@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Loader2, FolderOpen } from "lucide-react";
+import { GoogleDrivePicker } from "@/components/GoogleDrivePicker";
 
 interface StepTwoProps {
   onComplete: () => void;
@@ -10,29 +11,48 @@ interface StepTwoProps {
 
 const StepTwo = ({ onComplete }: StepTwoProps) => {
   const [isLoading, setIsLoading] = useState(false);
+  const [showPicker, setShowPicker] = useState(false);
 
-  const handleConnectDrive = async () => {
+  const handleFolderSelected = async (folderId: string, folderName: string) => {
     setIsLoading(true);
     try {
-      // TODO: Implémenter la connexion Google Drive
-      toast.info("Connexion Google Drive à implémenter");
-      
-      // Mark onboarding as complete
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Non authentifié");
 
-      const { error } = await supabase
+      // Get current session with provider token
+      const { data: sessionData } = await supabase.auth.getSession();
+      
+      if (!sessionData.session?.provider_token) {
+        toast.error("Impossible d'accéder à Google Drive. Veuillez vous reconnecter.");
+        return;
+      }
+
+      // Call edge function to sync Google Drive
+      const { data, error } = await supabase.functions.invoke('sync-google-drive', {
+        body: {
+          folderId,
+          folderName,
+          action: 'connect'
+        }
+      });
+
+      if (error) throw error;
+
+      console.log('Sync response:', data);
+      toast.success(`${data.imagesCount} images synchronisées !`);
+
+      // Mark onboarding as complete
+      const { error: profileError } = await supabase
         .from("user_profiles")
         .update({ has_completed_onboarding: true })
         .eq("user_id", user.id);
 
-      if (error) throw error;
+      if (profileError) throw profileError;
 
-      toast.success("Configuration terminée !");
       onComplete();
     } catch (error: any) {
-      console.error("Error completing onboarding:", error);
-      toast.error(error.message || "Erreur lors de la finalisation");
+      console.error("Error connecting drive:", error);
+      toast.error(error.message || "Erreur lors de la connexion");
     } finally {
       setIsLoading(false);
     }
@@ -77,7 +97,7 @@ const StepTwo = ({ onComplete }: StepTwoProps) => {
         </div>
 
         <Button
-          onClick={handleConnectDrive}
+          onClick={() => setShowPicker(true)}
           variant="premium"
           size="lg"
           className="w-full"
@@ -86,12 +106,18 @@ const StepTwo = ({ onComplete }: StepTwoProps) => {
           {isLoading ? (
             <>
               <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-              Connexion...
+              Synchronisation...
             </>
           ) : (
             "Connecter Google Drive"
           )}
         </Button>
+
+        <GoogleDrivePicker
+          open={showPicker}
+          onOpenChange={setShowPicker}
+          onFolderSelected={handleFolderSelected}
+        />
 
         <Button
           onClick={handleSkip}

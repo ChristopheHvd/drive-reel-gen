@@ -59,6 +59,114 @@ export type Database = {
         }
         Relationships: []
       }
+      drive_folders: {
+        Row: {
+          created_at: string
+          folder_id: string
+          folder_name: string
+          id: string
+          updated_at: string
+          user_id: string
+          watch_channel_id: string | null
+          watch_expiration: string | null
+          watch_resource_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          folder_id: string
+          folder_name: string
+          id?: string
+          updated_at?: string
+          user_id: string
+          watch_channel_id?: string | null
+          watch_expiration?: string | null
+          watch_resource_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          folder_id?: string
+          folder_name?: string
+          id?: string
+          updated_at?: string
+          user_id?: string
+          watch_channel_id?: string | null
+          watch_expiration?: string | null
+          watch_resource_id?: string | null
+        }
+        Relationships: []
+      }
+      drive_images: {
+        Row: {
+          created_at: string
+          created_time: string | null
+          drive_file_id: string
+          file_name: string
+          id: string
+          mime_type: string
+          modified_time: string | null
+          size: number | null
+          synced_at: string
+          thumbnail_link: string | null
+          updated_at: string
+          user_id: string
+          web_content_link: string | null
+        }
+        Insert: {
+          created_at?: string
+          created_time?: string | null
+          drive_file_id: string
+          file_name: string
+          id?: string
+          mime_type: string
+          modified_time?: string | null
+          size?: number | null
+          synced_at?: string
+          thumbnail_link?: string | null
+          updated_at?: string
+          user_id: string
+          web_content_link?: string | null
+        }
+        Update: {
+          created_at?: string
+          created_time?: string | null
+          drive_file_id?: string
+          file_name?: string
+          id?: string
+          mime_type?: string
+          modified_time?: string | null
+          size?: number | null
+          synced_at?: string
+          thumbnail_link?: string | null
+          updated_at?: string
+          user_id?: string
+          web_content_link?: string | null
+        }
+        Relationships: []
+      }
+      drive_tokens: {
+        Row: {
+          created_at: string
+          id: string
+          refresh_token: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          refresh_token: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          refresh_token?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_profiles: {
         Row: {
           avatar_url: string | null

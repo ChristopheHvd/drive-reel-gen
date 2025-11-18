@@ -1,2 +1,5 @@
 [functions.analyze-brand]
 verify_jwt = true
+
+[functions.sync-google-drive]
+verify_jwt = true

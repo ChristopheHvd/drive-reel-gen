@@ -37,7 +37,8 @@ export const useAuth = () => {
         queryParams: {
           access_type: 'offline',
           prompt: 'consent',
-        }
+        },
+        scopes: 'email profile https://www.googleapis.com/auth/drive.readonly https://www.googleapis.com/auth/drive.metadata.readonly'
       }
     });
 
