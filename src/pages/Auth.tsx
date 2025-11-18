@@ -1,12 +1,51 @@
 import { Button } from "@/components/ui/button";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { useEffect } from "react";
+import { useAuth } from "@/hooks/useAuth";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 import logo from "@/assets/daft-funk-logo.png";
 
 const Auth = () => {
-  const handleGoogleLogin = () => {
-    // TODO: Implement Google OAuth
-    console.log("Google OAuth to be implemented");
+  const { user, loading, signInWithGoogle } = useAuth();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (user && !loading) {
+      // Check if user has completed onboarding
+      const checkOnboarding = async () => {
+        const { data } = await supabase
+          .from("user_profiles")
+          .select("has_completed_onboarding")
+          .eq("user_id", user.id)
+          .single();
+
+        if (data?.has_completed_onboarding) {
+          navigate("/app");
+        } else {
+          navigate("/onboarding");
+        }
+      };
+      checkOnboarding();
+    }
+  }, [user, loading, navigate]);
+
+  const handleGoogleLogin = async () => {
+    try {
+      await signInWithGoogle();
+    } catch (error) {
+      console.error("Error during Google sign in:", error);
+      toast.error("Erreur lors de la connexion avec Google");
+    }
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-dark flex items-center justify-center">
+        <div className="text-foreground">Chargement...</div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-dark flex items-center justify-center p-4">
