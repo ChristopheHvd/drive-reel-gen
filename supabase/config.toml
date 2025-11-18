@@ -1,1 +1,2 @@
-project_id = "zuurpfghhdlsilpzmgwf"
+[functions.analyze-brand]
+verify_jwt = true
