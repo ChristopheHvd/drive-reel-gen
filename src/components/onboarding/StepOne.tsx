@@ -56,6 +56,24 @@ const StepOne = ({ onComplete }: StepOneProps) => {
       if (brandError) throw brandError;
 
       toast.success("Informations enregistrées avec succès");
+
+      // Trigger brand analysis if website URL is provided
+      if (data.website_url) {
+        toast.info("Analyse de votre marque en cours...");
+        
+        // Call analyze-brand edge function
+        const { error: analyzeError } = await supabase.functions.invoke('analyze-brand', {
+          body: { websiteUrl: data.website_url }
+        });
+
+        if (analyzeError) {
+          console.error('Error analyzing brand:', analyzeError);
+          toast.error("L'analyse de la marque a échoué, mais vos informations sont sauvegardées");
+        } else {
+          toast.success("Analyse de la marque terminée !");
+        }
+      }
+
       onComplete();
     } catch (error: any) {
       console.error("Error saving brand profile:", error);
@@ -128,7 +146,7 @@ const StepOne = ({ onComplete }: StepOneProps) => {
                 <FormLabel>Audience cible *</FormLabel>
                 <FormControl>
                   <Textarea
-                    placeholder="Qui sont vos clients idéaux ?"
+                    placeholder="Qui sont vos clients principaux ?"
                     className="min-h-20"
                     {...field}
                   />
@@ -138,16 +156,10 @@ const StepOne = ({ onComplete }: StepOneProps) => {
             )}
           />
 
-          <Button
-            type="submit"
-            variant="premium"
-            size="lg"
-            className="w-full"
-            disabled={isLoading}
-          >
+          <Button type="submit" className="w-full" disabled={isLoading}>
             {isLoading ? (
               <>
-                <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 Enregistrement...
               </>
             ) : (

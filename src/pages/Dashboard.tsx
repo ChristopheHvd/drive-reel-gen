@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import logo from "@/assets/daft-funk-logo.png";
+import { BrandSettingsDialog } from "@/components/BrandSettingsDialog";
 
 const Dashboard = () => {
   return (
@@ -22,7 +23,7 @@ const Dashboard = () => {
                 <span className="text-sm text-muted-foreground ml-2">• 6/6 vidéos</span>
               </div>
             </div>
-            <Button variant="outline" size="sm">Paramètres</Button>
+            <BrandSettingsDialog trigger={<Button variant="outline" size="sm">Paramètres</Button>} />
           </div>
         </div>
       </header>
