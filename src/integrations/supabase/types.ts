@@ -14,6 +14,51 @@ export type Database = {
   }
   public: {
     Tables: {
+      brand_profiles: {
+        Row: {
+          analyzed_at: string | null
+          brand_values: Json | null
+          business_description: string | null
+          company_name: string
+          created_at: string
+          id: string
+          target_audience: string | null
+          tone_of_voice: string | null
+          updated_at: string
+          user_id: string
+          visual_identity: Json | null
+          website_url: string | null
+        }
+        Insert: {
+          analyzed_at?: string | null
+          brand_values?: Json | null
+          business_description?: string | null
+          company_name: string
+          created_at?: string
+          id?: string
+          target_audience?: string | null
+          tone_of_voice?: string | null
+          updated_at?: string
+          user_id: string
+          visual_identity?: Json | null
+          website_url?: string | null
+        }
+        Update: {
+          analyzed_at?: string | null
+          brand_values?: Json | null
+          business_description?: string | null
+          company_name?: string
+          created_at?: string
+          id?: string
+          target_audience?: string | null
+          tone_of_voice?: string | null
+          updated_at?: string
+          user_id?: string
+          visual_identity?: Json | null
+          website_url?: string | null
+        }
+        Relationships: []
+      }
       user_profiles: {
         Row: {
           avatar_url: string | null
