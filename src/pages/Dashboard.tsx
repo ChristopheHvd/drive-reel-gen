@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import logo from "@/assets/daft-funk-logo.png";
-import { BrandSettingsDialog } from "@/components/BrandSettingsDialog";
+import { BrandSettingsDialog } from "@/features/brand";
 
 const Dashboard = () => {
   return (
