@@ -3,3 +3,6 @@ verify_jwt = true
 
 [functions.sync-google-drive]
 verify_jwt = true
+
+[functions.list-drive-folders]
+verify_jwt = true

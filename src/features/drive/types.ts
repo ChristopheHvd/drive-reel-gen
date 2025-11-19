@@ -26,6 +26,11 @@ export interface DriveFolder {
   updated_at: string;
 }
 
+export interface DriveFolderItem {
+  id: string;
+  name: string;
+}
+
 export interface ConnectFolderDto {
   folderId: string;
   folderName: string;

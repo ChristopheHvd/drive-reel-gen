@@ -1,9 +1,9 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { GoogleDrivePicker } from "@/features/drive";
+import { DriveFolderBrowser } from "@/features/drive";
 
 interface StepTwoProps {
   onComplete: () => void;
@@ -11,7 +11,29 @@ interface StepTwoProps {
 
 const StepTwo = ({ onComplete }: StepTwoProps) => {
   const [isLoading, setIsLoading] = useState(false);
-  const [pickerOpen, setPickerOpen] = useState(false);
+  const [hasDriveAccess, setHasDriveAccess] = useState<boolean | null>(null);
+  const [showBrowser, setShowBrowser] = useState(false);
+
+  useEffect(() => {
+    checkDriveAccess();
+  }, []);
+
+  const checkDriveAccess = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { data: tokenData } = await supabase
+        .from('drive_tokens')
+        .select('refresh_token')
+        .eq('user_id', user.id)
+        .single();
+
+      setHasDriveAccess(!!tokenData?.refresh_token);
+    } catch (error) {
+      setHasDriveAccess(false);
+    }
+  };
 
   const handleFolderSelected = async (folderId: string, folderName: string) => {
     setIsLoading(true);
@@ -79,22 +101,34 @@ const StepTwo = ({ onComplete }: StepTwoProps) => {
   }
 
   return (
-    <>
-      <div className="space-y-6">
-        <div className="text-center space-y-2">
-          <h2 className="text-2xl font-bold">Connecter Google Drive</h2>
-          <p className="text-muted-foreground">
-            Synchronisez vos images depuis Google Drive pour générer automatiquement des vidéos
-          </p>
-        </div>
+    <div className="space-y-6">
+      <div className="text-center space-y-2">
+        <h2 className="text-2xl font-bold">Connecter Google Drive</h2>
+        <p className="text-muted-foreground">
+          Synchronisez vos images depuis Google Drive pour générer automatiquement des vidéos
+        </p>
+      </div>
 
+      {hasDriveAccess === null ? (
+        <div className="flex items-center justify-center py-12">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      ) : !hasDriveAccess && !showBrowser ? (
         <div className="space-y-4">
+          <div className="bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 rounded-lg p-4 space-y-2">
+            <p className="text-sm text-blue-900 dark:text-blue-100">
+              <strong>Synchronisation automatique :</strong> Nous allons synchroniser 
+              les images de votre Google Drive pour générer automatiquement des vidéos 
+              à partir de vos contenus.
+            </p>
+          </div>
+
           <Button
             variant="premium"
-            onClick={() => setPickerOpen(true)}
+            onClick={() => setShowBrowser(true)}
             className="w-full"
           >
-            Connecter Google Drive
+            Connecter mon Google Drive
           </Button>
 
           <Button
@@ -105,14 +139,38 @@ const StepTwo = ({ onComplete }: StepTwoProps) => {
             Passer cette étape
           </Button>
         </div>
-      </div>
+      ) : !showBrowser ? (
+        <div className="space-y-4">
+          <Button
+            variant="premium"
+            onClick={() => setShowBrowser(true)}
+            className="w-full"
+          >
+            Sélectionner un dossier
+          </Button>
 
-      <GoogleDrivePicker
-        open={pickerOpen}
-        onOpenChange={setPickerOpen}
-        onFolderSelected={handleFolderSelected}
-      />
-    </>
+          <Button
+            variant="ghost"
+            onClick={handleSkip}
+            className="w-full"
+          >
+            Passer cette étape
+          </Button>
+        </div>
+      ) : (
+        <div className="space-y-4">
+          <DriveFolderBrowser onFolderSelected={handleFolderSelected} />
+          
+          <Button
+            variant="ghost"
+            onClick={handleSkip}
+            className="w-full"
+          >
+            Passer cette étape
+          </Button>
+        </div>
+      )}
+    </div>
   );
 };
 
