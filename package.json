@@ -6,9 +6,18 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
+    "prebuild": "npm run test:all",
     "build:dev": "vite build --mode development",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "test": "vitest",
+    "test:unit": "vitest run",
+    "test:ui": "vitest --ui",
+    "test:watch": "vitest watch",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui",
+    "test:regression": "npm run test:unit && npm run test:e2e regression-suite",
+    "test:all": "npm run test:unit && npm run test:e2e"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",
