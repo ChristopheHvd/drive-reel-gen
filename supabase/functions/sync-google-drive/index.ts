@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { z } from 'https://deno.land/x/zod@v3.22.4/mod.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -16,6 +17,21 @@ interface GoogleDriveFile {
   createdTime: string;
   modifiedTime: string;
 }
+
+const ConnectSchema = z.object({
+  folderId: z.string().min(1, 'Folder ID requis'),
+  folderName: z.string().min(1, 'Folder name requis'),
+  action: z.literal('connect'),
+});
+
+const SyncSchema = z.object({
+  action: z.literal('sync'),
+});
+
+const RequestSchema = z.discriminatedUnion('action', [
+  ConnectSchema,
+  SyncSchema,
+]);
 
 serve(async (req) => {
   // Handle CORS preflight
@@ -43,9 +59,25 @@ serve(async (req) => {
       throw new Error('Unauthorized');
     }
 
-    const { folderId, folderName, action } = await req.json();
+    const body = await req.json();
+    
+    // Validation OBLIGATOIRE
+    const result = RequestSchema.safeParse(body);
+    if (!result.success) {
+      return new Response(
+        JSON.stringify({ error: 'Invalid data', details: result.error }), 
+        { 
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        }
+      );
+    }
+
+    const validatedData = result.data;
+    const { action } = validatedData;
 
     if (action === 'connect') {
+      const { folderId, folderName } = validatedData;
       // Get user's Google access token from session
       const { data: sessionData } = await supabase.auth.getSession();
       const providerToken = sessionData.session?.provider_token;

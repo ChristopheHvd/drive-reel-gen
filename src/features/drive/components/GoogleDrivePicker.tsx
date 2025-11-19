@@ -8,9 +8,15 @@ import { FolderOpen, Loader2 } from "lucide-react";
 interface GoogleDrivePickerProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onFolderSelected: (folderId: string, folderName: string) => void;
+  onFolderSelected: (folderId: string, folderName: string) => void | Promise<void>;
 }
 
+/**
+ * Modal pour sélectionner un dossier Google Drive
+ * @param open - État d'ouverture du modal
+ * @param onOpenChange - Callback pour changer l'état d'ouverture
+ * @param onFolderSelected - Callback appelé lors de la sélection d'un dossier
+ */
 export const GoogleDrivePicker = ({ open, onOpenChange, onFolderSelected }: GoogleDrivePickerProps) => {
   const [folderId, setFolderId] = useState("");
   const [folderName, setFolderName] = useState("");

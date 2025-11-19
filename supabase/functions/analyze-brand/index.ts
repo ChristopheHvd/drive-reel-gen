@@ -1,11 +1,16 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.81.1';
+import { z } from 'https://deno.land/x/zod@v3.22.4/mod.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
+
+const RequestSchema = z.object({
+  websiteUrl: z.string().url('URL invalide'),
+});
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -13,12 +18,22 @@ serve(async (req) => {
   }
 
   try {
-    const { websiteUrl } = await req.json();
-    console.log('Analyzing brand for website:', websiteUrl);
-
-    if (!websiteUrl) {
-      throw new Error('Website URL is required');
+    const body = await req.json();
+    
+    // Validation OBLIGATOIRE
+    const result = RequestSchema.safeParse(body);
+    if (!result.success) {
+      return new Response(
+        JSON.stringify({ error: 'Invalid data', details: result.error }), 
+        { 
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        }
+      );
     }
+
+    const { websiteUrl } = result.data;
+    console.log('Analyzing brand for website:', websiteUrl);
 
     const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
     if (!LOVABLE_API_KEY) {

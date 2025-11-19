@@ -3,6 +3,25 @@ import { User, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 
+/**
+ * Hook pour gérer l'authentification des utilisateurs via Google OAuth
+ * 
+ * @returns {Object} État et méthodes d'authentification
+ * @returns {User | null} user - L'utilisateur actuellement connecté
+ * @returns {Session | null} session - La session active
+ * @returns {boolean} loading - Indique si l'authentification est en cours de chargement
+ * @returns {Function} signInWithGoogle - Fonction pour se connecter avec Google
+ * @returns {Function} signOut - Fonction pour se déconnecter
+ * 
+ * @example
+ * ```tsx
+ * const { user, loading, signInWithGoogle, signOut } = useAuth();
+ * 
+ * if (loading) return <Spinner />;
+ * if (!user) return <button onClick={signInWithGoogle}>Se connecter</button>;
+ * return <button onClick={signOut}>Se déconnecter</button>;
+ * ```
+ */
 export const useAuth = () => {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);

@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import StepOne from "@/components/onboarding/StepOne";
-import StepTwo from "@/components/onboarding/StepTwo";
+import { StepOne, StepTwo } from "@/features/onboarding";
 import logo from "@/assets/daft-funk-logo.png";
 
 const Onboarding = () => {
