@@ -22,6 +22,7 @@ export type Database = {
           company_name: string
           created_at: string
           id: string
+          instagram_url: string | null
           target_audience: string | null
           tone_of_voice: string | null
           updated_at: string
@@ -36,6 +37,7 @@ export type Database = {
           company_name: string
           created_at?: string
           id?: string
+          instagram_url?: string | null
           target_audience?: string | null
           tone_of_voice?: string | null
           updated_at?: string
@@ -50,6 +52,7 @@ export type Database = {
           company_name?: string
           created_at?: string
           id?: string
+          instagram_url?: string | null
           target_audience?: string | null
           tone_of_voice?: string | null
           updated_at?: string

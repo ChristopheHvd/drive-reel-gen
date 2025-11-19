@@ -9,7 +9,9 @@ const corsHeaders = {
 };
 
 const RequestSchema = z.object({
-  websiteUrl: z.string().url('URL invalide'),
+  websiteUrl: z.string().url('URL invalide').optional(),
+  instagramUrl: z.string().url('URL Instagram invalide').optional(),
+  userId: z.string().uuid().optional(),
 });
 
 serve(async (req) => {
@@ -32,8 +34,8 @@ serve(async (req) => {
       );
     }
 
-    const { websiteUrl } = result.data;
-    console.log('Analyzing brand for website:', websiteUrl);
+    const { websiteUrl, instagramUrl, userId } = result.data;
+    console.log('Analyzing brand for:', { websiteUrl, instagramUrl, userId });
 
     const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
     if (!LOVABLE_API_KEY) {
@@ -62,12 +64,17 @@ serve(async (req) => {
     console.log('User authenticated:', user.id);
 
     // Call Lovable AI to analyze the brand
-    const prompt = `Tu es un expert en analyse de marque et en marketing. Analyse le site web suivant et extrais les informations clés de la marque:
+    const sources = [];
+    if (websiteUrl) sources.push(`Site web: ${websiteUrl}`);
+    if (instagramUrl) sources.push(`Instagram: ${instagramUrl}`);
+    
+    const prompt = `Tu es un expert en analyse de marque et en marketing. Analyse cette entreprise à partir des sources suivantes:
 
-Site web: ${websiteUrl}
+${sources.join('\n')}
 
 Fournis une analyse détaillée au format JSON avec les champs suivants:
 - business_description: Une description détaillée de l'activité de l'entreprise (2-3 phrases)
+- target_audience: Description précise de l'audience cible
 - brand_values: Un tableau de 3-5 valeurs clés de la marque (ex: ["innovation", "qualité", "durabilité"])
 - visual_identity: Un objet décrivant l'identité visuelle avec:
   - colors: tableau des couleurs principales (hex codes si possible)
@@ -177,6 +184,30 @@ Réponds UNIQUEMENT avec le JSON, sans texte additionnel.`;
       if (insertError) {
         console.error('Error creating brand profile:', insertError);
         throw insertError;
+      }
+    }
+
+    // Auto-save if userId is provided
+    if (userId) {
+      const brandProfileData = {
+        user_id: userId,
+        business_description: brandData.business_description,
+        target_audience: brandData.target_audience || null,
+        brand_values: brandData.brand_values,
+        visual_identity: brandData.visual_identity,
+        tone_of_voice: brandData.tone_of_voice,
+        analyzed_at: new Date().toISOString(),
+      };
+
+      const { error: updateError } = await supabase
+        .from('brand_profiles')
+        .update(brandProfileData)
+        .eq('user_id', userId);
+
+      if (updateError) {
+        console.error('Error auto-saving brand profile:', updateError);
+      } else {
+        console.log('Brand profile auto-saved successfully');
       }
     }
 
