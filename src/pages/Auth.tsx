@@ -14,6 +14,22 @@ const Auth = () => {
     if (user && !loading) {
       // Check if user has completed onboarding
       const checkOnboarding = async () => {
+        // Try to save the Google Drive token first
+        try {
+          const { data: session } = await supabase.auth.getSession();
+          if (session.session?.access_token) {
+            await supabase.functions.invoke('save-drive-token', {
+              headers: {
+                Authorization: `Bearer ${session.session.access_token}`
+              }
+            });
+            console.log('✅ Token Google Drive sauvegardé');
+          }
+        } catch (error) {
+          console.error('⚠️ Could not save Drive token:', error);
+          // Non-blocking error, continue anyway
+        }
+
         const { data } = await supabase
           .from("user_profiles")
           .select("has_completed_onboarding")
