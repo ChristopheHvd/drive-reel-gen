@@ -33,15 +33,95 @@ serve(async (req) => {
     const { parentFolderId } = await req.json();
     console.log('Listing folders for parent:', parentFolderId, 'user:', user.id);
 
-    // Récupérer le token Google Drive de l'utilisateur
-    const { data: tokenData, error: tokenError } = await supabase
-      .from('drive_tokens')
-      .select('refresh_token')
-      .eq('user_id', user.id)
-      .single();
+    // Récupérer les données utilisateur complètes avec identities
+    console.log('🔍 Phase 1: Fetching user data with identities...');
+    const { data: userData, error: userDataError } = await supabase.auth.admin.getUserById(user.id);
 
-    if (tokenError || !tokenData?.refresh_token) {
-      throw new Error('No Google Drive token found. Please reconnect your Google account.');
+    if (userDataError || !userData?.user) {
+      console.error('❌ Failed to get user data:', userDataError);
+      throw new Error('Impossible de récupérer les informations utilisateur');
+    }
+
+    console.log('✅ User data retrieved');
+    console.log('📊 Number of identities:', userData.user.identities?.length || 0);
+    console.log('📊 App metadata keys:', Object.keys(userData.user.app_metadata || {}));
+    console.log('📊 User metadata keys:', Object.keys(userData.user.user_metadata || {}));
+
+    // Chercher l'identity Google
+    const googleIdentity = userData.user.identities?.find(
+      (identity: any) => identity.provider === 'google'
+    );
+
+    if (!googleIdentity) {
+      console.error('❌ No Google identity found');
+      throw new Error('Aucune connexion Google trouvée. Veuillez vous reconnecter avec Google.');
+    }
+
+    console.log('✅ Google identity found:', googleIdentity.id);
+    console.log('📊 Identity data keys:', Object.keys(googleIdentity.identity_data || {}));
+
+    // Tenter de récupérer le refresh token
+    let refreshToken: string | null = null;
+    let tokenSource = '';
+
+    // Option A : Dans identity_data
+    if (googleIdentity.identity_data?.provider_refresh_token) {
+      refreshToken = googleIdentity.identity_data.provider_refresh_token;
+      tokenSource = 'identity_data.provider_refresh_token';
+      console.log('✅ Found refresh token in identity_data');
+    }
+
+    // Option B : Dans app_metadata
+    if (!refreshToken && userData.user.app_metadata?.provider_refresh_token) {
+      refreshToken = userData.user.app_metadata.provider_refresh_token;
+      tokenSource = 'app_metadata.provider_refresh_token';
+      console.log('✅ Found refresh token in app_metadata');
+    }
+
+    // Option C : Dans user_metadata
+    if (!refreshToken && userData.user.user_metadata?.provider_refresh_token) {
+      refreshToken = userData.user.user_metadata.provider_refresh_token;
+      tokenSource = 'user_metadata.provider_refresh_token';
+      console.log('✅ Found refresh token in user_metadata');
+    }
+
+    // Option D : Chercher dans drive_tokens en fallback
+    if (!refreshToken) {
+      console.log('🔍 Phase 2: No refresh token in auth data, checking drive_tokens table...');
+      const { data: tokenData } = await supabase
+        .from('drive_tokens')
+        .select('refresh_token')
+        .eq('user_id', user.id)
+        .maybeSingle();
+      
+      if (tokenData?.refresh_token) {
+        refreshToken = tokenData.refresh_token;
+        tokenSource = 'drive_tokens table';
+        console.log('✅ Found refresh token in drive_tokens table');
+      }
+    }
+
+    if (!refreshToken) {
+      console.error('❌ No valid refresh token found in any location');
+      console.error('Checked locations: identity_data, app_metadata, user_metadata, drive_tokens');
+      throw new Error('Token Google Drive introuvable. Veuillez vous reconnecter avec Google en activant les permissions Google Drive.');
+    }
+
+    console.log('✅ Using refresh token from:', tokenSource);
+
+    // Sauvegarder dans drive_tokens pour cache si pas déjà là
+    if (tokenSource !== 'drive_tokens table') {
+      try {
+        console.log('💾 Caching refresh token in drive_tokens...');
+        await supabase.from('drive_tokens').upsert({
+          user_id: user.id,
+          refresh_token: refreshToken,
+        });
+        console.log('✅ Cached refresh token in drive_tokens');
+      } catch (saveError) {
+        console.error('⚠️ Failed to cache token:', saveError);
+        // Non bloquant
+      }
     }
 
     // Refresh access token
@@ -58,7 +138,7 @@ serve(async (req) => {
       body: new URLSearchParams({
         client_id: clientId,
         client_secret: clientSecret,
-        refresh_token: tokenData.refresh_token,
+        refresh_token: refreshToken,
         grant_type: 'refresh_token',
       }),
     });
