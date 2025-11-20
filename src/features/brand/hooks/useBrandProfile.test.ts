@@ -80,8 +80,9 @@ describe('useBrandProfile - Regression Tests', () => {
       select: vi.fn().mockReturnThis(),
       eq: vi.fn().mockReturnThis(),
       single: vi.fn()
-        .mockResolvedValueOnce({ data: { id: 'profile-123' }, error: null })
-        .mockResolvedValueOnce({ data: mockProfile, error: null }),
+        .mockResolvedValueOnce({ data: mockProfile, error: null }) // Initial load on mount
+        .mockResolvedValueOnce({ data: { id: 'profile-123' }, error: null }) // Check existing profile
+        .mockResolvedValueOnce({ data: mockProfile, error: null }), // Load profile after update
     };
 
     const mockFromUpdate = {
@@ -90,7 +91,8 @@ describe('useBrandProfile - Regression Tests', () => {
     };
 
     (supabase.from as any)
-      .mockReturnValueOnce(mockFromSelect) // First call for checking existing profile
+      .mockReturnValueOnce(mockFromSelect) // Initial load on mount
+      .mockReturnValueOnce(mockFromSelect) // Check existing profile
       .mockReturnValueOnce(mockFromUpdate) // Update call
       .mockReturnValueOnce(mockFromSelect); // Load profile after update
 
