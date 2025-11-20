@@ -9,8 +9,8 @@ const corsHeaders = {
 };
 
 const RequestSchema = z.object({
-  websiteUrl: z.string().url('URL invalide').optional(),
-  instagramUrl: z.string().url('URL Instagram invalide').optional(),
+  websiteUrl: z.string().optional().or(z.literal("")),
+  instagramUrl: z.string().optional().or(z.literal("")),
   userId: z.string().uuid().optional(),
 });
 
@@ -35,7 +35,23 @@ serve(async (req) => {
     }
 
     const { websiteUrl, instagramUrl, userId } = result.data;
-    console.log('Analyzing brand for:', { websiteUrl, instagramUrl, userId });
+
+    // Filtrer les chaînes vides
+    const validWebsiteUrl = websiteUrl && websiteUrl.trim() !== "" ? websiteUrl : undefined;
+    const validInstagramUrl = instagramUrl && instagramUrl.trim() !== "" ? instagramUrl : undefined;
+
+    // Vérifier qu'au moins une URL est fournie
+    if (!validWebsiteUrl && !validInstagramUrl) {
+      return new Response(
+        JSON.stringify({ error: 'Au moins une URL (site web ou Instagram) est requise pour l\'analyse' }), 
+        { 
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        }
+      );
+    }
+
+    console.log('Analyzing brand for:', { validWebsiteUrl, validInstagramUrl, userId });
 
     const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
     if (!LOVABLE_API_KEY) {
@@ -65,8 +81,8 @@ serve(async (req) => {
 
     // Call Lovable AI to analyze the brand
     const sources = [];
-    if (websiteUrl) sources.push(`Site web: ${websiteUrl}`);
-    if (instagramUrl) sources.push(`Instagram: ${instagramUrl}`);
+    if (validWebsiteUrl) sources.push(`Site web: ${validWebsiteUrl}`);
+    if (validInstagramUrl) sources.push(`Instagram: ${validInstagramUrl}`);
     
     const prompt = `Tu es un expert en analyse de marque et en marketing. Analyse cette entreprise à partir des sources suivantes:
 

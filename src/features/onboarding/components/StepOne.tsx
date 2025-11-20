@@ -18,8 +18,15 @@ import { supabase } from "@/integrations/supabase/client";
 
 const formSchema = z.object({
   companyName: z.string().min(2, "Le nom de l'entreprise doit contenir au moins 2 caractères"),
-  websiteUrl: z.string().url("URL invalide").optional().or(z.literal("")),
-  instagramUrl: z.string().url("URL Instagram invalide").optional().or(z.literal("")),
+  websiteUrl: z
+    .string()
+    .transform((val) => {
+      if (!val || val === "") return "";
+      if (val.startsWith("http://") || val.startsWith("https://")) return val;
+      return `https://${val}`;
+    })
+    .pipe(z.string().url("URL invalide").optional().or(z.literal(""))),
+  instagramUrl: z.string().optional().or(z.literal("")),
 });
 
 type FormData = z.infer<typeof formSchema>;
@@ -152,7 +159,21 @@ const StepOne = ({ onComplete }: StepOneProps) => {
               <FormItem>
                 <FormLabel>Instagram (optionnel)</FormLabel>
                 <FormControl>
-                  <Input placeholder="https://instagram.com/votre_entreprise" {...field} />
+                  <div className="flex items-center">
+                    <span className="px-3 py-2 bg-muted border border-r-0 border-input rounded-l-md text-sm text-muted-foreground">
+                      instagram.com/
+                    </span>
+                    <Input 
+                      placeholder="nom_du_compte" 
+                      className="rounded-l-none"
+                      {...field}
+                      value={field.value?.replace('https://instagram.com/', '').replace('instagram.com/', '') || ''}
+                      onChange={(e) => {
+                        const username = e.target.value;
+                        field.onChange(username ? `https://instagram.com/${username}` : '');
+                      }}
+                    />
+                  </div>
                 </FormControl>
                 <FormMessage />
               </FormItem>
