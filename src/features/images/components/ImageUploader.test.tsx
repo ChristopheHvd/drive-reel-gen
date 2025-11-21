@@ -34,19 +34,19 @@ describe('ImageUploader', () => {
     expect(getByText(/JPG, PNG, WEBP, HEIC/i)).toBeDefined();
   });
 
-  it('should handle file selection via input', async () => {
+  it('should trigger upload immediately on file selection', async () => {
     const user = userEvent.setup();
-    const { getByText } = render(<ImageUploader />);
+    mockUploadImages.mockResolvedValue([{ id: 'img-1' }]);
+    
+    const { container } = render(<ImageUploader />);
     
     const input = document.querySelector('input[type="file"]') as HTMLInputElement;
-    expect(input).toBeDefined();
-    
     const file = new File(['test'], 'test.jpg', { type: 'image/jpeg' });
     
-    if (input) {
-      await user.upload(input, file);
-      expect(getByText('test.jpg')).toBeDefined();
-    }
+    await user.upload(input, file);
+    
+    // Vérifier que uploadImages a été appelé immédiatement
+    expect(mockUploadImages).toHaveBeenCalledWith([file]);
   });
 
   it('should show upload progress', () => {
@@ -98,22 +98,25 @@ describe('ImageUploader', () => {
     expect(getByText('✓')).toBeDefined();
   });
 
-  it('should call uploadImages when upload button is clicked', async () => {
-    const user = userEvent.setup();
+  it('should trigger upload on drag and drop', async () => {
     mockUploadImages.mockResolvedValue([{ id: 'img-1' }]);
     
-    const { getByText } = render(<ImageUploader />);
+    const { container } = render(<ImageUploader />);
     
-    const input = document.querySelector('input[type="file"]') as HTMLInputElement;
+    const dropZone = container.querySelector('div');
     const file = new File(['test'], 'test.jpg', { type: 'image/jpeg' });
     
-    if (input) {
-      await user.upload(input, file);
+    const dataTransfer = {
+      files: [file],
+      items: [{ kind: 'file', type: 'image/jpeg', getAsFile: () => file }],
+      types: ['Files']
+    };
+    
+    if (dropZone) {
+      const dropEvent = Object.assign(new Event('drop', { bubbles: true }), { dataTransfer });
+      dropZone.dispatchEvent(dropEvent);
       
-      const uploadButton = getByText(/Uploader 1 image/i);
-      await user.click(uploadButton);
-      
-      expect(mockUploadImages).toHaveBeenCalled();
+      expect(mockUploadImages).toHaveBeenCalledWith([file]);
     }
   });
 });
