@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { DriveFolderBrowser } from "@/features/drive";
+import { DriveFolderBrowser, ConnectDriveButton } from "@/features/drive";
 
 interface StepTwoProps {
   onComplete: () => void;
@@ -123,13 +123,14 @@ const StepTwo = ({ onComplete }: StepTwoProps) => {
             </p>
           </div>
 
-          <Button
+          <ConnectDriveButton 
             variant="premium"
-            onClick={() => setShowBrowser(true)}
             className="w-full"
-          >
-            Connecter mon Google Drive
-          </Button>
+            onConnected={() => {
+              checkDriveAccess();
+              toast.success("Vous pouvez maintenant sélectionner un dossier");
+            }}
+          />
 
           <Button
             variant="ghost"
