@@ -54,6 +54,30 @@ CRUD sur les images de l'équipe
 - RLS sur storage : path doit commencer par team_id de l'utilisateur
 - Validation côté client ET serveur (taille, type MIME)
 
+## Tests
+
+### Tests Unitaires
+- `useImages.test.ts` : Tests du hook de gestion des images
+- `useImageUpload.test.ts` : Tests du hook d'upload
+- `ImageUploader.test.tsx` : Tests du composant d'upload
+- `ImageCard.test.tsx` : Tests de la card d'affichage
+
+### Tests d'Intégration
+- `team-rls.test.ts` : Tests des RLS policies des teams
+- `images-rls.test.ts` : Tests de sécurité des images
+
+### Exécuter les tests
+```bash
+# Tests unitaires uniquement
+npm run test:unit
+
+# Tests d'intégration (nécessite Supabase)
+npm run test:integration
+
+# Tous les tests
+npm run test:all
+```
+
 ## Usage
 
 ```tsx
@@ -74,3 +98,62 @@ function MyComponent() {
   );
 }
 ```
+
+## Sécurité RLS - Détails
+
+### Table `images`
+```sql
+-- SELECT: User voit images de ses teams
+CREATE POLICY "Team members can view team images"
+ON images FOR SELECT
+USING (team_id IN (SELECT public.user_teams()));
+
+-- INSERT: User peut créer images pour ses teams
+CREATE POLICY "Team members can insert team images"
+ON images FOR INSERT
+WITH CHECK (team_id IN (SELECT public.user_teams()));
+
+-- UPDATE/DELETE: Idem
+```
+
+### Storage Bucket `team-images`
+```sql
+-- Upload: Path doit être {team_id}/...
+CREATE POLICY "Team members can upload team images"
+ON storage.objects FOR INSERT
+WITH CHECK (
+  bucket_id = 'team-images'
+  AND (storage.foldername(name))[1]::uuid IN (SELECT public.user_teams())
+);
+
+-- View/Delete: Idem avec validation du path
+```
+
+### Helper Function
+```sql
+-- Retourne les team_id des teams du user
+CREATE FUNCTION public.user_teams()
+RETURNS SETOF UUID
+AS $$
+  SELECT team_id 
+  FROM public.team_members 
+  WHERE user_id = auth.uid();
+$$;
+```
+
+## Points d'Attention
+
+### Upload
+- Max 10MB par fichier
+- Types autorisés : JPEG, JPG, PNG, WEBP, HEIC
+- Génération d'UUID pour éviter les conflits
+
+### Performances
+- Lazy loading des images dans la grid
+- Pagination recommandée pour > 100 images
+- Utiliser les miniatures quand disponibles
+
+### Erreurs Courantes
+1. **"Team not found"** : User n'est membre d'aucune team (vérifier trigger signup)
+2. **"Permission denied"** : RLS bloque l'accès (vérifier team_id)
+3. **"File too large"** : Fichier > 10MB (valider côté client)
