@@ -24,9 +24,9 @@ export type Database = {
           id: string
           instagram_url: string | null
           target_audience: string | null
+          team_id: string | null
           tone_of_voice: string | null
           updated_at: string
-          user_id: string
           visual_identity: Json | null
           website_url: string | null
         }
@@ -39,9 +39,9 @@ export type Database = {
           id?: string
           instagram_url?: string | null
           target_audience?: string | null
+          team_id?: string | null
           tone_of_voice?: string | null
           updated_at?: string
-          user_id: string
           visual_identity?: Json | null
           website_url?: string | null
         }
@@ -54,119 +54,125 @@ export type Database = {
           id?: string
           instagram_url?: string | null
           target_audience?: string | null
+          team_id?: string | null
           tone_of_voice?: string | null
           updated_at?: string
-          user_id?: string
           visual_identity?: Json | null
           website_url?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "brand_profiles_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+        ]
       }
-      drive_folders: {
+      images: {
         Row: {
           created_at: string
-          folder_id: string
-          folder_name: string
+          file_name: string
+          file_size: number
+          height: number | null
           id: string
+          mime_type: string
+          storage_path: string
+          team_id: string
           updated_at: string
-          user_id: string
-          watch_channel_id: string | null
-          watch_expiration: string | null
-          watch_resource_id: string | null
+          uploaded_by: string
+          width: number | null
         }
         Insert: {
           created_at?: string
-          folder_id: string
-          folder_name: string
+          file_name: string
+          file_size: number
+          height?: number | null
           id?: string
+          mime_type: string
+          storage_path: string
+          team_id: string
           updated_at?: string
-          user_id: string
-          watch_channel_id?: string | null
-          watch_expiration?: string | null
-          watch_resource_id?: string | null
+          uploaded_by: string
+          width?: number | null
         }
         Update: {
           created_at?: string
-          folder_id?: string
-          folder_name?: string
-          id?: string
-          updated_at?: string
-          user_id?: string
-          watch_channel_id?: string | null
-          watch_expiration?: string | null
-          watch_resource_id?: string | null
-        }
-        Relationships: []
-      }
-      drive_images: {
-        Row: {
-          created_at: string
-          created_time: string | null
-          drive_file_id: string
-          file_name: string
-          id: string
-          mime_type: string
-          modified_time: string | null
-          size: number | null
-          synced_at: string
-          thumbnail_link: string | null
-          updated_at: string
-          user_id: string
-          web_content_link: string | null
-        }
-        Insert: {
-          created_at?: string
-          created_time?: string | null
-          drive_file_id: string
-          file_name: string
-          id?: string
-          mime_type: string
-          modified_time?: string | null
-          size?: number | null
-          synced_at?: string
-          thumbnail_link?: string | null
-          updated_at?: string
-          user_id: string
-          web_content_link?: string | null
-        }
-        Update: {
-          created_at?: string
-          created_time?: string | null
-          drive_file_id?: string
           file_name?: string
+          file_size?: number
+          height?: number | null
           id?: string
           mime_type?: string
-          modified_time?: string | null
-          size?: number | null
-          synced_at?: string
-          thumbnail_link?: string | null
+          storage_path?: string
+          team_id?: string
           updated_at?: string
-          user_id?: string
-          web_content_link?: string | null
+          uploaded_by?: string
+          width?: number | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "images_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+        ]
       }
-      drive_tokens: {
+      team_members: {
+        Row: {
+          id: string
+          joined_at: string
+          role: Database["public"]["Enums"]["team_role"]
+          team_id: string
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          joined_at?: string
+          role?: Database["public"]["Enums"]["team_role"]
+          team_id: string
+          user_id: string
+        }
+        Update: {
+          id?: string
+          joined_at?: string
+          role?: Database["public"]["Enums"]["team_role"]
+          team_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "team_members_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      teams: {
         Row: {
           created_at: string
           id: string
-          refresh_token: string
+          name: string
+          owner_id: string
           updated_at: string
-          user_id: string
         }
         Insert: {
           created_at?: string
           id?: string
-          refresh_token: string
+          name: string
+          owner_id: string
           updated_at?: string
-          user_id: string
         }
         Update: {
           created_at?: string
           id?: string
-          refresh_token?: string
+          name?: string
+          owner_id?: string
           updated_at?: string
-          user_id?: string
         }
         Relationships: []
       }
@@ -176,7 +182,6 @@ export type Database = {
           created_at: string
           email: string
           full_name: string | null
-          has_completed_onboarding: boolean
           id: string
           updated_at: string
           user_id: string
@@ -186,7 +191,6 @@ export type Database = {
           created_at?: string
           email: string
           full_name?: string | null
-          has_completed_onboarding?: boolean
           id?: string
           updated_at?: string
           user_id: string
@@ -196,7 +200,6 @@ export type Database = {
           created_at?: string
           email?: string
           full_name?: string | null
-          has_completed_onboarding?: boolean
           id?: string
           updated_at?: string
           user_id?: string
@@ -215,6 +218,7 @@ export type Database = {
           stripe_customer_id: string | null
           stripe_price_id: string | null
           stripe_subscription_id: string | null
+          team_id: string | null
           updated_at: string
           user_id: string
           video_limit: number
@@ -231,6 +235,7 @@ export type Database = {
           stripe_customer_id?: string | null
           stripe_price_id?: string | null
           stripe_subscription_id?: string | null
+          team_id?: string | null
           updated_at?: string
           user_id: string
           video_limit?: number
@@ -247,22 +252,33 @@ export type Database = {
           stripe_customer_id?: string | null
           stripe_price_id?: string | null
           stripe_subscription_id?: string | null
+          team_id?: string | null
           updated_at?: string
           user_id?: string
           video_limit?: number
           videos_generated_this_month?: number
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "user_subscriptions_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      is_team_admin: { Args: { _team_id: string }; Returns: boolean }
+      is_team_owner: { Args: { _team_id: string }; Returns: boolean }
+      user_teams: { Args: never; Returns: string[] }
     }
     Enums: {
-      [_ in never]: never
+      team_role: "owner" | "admin" | "member"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -389,6 +405,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      team_role: ["owner", "admin", "member"],
+    },
   },
 } as const

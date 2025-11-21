@@ -1,28 +1,14 @@
 import { useState, useCallback, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { DriveImage } from "../types";
+import { Image } from "../types";
 
 /**
- * Hook pour gérer les images synchronisées depuis Google Drive
+ * Hook pour gérer les images de l'équipe
  * 
- * @returns {Object} État et méthodes des images Drive
- * @returns {DriveImage[]} images - Liste des images synchronisées
- * @returns {boolean} loading - Indique si le chargement est en cours
- * @returns {Error | null} error - Erreur éventuelle
- * @returns {Function} fetchImages - Fonction pour recharger les images
- * @returns {Function} deleteImage - Fonction pour supprimer une image
- * 
- * @example
- * ```tsx
- * const { images, loading, fetchImages } = useDriveImages();
- * 
- * useEffect(() => {
- *   fetchImages();
- * }, [fetchImages]);
- * ```
+ * @returns État et méthodes des images
  */
-export const useDriveImages = () => {
-  const [images, setImages] = useState<DriveImage[]>([]);
+export const useImages = () => {
+  const [images, setImages] = useState<Image[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
 
@@ -36,18 +22,17 @@ export const useDriveImages = () => {
         throw new Error("Non authentifié");
       }
 
-      const { data: driveImages, error: fetchError } = await supabase
-        .from('drive_images')
+      const { data: imagesData, error: fetchError } = await supabase
+        .from('images')
         .select('*')
-        .eq('user_id', user.id)
-        .order('synced_at', { ascending: false });
+        .order('created_at', { ascending: false });
 
       if (fetchError) throw fetchError;
 
-      setImages(driveImages || []);
+      setImages(imagesData || []);
     } catch (err) {
       setError(err as Error);
-      console.error('Error fetching drive images:', err);
+      console.error('Error fetching images:', err);
     } finally {
       setLoading(false);
     }
@@ -55,8 +40,19 @@ export const useDriveImages = () => {
 
   const deleteImage = useCallback(async (imageId: string) => {
     try {
+      const imageToDelete = images.find(img => img.id === imageId);
+      if (!imageToDelete) throw new Error("Image non trouvée");
+
+      // 1. Supprimer du storage
+      const { error: storageError } = await supabase.storage
+        .from('team-images')
+        .remove([imageToDelete.storage_path]);
+
+      if (storageError) throw storageError;
+
+      // 2. Supprimer de la table
       const { error: deleteError } = await supabase
-        .from('drive_images')
+        .from('images')
         .delete()
         .eq('id', imageId);
 
@@ -67,7 +63,7 @@ export const useDriveImages = () => {
       console.error('Error deleting image:', err);
       throw err;
     }
-  }, []);
+  }, [images]);
 
   useEffect(() => {
     fetchImages();

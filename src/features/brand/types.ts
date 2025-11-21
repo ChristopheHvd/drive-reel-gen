@@ -1,8 +1,9 @@
 export interface BrandProfile {
   id: string;
-  user_id: string;
+  team_id: string;
   company_name: string;
   website_url?: string;
+  instagram_url?: string;
   business_description?: string;
   target_audience?: string;
   tone_of_voice?: string;
@@ -22,6 +23,7 @@ export interface VisualIdentity {
 export interface CreateBrandDto {
   company_name: string;
   website_url?: string;
+  instagram_url?: string;
   business_description?: string;
   target_audience?: string;
 }
@@ -35,6 +37,7 @@ export interface UpdateBrandDto extends Partial<CreateBrandDto> {
 export interface BrandFormData {
   companyName: string;
   websiteUrl?: string;
+  instagramUrl?: string;
   businessDescription?: string;
   targetAudience?: string;
 }

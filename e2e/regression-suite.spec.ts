@@ -39,12 +39,14 @@ test.describe('Regression Suite - Critical Paths', () => {
   });
 
   test('Protected routes redirect to auth', async ({ page }) => {
-    // Essayer d'accéder au dashboard sans être connecté
     await page.goto('/app');
-    
-    // Devrait rediriger vers /auth
     await page.waitForURL('**/auth');
     expect(page.url()).toContain('/auth');
+  });
+
+  test('Dashboard accessible after auth', async ({ page }) => {
+    await page.goto('/app');
+    expect(page.url()).toContain('/app');
   });
 
   test('Logo and branding visible on all pages', async ({ page }) => {
