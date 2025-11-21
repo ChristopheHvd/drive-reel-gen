@@ -7,5 +7,5 @@ verify_jwt = true
 [functions.list-drive-folders]
 verify_jwt = true
 
-[functions.save-drive-token]
+[functions.google-drive-auth]
 verify_jwt = true

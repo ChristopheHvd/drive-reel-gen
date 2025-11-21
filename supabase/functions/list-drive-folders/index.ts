@@ -1,6 +1,5 @@
-import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.81.1';
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.81.1";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -15,179 +14,114 @@ serve(async (req) => {
   try {
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+    const googleClientId = Deno.env.get('GOOGLE_CLIENT_ID')!;
+    const googleClientSecret = Deno.env.get('GOOGLE_CLIENT_SECRET')!;
 
     const authHeader = req.headers.get('Authorization');
     if (!authHeader) {
-      throw new Error('No authorization header');
+      return new Response(
+        JSON.stringify({ error: 'Non authentifié' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
 
-    const { data: { user }, error: userError } = await supabase.auth.getUser(
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+    
+    const { data: { user }, error: authError } = await supabase.auth.getUser(
       authHeader.replace('Bearer ', '')
     );
-    
-    if (userError || !user) {
-      throw new Error('Unauthorized');
+
+    if (authError || !user) {
+      console.error('Auth error:', authError);
+      return new Response(
+        JSON.stringify({ error: 'Non authentifié' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
 
     const { parentFolderId } = await req.json();
-    console.log('Listing folders for parent:', parentFolderId, 'user:', user.id);
+    console.log('Listing folders for parent:', parentFolderId || 'root', 'user:', user.id);
 
-    // Récupérer les données utilisateur complètes avec identities
-    console.log('🔍 Phase 1: Fetching user data with identities...');
-    const { data: userData, error: userDataError } = await supabase.auth.admin.getUserById(user.id);
+    // Get refresh token directly from drive_tokens table
+    const { data: tokenData, error: tokenError } = await supabase
+      .from('drive_tokens')
+      .select('refresh_token')
+      .eq('user_id', user.id)
+      .single();
 
-    if (userDataError || !userData?.user) {
-      console.error('❌ Failed to get user data:', userDataError);
-      throw new Error('Impossible de récupérer les informations utilisateur');
+    if (tokenError || !tokenData?.refresh_token) {
+      console.error('❌ No refresh token found in drive_tokens for user:', user.id);
+      return new Response(
+        JSON.stringify({ 
+          error: 'Google Drive non connecté. Veuillez d\'abord connecter votre Google Drive dans l\'onboarding.',
+          requiresConnection: true 
+        }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
 
-    console.log('✅ User data retrieved');
-    console.log('📊 Number of identities:', userData.user.identities?.length || 0);
-    console.log('📊 App metadata keys:', Object.keys(userData.user.app_metadata || {}));
-    console.log('📊 User metadata keys:', Object.keys(userData.user.user_metadata || {}));
+    const refreshToken = tokenData.refresh_token;
+    console.log('✅ Found refresh token in drive_tokens');
 
-    // Chercher l'identity Google
-    const googleIdentity = userData.user.identities?.find(
-      (identity: any) => identity.provider === 'google'
-    );
-
-    if (!googleIdentity) {
-      console.error('❌ No Google identity found');
-      throw new Error('Aucune connexion Google trouvée. Veuillez vous reconnecter avec Google.');
-    }
-
-    console.log('✅ Google identity found:', googleIdentity.id);
-    console.log('📊 Identity data keys:', Object.keys(googleIdentity.identity_data || {}));
-
-    // Tenter de récupérer le refresh token
-    let refreshToken: string | null = null;
-    let tokenSource = '';
-
-    // Option A : Dans identity_data
-    if (googleIdentity.identity_data?.provider_refresh_token) {
-      refreshToken = googleIdentity.identity_data.provider_refresh_token;
-      tokenSource = 'identity_data.provider_refresh_token';
-      console.log('✅ Found refresh token in identity_data');
-    }
-
-    // Option B : Dans app_metadata
-    if (!refreshToken && userData.user.app_metadata?.provider_refresh_token) {
-      refreshToken = userData.user.app_metadata.provider_refresh_token;
-      tokenSource = 'app_metadata.provider_refresh_token';
-      console.log('✅ Found refresh token in app_metadata');
-    }
-
-    // Option C : Dans user_metadata
-    if (!refreshToken && userData.user.user_metadata?.provider_refresh_token) {
-      refreshToken = userData.user.user_metadata.provider_refresh_token;
-      tokenSource = 'user_metadata.provider_refresh_token';
-      console.log('✅ Found refresh token in user_metadata');
-    }
-
-    // Option D : Chercher dans drive_tokens en fallback
-    if (!refreshToken) {
-      console.log('🔍 Phase 2: No refresh token in auth data, checking drive_tokens table...');
-      const { data: tokenData } = await supabase
-        .from('drive_tokens')
-        .select('refresh_token')
-        .eq('user_id', user.id)
-        .maybeSingle();
-      
-      if (tokenData?.refresh_token) {
-        refreshToken = tokenData.refresh_token;
-        tokenSource = 'drive_tokens table';
-        console.log('✅ Found refresh token in drive_tokens table');
-      }
-    }
-
-    if (!refreshToken) {
-      console.error('❌ No valid refresh token found in any location');
-      console.error('Checked locations: identity_data, app_metadata, user_metadata, drive_tokens');
-      throw new Error('Token Google Drive introuvable. Veuillez vous reconnecter avec Google en activant les permissions Google Drive.');
-    }
-
-    console.log('✅ Using refresh token from:', tokenSource);
-
-    // Sauvegarder dans drive_tokens pour cache si pas déjà là
-    if (tokenSource !== 'drive_tokens table') {
-      try {
-        console.log('💾 Caching refresh token in drive_tokens...');
-        await supabase.from('drive_tokens').upsert({
-          user_id: user.id,
-          refresh_token: refreshToken,
-        });
-        console.log('✅ Cached refresh token in drive_tokens');
-      } catch (saveError) {
-        console.error('⚠️ Failed to cache token:', saveError);
-        // Non bloquant
-      }
-    }
-
-    // Refresh access token
-    const clientId = Deno.env.get('GOOGLE_CLIENT_ID');
-    const clientSecret = Deno.env.get('GOOGLE_CLIENT_SECRET');
-    
-    if (!clientId || !clientSecret) {
-      throw new Error('Google OAuth credentials not configured');
-    }
-
+    // Refresh the access token
     const tokenResponse = await fetch('https://oauth2.googleapis.com/token', {
       method: 'POST',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
       body: new URLSearchParams({
-        client_id: clientId,
-        client_secret: clientSecret,
+        client_id: googleClientId,
+        client_secret: googleClientSecret,
         refresh_token: refreshToken,
         grant_type: 'refresh_token',
       }),
     });
 
     if (!tokenResponse.ok) {
-      const errorText = await tokenResponse.text();
-      console.error('Token refresh error:', errorText);
-      throw new Error('Failed to refresh Google token');
+      const errorData = await tokenResponse.text();
+      console.error('Token refresh failed:', errorData);
+      return new Response(
+        JSON.stringify({ 
+          error: 'Impossible de rafraîchir le token. Veuillez reconnecter votre Google Drive.',
+          requiresReconnection: true 
+        }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
 
-    const { access_token } = await tokenResponse.json();
+    const tokens = await tokenResponse.json();
+    const accessToken = tokens.access_token;
 
-    // Lister les dossiers du parent spécifié
-    const query = parentFolderId === 'root' 
-      ? `mimeType='application/vnd.google-apps.folder' and 'root' in parents and trashed=false`
-      : `mimeType='application/vnd.google-apps.folder' and '${parentFolderId}' in parents and trashed=false`;
+    // List folders from Google Drive
+    const query = `mimeType='application/vnd.google-apps.folder'${parentFolderId ? ` and '${parentFolderId}' in parents` : " and 'root' in parents"} and trashed=false`;
+    const driveUrl = `https://www.googleapis.com/drive/v3/files?q=${encodeURIComponent(query)}&fields=files(id,name)&orderBy=name`;
 
-    const driveResponse = await fetch(
-      `https://www.googleapis.com/drive/v3/files?q=${encodeURIComponent(query)}&fields=files(id,name)&orderBy=name`,
-      {
-        headers: {
-          'Authorization': `Bearer ${access_token}`,
-        },
-      }
-    );
+    const driveResponse = await fetch(driveUrl, {
+      headers: {
+        'Authorization': `Bearer ${accessToken}`,
+      },
+    });
 
     if (!driveResponse.ok) {
-      const errorText = await driveResponse.text();
-      console.error('Drive API error:', errorText);
-      throw new Error('Failed to fetch folders from Google Drive');
+      const errorData = await driveResponse.text();
+      console.error('Drive API error:', errorData);
+      return new Response(
+        JSON.stringify({ error: 'Erreur lors de la récupération des dossiers' }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
 
     const driveData = await driveResponse.json();
-    console.log('Fetched folders:', driveData.files?.length || 0);
+    console.log(`✅ Found ${driveData.files?.length || 0} folders`);
 
     return new Response(
       JSON.stringify({ folders: driveData.files || [] }),
-      {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      }
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
+
   } catch (error) {
-    console.error('Error:', error);
+    console.error('Unhandled error:', error);
     return new Response(
-      JSON.stringify({ error: error instanceof Error ? error.message : 'Unknown error' }),
-      {
-        status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      }
+      JSON.stringify({ error: error instanceof Error ? error.message : 'Erreur inconnue' }),
+      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }
 });
