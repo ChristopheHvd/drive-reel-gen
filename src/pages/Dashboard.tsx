@@ -1,16 +1,46 @@
 import { useState } from "react";
 import { ImageUploader, ImageGrid, useImages, Image } from "@/features/images";
+import { VideoList, VideoConfigForm, useVideos } from "@/features/videos";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { Video, Upload } from "lucide-react";
+import { Upload, ChevronRight } from "lucide-react";
 import { Link } from "react-router-dom";
+import { useToast } from "@/hooks/use-toast";
 import logo from "@/assets/daft-funk-logo.png";
 
 const Dashboard = () => {
   const { images, loading, deleteImage, fetchImages } = useImages();
   const [selectedImage, setSelectedImage] = useState<Image | null>(null);
   const [showUploader, setShowUploader] = useState(false);
+  const { videos, loading: videosLoading, refetchVideos } = useVideos(selectedImage?.id);
+  const { toast } = useToast();
+
+  const handleGenerateVideo = async (config: {
+    mode: string;
+    prompt: string;
+    aspectRatio: string;
+  }) => {
+    if (!selectedImage) {
+      toast({
+        title: "Erreur",
+        description: "Veuillez sélectionner une image",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // TODO: Implémenter la génération de vidéo
+    toast({
+      title: "Génération lancée",
+      description: "Votre vidéo est en cours de génération...",
+    });
+  };
+
+  const scrollToGeneration = () => {
+    // Scroll vers le panneau de génération sur mobile
+    document.getElementById("video-config")?.scrollIntoView({ behavior: "smooth" });
+  };
 
   return (
     <div className="min-h-screen bg-gradient-dark">
@@ -18,46 +48,115 @@ const Dashboard = () => {
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <Link to="/" className="flex items-center gap-3">
             <img src={logo} alt="Daft Funk" className="h-10 w-10" />
-            <span className="text-2xl font-bold bg-gradient-gold bg-clip-text text-transparent">Daft Funk</span>
+            <span className="text-2xl font-bold bg-gradient-gold bg-clip-text text-transparent">
+              Daft Funk
+            </span>
           </Link>
           <div className="flex items-center gap-4">
             <span className="text-sm text-muted-foreground">Free • 0/6 vidéos</span>
-            <Button variant="outline" size="sm">Passer à Pro</Button>
+            <Button variant="outline" size="sm">
+              Passer à Pro
+            </Button>
           </div>
         </div>
       </header>
 
       <div className="container mx-auto px-4 py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-2">
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+          {/* LEFT PANEL: Images */}
+          <div className="lg:col-span-4">
+            <Card className="h-full">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
                 <CardTitle>Mes Images</CardTitle>
-                <Button onClick={() => setShowUploader(!showUploader)} size="sm">
-                  <Upload className="w-4 h-4 mr-2" />{showUploader ? "Masquer" : "Uploader"}
+                <Button
+                  onClick={() => setShowUploader(!showUploader)}
+                  size="sm"
+                  variant="ghost"
+                >
+                  <Upload className="w-4 h-4 mr-2" />
+                  {showUploader ? "Masquer" : "Upload"}
                 </Button>
               </CardHeader>
               <CardContent>
-                {showUploader && <><ImageUploader onUploadComplete={() => { fetchImages(); setShowUploader(false); }} /><Separator className="my-6" /></>}
-                <ImageGrid images={images} loading={loading} onDeleteImage={deleteImage} onSelectImage={setSelectedImage} selectedImageId={selectedImage?.id} />
+                {showUploader && (
+                  <>
+                    <ImageUploader
+                      onUploadComplete={() => {
+                        fetchImages();
+                        setShowUploader(false);
+                      }}
+                    />
+                    <Separator className="my-6" />
+                  </>
+                )}
+                <ImageGrid
+                  images={images}
+                  loading={loading}
+                  onDeleteImage={deleteImage}
+                  onSelectImage={(image) => {
+                    setSelectedImage(image);
+                    // Sur mobile, scroll automatiquement vers les vidéos
+                    if (window.innerWidth < 1024) {
+                      setTimeout(() => {
+                        document.getElementById("video-list")?.scrollIntoView({ 
+                          behavior: "smooth" 
+                        });
+                      }, 100);
+                    }
+                  }}
+                  selectedImageId={selectedImage?.id}
+                />
               </CardContent>
             </Card>
           </div>
-          <div>
-            <Card>
-              <CardHeader><CardTitle>Génération Vidéo</CardTitle></CardHeader>
-              <CardContent className="space-y-4">
+
+          {/* CENTER PANEL: Vidéos générées */}
+          <div className="lg:col-span-5" id="video-list">
+            <Card className="h-full">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
+                <CardTitle>Vidéos générées</CardTitle>
+                {selectedImage && videos.length > 0 && (
+                  <Button
+                    onClick={scrollToGeneration}
+                    size="sm"
+                    variant="ghost"
+                    className="lg:hidden"
+                  >
+                    Générer
+                    <ChevronRight className="w-4 h-4 ml-1" />
+                  </Button>
+                )}
+              </CardHeader>
+              <CardContent>
+                <VideoList
+                  imageId={selectedImage?.id}
+                  videos={videos}
+                  loading={videosLoading}
+                  onGenerateVideo={scrollToGeneration}
+                />
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* RIGHT PANEL: Configuration génération */}
+          <div className="lg:col-span-3" id="video-config">
+            <Card className="h-full">
+              <CardHeader>
+                <CardTitle>Génération Vidéo IA</CardTitle>
+                <p className="text-sm text-muted-foreground">
+                  Configurez les paramètres pour générer une nouvelle variation de vidéo
+                </p>
+              </CardHeader>
+              <CardContent>
                 {selectedImage ? (
-                  <>
-                    <div className="aspect-square bg-muted rounded-lg overflow-hidden">
-                      <img src={selectedImage.storage_path} alt={selectedImage.file_name} className="w-full h-full object-cover" />
-                    </div>
-                    <div><p className="text-sm font-medium truncate">{selectedImage.file_name}</p></div>
-                    <Separator />
-                    <Button className="w-full" size="lg"><Video className="w-4 h-4 mr-2" />Générer une vidéo</Button>
-                  </>
+                  <VideoConfigForm
+                    onGenerate={handleGenerateVideo}
+                    disabled={!selectedImage}
+                  />
                 ) : (
-                  <div className="text-center py-12 text-muted-foreground"><Video className="w-12 h-12 mx-auto mb-4 opacity-50" /><p className="text-sm">Sélectionnez une image</p></div>
+                  <div className="text-center py-12 text-muted-foreground">
+                    <p className="text-sm">Sélectionnez une image pour configurer la génération</p>
+                  </div>
                 )}
               </CardContent>
             </Card>
