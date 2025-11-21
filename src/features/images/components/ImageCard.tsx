@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Trash2, Download, Eye } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -32,7 +32,7 @@ export const ImageCard = ({ image, onDelete, onSelect, isSelected }: ImageCardPr
   const [isDeleting, setIsDeleting] = useState(false);
 
   // Charger l'URL de l'image
-  useState(() => {
+  useEffect(() => {
     const loadImageUrl = async () => {
       const { data } = supabase.storage
         .from('team-images')
@@ -41,7 +41,7 @@ export const ImageCard = ({ image, onDelete, onSelect, isSelected }: ImageCardPr
       setImageUrl(data.publicUrl);
     };
     loadImageUrl();
-  });
+  }, [image.storage_path]);
 
   const handleDelete = async () => {
     setIsDeleting(true);
