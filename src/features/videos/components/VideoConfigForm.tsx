@@ -22,7 +22,7 @@ interface VideoConfigFormProps {
  */
 export const VideoConfigForm = ({ onGenerate, disabled, loading }: VideoConfigFormProps) => {
   const [mode, setMode] = useState<VideoMode>("packshot");
-  const [prompt, setPrompt] = useState("");
+  const [prompt, setPrompt] = useState("Génère une vidéo sympa pour Instagram en suivant les codes d'Instagram");
   const [aspectRatio, setAspectRatio] = useState<AspectRatio>("9:16");
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -57,8 +57,8 @@ export const VideoConfigForm = ({ onGenerate, disabled, loading }: VideoConfigFo
       </div>
 
       <Collapsible>
-        <CollapsibleTrigger className="flex items-center gap-2 text-sm font-medium hover:text-primary transition-colors">
-          <ChevronRight className="w-4 h-4 transition-transform data-[state=open]:rotate-90" />
+        <CollapsibleTrigger className="flex items-center gap-2 text-sm font-medium hover:text-primary transition-colors group">
+          <ChevronRight className="w-4 h-4 transition-transform group-data-[state=open]:rotate-90" />
           Options avancées
         </CollapsibleTrigger>
         
