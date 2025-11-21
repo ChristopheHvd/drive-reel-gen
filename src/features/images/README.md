@@ -1,82 +1,117 @@
 # Feature Images
 
-Gère l'upload, l'affichage et la suppression d'images pour les équipes.
+Gestion complète des images pour les équipes : upload, affichage, suppression.
 
 ## Architecture
 
 ### Storage
-- Bucket : `team-images`
-- Path : `{team_id}/{uuid}.{ext}`
-- RLS : Seuls les membres de l'équipe peuvent accéder aux images de leur team
+- **Bucket Supabase** : `team-images`
+- **Path** : `{team_id}/{uuid}.{ext}`
+- **RLS** : Strict, accès limité aux membres de l'équipe
 
-### Table `images`
-- Lien vers `team_id` pour partage entre membres
-- Métadonnées : nom, taille, type MIME, dimensions
+### Table Database : `images`
+- Lien avec `team_id` pour multi-tenant
+- Métadonnées : nom, taille, MIME type, dimensions
 - Tracking : `uploaded_by` pour audit
 
 ## Composants
 
 ### `ImageUploader`
-Upload d'images avec drag'n'drop et file picker
-- Validation côté client (type, taille max 10MB)
-- Progress bars pendant l'upload
-- Support multi-fichiers (max 10)
+Composant d'upload avec drag'n'drop et sélection de fichiers.
+
+**Comportement :**
+- **Upload automatique** : L'upload démarre immédiatement après sélection des fichiers (pas de bouton "Uploader")
+- **Drag'n'drop** : Zone de dépôt active sur tout le composant
+- **Validation client** : Taille max 10MB, types MIME autorisés
+- **Progress bars** : Affichage du statut d'upload pour chaque fichier
+- **Multi-fichiers** : Jusqu'à 10 fichiers simultanés par défaut
+
+**Props :**
+- `onUploadComplete?: () => void` - Callback après upload réussi
+- `maxFiles?: number` - Nombre max de fichiers (défaut: 10)
+
+**États :**
+- `isUploading` : Upload en cours
+- `progress` : Tableau des progress par fichier (0-100%)
+- Toast notifications pour succès/erreur
 
 ### `ImageGrid`
-Grille responsive d'affichage des images
-- Lazy loading
-- États vides
-- Loading skeletons
+Grille responsive d'affichage des images.
+
+**Features :**
+- Lazy loading des images
+- États vides / loading
+- Grid responsive (mobile → desktop)
 
 ### `ImageCard`
-Card individuelle pour chaque image
-- Preview
-- Actions : télécharger, supprimer
+Card individuelle pour chaque image.
+
+**Actions :**
+- Prévisualisation
+- Téléchargement
+- Suppression
 - Sélection (pour génération vidéo)
 
 ## Hooks
 
 ### `useImageUpload`
-Gère l'upload vers Storage + création métadonnées
-- Récupère automatiquement le `team_id`
-- Upload vers `team-images/{team_id}/{uuid}.ext`
-- Création entrée dans table `images`
+Gère l'upload vers Storage + création metadata.
+
+**Retour :**
+```typescript
+{
+  uploadImages: (files: File[]) => Promise<Image[]>;
+  isUploading: boolean;
+  progress: UploadProgress[];
+  resetProgress: () => void;
+}
+```
+
+**Logique :**
+1. Upload vers `team-images` bucket
+2. Extraction dimensions avec `Image` API
+3. Création metadata dans table `images`
+4. Gestion automatique du `team_id` (depuis contexte user)
 
 ### `useImages`
-CRUD sur les images de l'équipe
-- Fetch automatique des images de la team
-- Suppression (storage + table)
-- Refresh manuel
+CRUD operations sur les images de l'équipe.
+
+**Retour :**
+```typescript
+{
+  images: Image[];
+  loading: boolean;
+  error: Error | null;
+  deleteImage: (id: string) => Promise<void>;
+  fetchImages: () => Promise<void>;
+}
+```
 
 ## Sécurité
 
-- RLS strict sur table `images` : `team_id IN (SELECT user_teams())`
-- RLS sur storage : path doit commencer par team_id de l'utilisateur
-- Validation côté client ET serveur (taille, type MIME)
+### RLS Policies
+- **SELECT** : Team members uniquement
+- **INSERT** : Team members, avec `team_id` vérifié
+- **DELETE** : Team members uniquement
+- **UPDATE** : Team members uniquement
+
+### Validation
+- **Client** : Taille, MIME type, nombre de fichiers
+- **Server** : RLS automatique via Supabase
 
 ## Tests
 
-### Tests Unitaires
-- `useImages.test.ts` : Tests du hook de gestion des images
-- `useImageUpload.test.ts` : Tests du hook d'upload
-- `ImageUploader.test.tsx` : Tests du composant d'upload
-- `ImageCard.test.tsx` : Tests de la card d'affichage
+### Unit Tests
+- `ImageUploader.test.tsx` : Upload immédiat, drag'n'drop, validation
+- `ImageCard.test.tsx` : Actions (download, delete, select)
+- `useImageUpload.test.ts` : Hook logic, team_id handling
+- `useImages.test.ts` : CRUD operations, RLS respect
 
-### Tests d'Intégration
-- `team-rls.test.ts` : Tests des RLS policies des teams
-- `images-rls.test.ts` : Tests de sécurité des images
+### Integration Tests
+- `tests/security/images-rls.test.ts` : Vérification RLS stricte
 
-### Exécuter les tests
-```bash
-# Tests unitaires uniquement
-npm run test:unit
-
-# Tests d'intégration (nécessite Supabase)
-npm run test:integration
-
-# Tous les tests
-npm run test:all
-```
+### E2E Tests
+- `e2e/image-upload.spec.ts` : Flow complet d'upload automatique
 
 ## Usage
 
@@ -85,75 +120,22 @@ import { ImageUploader, ImageGrid, useImages } from '@/features/images';
 
 function MyComponent() {
   const { images, loading, deleteImage, fetchImages } = useImages();
-  
+
   return (
     <div>
       <ImageUploader onUploadComplete={fetchImages} />
       <ImageGrid 
         images={images} 
-        loading={loading} 
-        onDeleteImage={deleteImage} 
+        loading={loading}
+        onDelete={deleteImage}
       />
     </div>
   );
 }
 ```
 
-## Sécurité RLS - Détails
+## Prérequis
 
-### Table `images`
-```sql
--- SELECT: User voit images de ses teams
-CREATE POLICY "Team members can view team images"
-ON images FOR SELECT
-USING (team_id IN (SELECT public.user_teams()));
+**IMPORTANT** : L'utilisateur doit être associé à une équipe (via `team_members`) pour pouvoir uploader des images. Sans team, l'upload échouera avec l'erreur "Équipe non trouvée".
 
--- INSERT: User peut créer images pour ses teams
-CREATE POLICY "Team members can insert team images"
-ON images FOR INSERT
-WITH CHECK (team_id IN (SELECT public.user_teams()));
-
--- UPDATE/DELETE: Idem
-```
-
-### Storage Bucket `team-images`
-```sql
--- Upload: Path doit être {team_id}/...
-CREATE POLICY "Team members can upload team images"
-ON storage.objects FOR INSERT
-WITH CHECK (
-  bucket_id = 'team-images'
-  AND (storage.foldername(name))[1]::uuid IN (SELECT public.user_teams())
-);
-
--- View/Delete: Idem avec validation du path
-```
-
-### Helper Function
-```sql
--- Retourne les team_id des teams du user
-CREATE FUNCTION public.user_teams()
-RETURNS SETOF UUID
-AS $$
-  SELECT team_id 
-  FROM public.team_members 
-  WHERE user_id = auth.uid();
-$$;
-```
-
-## Points d'Attention
-
-### Upload
-- Max 10MB par fichier
-- Types autorisés : JPEG, JPG, PNG, WEBP, HEIC
-- Génération d'UUID pour éviter les conflits
-
-### Performances
-- Lazy loading des images dans la grid
-- Pagination recommandée pour > 100 images
-- Utiliser les miniatures quand disponibles
-
-### Erreurs Courantes
-1. **"Team not found"** : User n'est membre d'aucune team (vérifier trigger signup)
-2. **"Permission denied"** : RLS bloque l'accès (vérifier team_id)
-3. **"File too large"** : Fichier > 10MB (valider côté client)
+Le système de création automatique de team lors de l'inscription doit être en place.

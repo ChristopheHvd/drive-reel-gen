@@ -3,7 +3,8 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Video, Loader2 } from "lucide-react";
+import { Collapsible, CollapsibleTrigger, CollapsibleContent } from "@/components/ui/collapsible";
+import { Video, Loader2, ChevronRight } from "lucide-react";
 import { VideoMode, AspectRatio } from "../types";
 
 interface VideoConfigFormProps {
@@ -55,39 +56,39 @@ export const VideoConfigForm = ({ onGenerate, disabled, loading }: VideoConfigFo
         </RadioGroup>
       </div>
 
-      <div className="space-y-3">
-        <Label>Format de la vidéo</Label>
-        <RadioGroup 
-          value={aspectRatio} 
-          onValueChange={(v) => setAspectRatio(v as AspectRatio)}
-          disabled={mode === "situation"}
-        >
-          <div className="flex items-center space-x-2">
-            <RadioGroupItem value="9:16" id="9:16" />
-            <Label htmlFor="9:16" className="font-normal cursor-pointer">
-              9:16 (Vertical)
-            </Label>
-          </div>
-          <div className="flex items-center space-x-2">
-            <RadioGroupItem 
-              value="16:9" 
-              id="16:9"
-              disabled={mode !== "situation"}
-            />
-            <Label 
-              htmlFor="16:9" 
-              className={`font-normal ${mode === "situation" ? "cursor-pointer" : "cursor-not-allowed opacity-50"}`}
+      <Collapsible>
+        <CollapsibleTrigger className="flex items-center gap-2 text-sm font-medium hover:text-primary transition-colors">
+          <ChevronRight className="w-4 h-4 transition-transform data-[state=open]:rotate-90" />
+          Options avancées
+        </CollapsibleTrigger>
+        
+        <CollapsibleContent className="space-y-3 pt-4">
+          <div className="space-y-3">
+            <Label>Format de la vidéo</Label>
+            <RadioGroup 
+              value={aspectRatio} 
+              onValueChange={(v) => setAspectRatio(v as AspectRatio)}
             >
-              16:9 (Horizontal)
-            </Label>
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="9:16" id="9:16" />
+                <Label htmlFor="9:16" className="font-normal cursor-pointer">
+                  9:16 (Vertical)
+                </Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="16:9" id="16:9" />
+                <Label htmlFor="16:9" className="font-normal cursor-pointer">
+                  16:9 (Horizontal)
+                </Label>
+              </div>
+            </RadioGroup>
+            <p className="text-xs text-muted-foreground">
+              Par défaut : 9:16 (Instagram Reels). 
+              Si le format n'est pas supporté nativement par l'API, une conversion automatique sera appliquée.
+            </p>
           </div>
-        </RadioGroup>
-        {mode === "situation" && aspectRatio !== "16:9" && (
-          <p className="text-xs text-muted-foreground">
-            Le mode "En situation" nécessite le format 16:9
-          </p>
-        )}
-      </div>
+        </CollapsibleContent>
+      </Collapsible>
 
       <div className="space-y-3">
         <Label htmlFor="prompt">Entrez le prompt</Label>
