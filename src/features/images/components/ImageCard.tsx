@@ -31,14 +31,21 @@ export const ImageCard = ({ image, onDelete, onSelect, isSelected }: ImageCardPr
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
 
-  // Charger l'URL de l'image
+  // Charger l'URL de l'image avec signed URL valide 1 an
   useEffect(() => {
     const loadImageUrl = async () => {
-      const { data } = supabase.storage
+      const { data, error } = await supabase.storage
         .from('team-images')
-        .getPublicUrl(image.storage_path);
+        .createSignedUrl(image.storage_path, 31536000); // 1 an en secondes
       
-      setImageUrl(data.publicUrl);
+      if (error) {
+        console.error('Erreur génération signed URL:', error);
+        return;
+      }
+      
+      if (data) {
+        setImageUrl(data.signedUrl);
+      }
     };
     loadImageUrl();
   }, [image.storage_path]);
