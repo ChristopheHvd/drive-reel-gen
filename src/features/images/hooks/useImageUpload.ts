@@ -77,7 +77,8 @@ export const useImageUpload = () => {
           .from('team-images')
           .upload(storagePath, file, {
             cacheControl: '3600',
-            upsert: false
+            upsert: false,
+            contentType: file.type
           });
 
         if (uploadError) throw uploadError;
