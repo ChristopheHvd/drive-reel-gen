@@ -64,6 +64,15 @@ This project is built with:
 
 Simply open [Lovable](https://lovable.dev/projects/83f7bd1e-2d94-402b-8d65-f2439c96522d) and click on Share -> Publish.
 
+### SPA Routing Configuration
+
+This project uses React Router for client-side routing. The `vercel.json` configuration ensures that all routes work correctly when:
+- Refreshing the page on any route
+- Accessing routes directly via URL
+- Sharing deep links to specific pages
+
+The configuration redirects all requests to `index.html`, allowing React Router to handle the routing client-side. This prevents 404 errors when accessing routes like `/app`, `/pricing`, or `/auth` directly.
+
 ## Can I connect a custom domain to my Lovable project?
 
 Yes, you can!
