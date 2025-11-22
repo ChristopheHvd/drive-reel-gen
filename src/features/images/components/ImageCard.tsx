@@ -36,7 +36,7 @@ export const ImageCard = ({ image, onDelete, onSelect, isSelected }: ImageCardPr
     const loadImageUrl = async () => {
       const { data, error } = await supabase.storage
         .from('team-images')
-        .createSignedUrl(image.storage_path, 31536000); // 1 an en secondes
+        .createSignedUrl(image.storage_path, 157680000); // 5 ans en secondes
       
       if (error) {
         console.error('Erreur génération signed URL:', error);
