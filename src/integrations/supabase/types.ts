@@ -268,6 +268,78 @@ export type Database = {
           },
         ]
       }
+      videos: {
+        Row: {
+          aspect_ratio: string
+          completed_at: string | null
+          created_at: string
+          duration_seconds: number
+          error_message: string | null
+          id: string
+          image_id: string
+          kie_task_id: string
+          mode: string
+          prompt: string
+          status: string
+          team_id: string
+          thumbnail_url: string | null
+          timeout_at: string
+          updated_at: string
+          video_url: string | null
+        }
+        Insert: {
+          aspect_ratio?: string
+          completed_at?: string | null
+          created_at?: string
+          duration_seconds?: number
+          error_message?: string | null
+          id?: string
+          image_id: string
+          kie_task_id: string
+          mode: string
+          prompt: string
+          status?: string
+          team_id: string
+          thumbnail_url?: string | null
+          timeout_at?: string
+          updated_at?: string
+          video_url?: string | null
+        }
+        Update: {
+          aspect_ratio?: string
+          completed_at?: string | null
+          created_at?: string
+          duration_seconds?: number
+          error_message?: string | null
+          id?: string
+          image_id?: string
+          kie_task_id?: string
+          mode?: string
+          prompt?: string
+          status?: string
+          team_id?: string
+          thumbnail_url?: string | null
+          timeout_at?: string
+          updated_at?: string
+          video_url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "videos_image_id_fkey"
+            columns: ["image_id"]
+            isOneToOne: false
+            referencedRelation: "images"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "videos_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never

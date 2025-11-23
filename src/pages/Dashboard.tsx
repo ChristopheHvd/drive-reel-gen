@@ -7,6 +7,7 @@ import { Separator } from "@/components/ui/separator";
 import { Upload, ChevronRight } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 import logo from "@/assets/daft-funk-logo.png";
 
 const Dashboard = () => {
@@ -29,12 +30,61 @@ const Dashboard = () => {
       });
       return;
     }
+    
+    try {
+      const { data, error } = await supabase.functions.invoke('generate-video', {
+        body: {
+          imageId: selectedImage.id,
+          mode: config.mode,
+          prompt: config.prompt,
+          aspectRatio: config.aspectRatio,
+        }
+      });
+      
+      if (error) throw error;
+      
+      toast({
+        title: "✅ Génération lancée",
+        description: `Votre vidéo sera prête dans ~2 minutes`,
+      });
+      
+      // Refetch videos immédiatement pour voir le statut 'pending'
+      refetchVideos();
+      
+    } catch (error: any) {
+      console.error('Video generation error:', error);
+      
+      if (error.message?.includes('Quota')) {
+        toast({
+          title: "Quota dépassé",
+          description: "Vous avez atteint votre limite mensuelle de vidéos",
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Erreur",
+          description: error.message || "Impossible de lancer la génération",
+          variant: "destructive",
+        });
+      }
+    }
+  };
 
-    // TODO: Implémenter la génération de vidéo
-    toast({
-      title: "Génération lancée",
-      description: "Votre vidéo est en cours de génération...",
-    });
+  const handleDeleteVideo = async (videoId: string) => {
+    try {
+      const { error } = await supabase
+        .from('videos')
+        .delete()
+        .eq('id', videoId);
+      
+      if (error) throw error;
+      
+      // Refetch
+      refetchVideos();
+    } catch (error) {
+      console.error('Delete video error:', error);
+      throw error;
+    }
   };
 
   const scrollToGeneration = () => {
@@ -130,9 +180,11 @@ const Dashboard = () => {
               <CardContent>
                 <VideoList
                   imageId={selectedImage?.id}
+                  selectedImage={selectedImage || undefined}
                   videos={videos}
                   loading={videosLoading}
                   onGenerateVideo={scrollToGeneration}
+                  onDeleteVideo={handleDeleteVideo}
                 />
               </CardContent>
             </Card>
@@ -150,6 +202,7 @@ const Dashboard = () => {
               <CardContent>
                 {selectedImage ? (
                   <VideoConfigForm
+                    selectedImageId={selectedImage.id}
                     onGenerate={handleGenerateVideo}
                     disabled={!selectedImage}
                   />

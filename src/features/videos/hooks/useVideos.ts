@@ -15,10 +15,20 @@ export const useVideos = (imageId?: string) => {
       setLoading(true);
       setError(null);
 
-      // TODO: Implémenter la requête Supabase quand la table videos sera créée
-      // Pour l'instant, retourner un tableau vide
-      setVideos([]);
+      if (!imageId) {
+        setVideos([]);
+        return;
+      }
+
+      const { data, error } = await supabase
+        .from('videos')
+        .select('*')
+        .eq('image_id', imageId)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
       
+      setVideos((data || []) as Video[]);
     } catch (e) {
       setError(e as Error);
       console.error("Error fetching videos:", e);
@@ -30,6 +40,32 @@ export const useVideos = (imageId?: string) => {
   useEffect(() => {
     fetchVideos();
   }, [fetchVideos]);
+
+  // Polling temps réel (optionnel)
+  useEffect(() => {
+    if (!imageId) return;
+
+    const channel = supabase
+      .channel('videos-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'videos',
+          filter: `image_id=eq.${imageId}`,
+        },
+        (payload) => {
+          console.log('Video updated:', payload);
+          fetchVideos();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [imageId, fetchVideos]);
 
   return {
     videos,
