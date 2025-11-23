@@ -4,10 +4,13 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Collapsible, CollapsibleTrigger, CollapsibleContent } from "@/components/ui/collapsible";
-import { Video, Loader2, ChevronRight } from "lucide-react";
+import { Video, Loader2, ChevronRight, Sparkles } from "lucide-react";
 import { VideoMode, AspectRatio } from "../types";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 interface VideoConfigFormProps {
+  selectedImageId?: string;
   onGenerate: (config: {
     mode: VideoMode;
     prompt: string;
@@ -20,14 +23,41 @@ interface VideoConfigFormProps {
 /**
  * Formulaire de configuration pour la génération de vidéo
  */
-export const VideoConfigForm = ({ onGenerate, disabled, loading }: VideoConfigFormProps) => {
+export const VideoConfigForm = ({ selectedImageId, onGenerate, disabled, loading }: VideoConfigFormProps) => {
   const [mode, setMode] = useState<VideoMode>("packshot");
   const [prompt, setPrompt] = useState("Génère une vidéo sympa pour Instagram en suivant les codes d'Instagram");
   const [aspectRatio, setAspectRatio] = useState<AspectRatio>("9:16");
+  const [loadingPrompt, setLoadingPrompt] = useState(false);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     onGenerate({ mode, prompt, aspectRatio });
+  };
+
+  const handleGeneratePrompt = async () => {
+    if (!selectedImageId) {
+      toast.error("Veuillez sélectionner une image");
+      return;
+    }
+    
+    setLoadingPrompt(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('generate-video-prompt', {
+        body: { imageId: selectedImageId }
+      });
+      
+      if (error) throw error;
+      
+      if (data?.prompt) {
+        setPrompt(data.prompt);
+        toast.success("Prompt généré avec succès !");
+      }
+    } catch (error: any) {
+      console.error('Error generating prompt:', error);
+      toast.error("Erreur lors de la génération du prompt");
+    } finally {
+      setLoadingPrompt(false);
+    }
   };
 
   return (
@@ -91,7 +121,23 @@ export const VideoConfigForm = ({ onGenerate, disabled, loading }: VideoConfigFo
       </Collapsible>
 
       <div className="space-y-3">
-        <Label htmlFor="prompt">Entrez le prompt</Label>
+        <div className="flex items-center justify-between">
+          <Label htmlFor="prompt">Entrez le prompt</Label>
+          <Button 
+            type="button"
+            variant="ghost" 
+            size="sm"
+            onClick={handleGeneratePrompt}
+            disabled={loadingPrompt || !selectedImageId}
+          >
+            {loadingPrompt ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : (
+              <Sparkles className="w-4 h-4" />
+            )}
+            <span className="ml-2">Générer avec IA</span>
+          </Button>
+        </div>
         <Textarea
           id="prompt"
           placeholder="Décrivez la vidéo que vous souhaitez générer..."

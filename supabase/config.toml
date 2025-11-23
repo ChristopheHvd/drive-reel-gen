@@ -1,2 +1,17 @@
 [functions.analyze-brand]
 verify_jwt = true
+
+[functions.generate-video]
+verify_jwt = true
+
+[functions.video-callback]
+verify_jwt = false
+
+[functions.generate-video-prompt]
+verify_jwt = true
+
+[functions.check-video-timeouts]
+verify_jwt = false
+
+[[functions.check-video-timeouts.schedule]]
+cron = "*/5 * * * *"
