@@ -140,7 +140,7 @@ serve(async (req) => {
         prompt: finalPrompt,
         generationType: "FIRST_AND_LAST_FRAMES_2_VIDEO",
         imageUrls: [imageSignedUrl],
-        aspectRatio: aspectRatio === "9:16" ? "vertical" : "horizontal",
+        aspectRatio: aspectRatio,
         callBackUrl: `${supabaseUrl}/functions/v1/video-callback`,
         model: "veo3_fast",
       }),
