@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { ImageUploader, ImageGrid, useImages, Image } from "@/features/images";
-import { VideoList, VideoConfigForm, useVideos } from "@/features/videos";
+import { VideoList, VideoConfigForm, useVideos, Video } from "@/features/videos";
 import { Button } from "@/components/ui/button";
 import { Upload, ChevronRight } from "lucide-react";
 import { Link } from "react-router-dom";
@@ -11,6 +11,7 @@ import logo from "@/assets/daft-funk-logo.png";
 const Dashboard = () => {
   const { images, loading, deleteImage, fetchImages } = useImages();
   const [selectedImage, setSelectedImage] = useState<Image | null>(null);
+  const [selectedVideo, setSelectedVideo] = useState<Video | null>(null);
   const [showUploader, setShowUploader] = useState(false);
   const { videos, loading: videosLoading, refetchVideos } = useVideos(selectedImage?.id);
   const { toast } = useToast();
@@ -23,9 +24,11 @@ const Dashboard = () => {
   }, [images, selectedImage]);
 
   const handleGenerateVideo = async (config: {
-    mode: string;
     prompt: string;
     aspectRatio: string;
+    logoFile?: File;
+    additionalImageFile?: File;
+    seed?: number;
   }) => {
     if (!selectedImage) {
       toast({
@@ -37,12 +40,40 @@ const Dashboard = () => {
     }
     
     try {
+      // Upload logo si présent
+      let logoUrl: string | undefined;
+      if (config.logoFile) {
+        const logoPath = `${selectedImage.team_id}/${Date.now()}_logo_${config.logoFile.name}`;
+        const { error: uploadError } = await supabase.storage
+          .from('team-images')
+          .upload(logoPath, config.logoFile, { contentType: config.logoFile.type });
+        
+        if (!uploadError) {
+          logoUrl = logoPath;
+        }
+      }
+
+      // Upload image additionnelle si présente
+      let additionalImageUrl: string | undefined;
+      if (config.additionalImageFile) {
+        const additionalPath = `${selectedImage.team_id}/${Date.now()}_additional_${config.additionalImageFile.name}`;
+        const { error: uploadError } = await supabase.storage
+          .from('team-images')
+          .upload(additionalPath, config.additionalImageFile, { contentType: config.additionalImageFile.type });
+        
+        if (!uploadError) {
+          additionalImageUrl = additionalPath;
+        }
+      }
+      
       const { data, error } = await supabase.functions.invoke('generate-video', {
         body: {
           imageId: selectedImage.id,
-          mode: config.mode,
           prompt: config.prompt,
           aspectRatio: config.aspectRatio,
+          logoUrl,
+          additionalImageUrl,
+          seed: config.seed,
         }
       });
       
@@ -103,14 +134,13 @@ const Dashboard = () => {
     
     setSelectedImage(image);
     
-    // Utiliser le prompt par défaut et le mode packshot (valeur autorisée par la contrainte DB)
+    // Utiliser le prompt par défaut
     const defaultPrompt = "Génère une vidéo sympa, très dynamique, respectant les codes d'Instagram";
     
     try {
       const { data, error } = await supabase.functions.invoke('generate-video', {
         body: {
           imageId: image.id,
-          mode: 'packshot',
           prompt: defaultPrompt,
           aspectRatio: '9:16',
         }
@@ -143,6 +173,16 @@ const Dashboard = () => {
         });
       }
     }
+  };
+
+  const handleRegenerateVideo = (video: Video) => {
+    // Régénérer avec les mêmes paramètres mais nouveau seed
+    const newSeed = Math.floor(Math.random() * 1000000);
+    handleGenerateVideo({
+      prompt: video.prompt,
+      aspectRatio: video.aspect_ratio,
+      seed: newSeed,
+    });
   };
 
   return (
@@ -238,6 +278,8 @@ const Dashboard = () => {
               loading={videosLoading}
               onGenerateVideo={scrollToGeneration}
               onDeleteVideo={handleDeleteVideo}
+              onSelectVideo={setSelectedVideo}
+              onRegenerateVideo={handleRegenerateVideo}
             />
           </div>
         </div>
@@ -255,6 +297,7 @@ const Dashboard = () => {
             {selectedImage ? (
               <VideoConfigForm
                 selectedImageId={selectedImage.id}
+                initialPrompt={selectedVideo?.prompt}
                 onGenerate={handleGenerateVideo}
                 disabled={!selectedImage}
               />

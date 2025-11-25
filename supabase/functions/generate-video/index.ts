@@ -42,7 +42,15 @@ serve(async (req) => {
     }
 
     // Parser le body
-    const { imageId, mode = "packshot", prompt, aspectRatio = "9:16", durationSeconds = 8 } = await req.json();
+    const { 
+      imageId, 
+      prompt, 
+      aspectRatio = "9:16", 
+      durationSeconds = 8,
+      seed,
+      logoUrl,
+      additionalImageUrl,
+    } = await req.json();
 
     if (!imageId) {
       return new Response(JSON.stringify({ error: "imageId requis" }), {
@@ -128,8 +136,43 @@ serve(async (req) => {
     // Générer prompt par défaut si absent
     const finalPrompt = prompt || "Génère une vidéo sympa, très dynamique, respectant les codes d'Instagram";
 
+    // Générer seed si absent
+    const finalSeed = seed || Math.floor(Math.random() * 1000000);
+
+    // Déterminer le generationType et les imageUrls
+    let generationType = "FIRST_AND_LAST_FRAMES_2_VIDEO";
+    const imageUrls = [imageSignedUrl];
+    let targetAspectRatio = aspectRatio;
+    let willBeCropped = false;
+
+    // Si logo ou image additionnelle, passer en REFERENCE_2_VIDEO
+    if (logoUrl || additionalImageUrl) {
+      generationType = "REFERENCE_2_VIDEO";
+      
+      // Ajouter les URLs signées pour logo et image additionnelle
+      if (logoUrl) {
+        const { data: logoSignedData } = await supabase.storage
+          .from("team-images")
+          .createSignedUrl(logoUrl, 7200);
+        if (logoSignedData) imageUrls.push(logoSignedData.signedUrl);
+      }
+      
+      if (additionalImageUrl) {
+        const { data: additionalSignedData } = await supabase.storage
+          .from("team-images")
+          .createSignedUrl(additionalImageUrl, 7200);
+        if (additionalSignedData) imageUrls.push(additionalSignedData.signedUrl);
+      }
+
+      // Si 9:16 demandé, générer en 16:9 puis on recadrera
+      if (aspectRatio === "9:16") {
+        targetAspectRatio = "16:9";
+        willBeCropped = true;
+      }
+    }
+
     // Appel API Kie.ai
-    console.log("Calling Kie.ai API...");
+    console.log("Calling Kie.ai API...", { generationType, imageUrls: imageUrls.length, aspectRatio: targetAspectRatio });
     const kieResponse = await fetch("https://api.kie.ai/api/v1/veo/generate", {
       method: "POST",
       headers: {
@@ -138,11 +181,12 @@ serve(async (req) => {
       },
       body: JSON.stringify({
         prompt: finalPrompt,
-        generationType: "FIRST_AND_LAST_FRAMES_2_VIDEO",
-        imageUrls: [imageSignedUrl],
-        aspectRatio: aspectRatio,
+        generationType,
+        imageUrls,
+        aspectRatio: targetAspectRatio,
         callBackUrl: `${supabaseUrl}/functions/v1/video-callback`,
         model: "veo3_fast",
+        seeds: [finalSeed],
       }),
     });
 
@@ -175,11 +219,16 @@ serve(async (req) => {
         image_id: imageId,
         team_id: teamId,
         kie_task_id: taskId,
-        mode: mode,
+        mode: "packshot", // Mode legacy pour compatibilité DB
         prompt: finalPrompt,
         aspect_ratio: aspectRatio,
         duration_seconds: durationSeconds,
         status: "pending",
+        seed: finalSeed,
+        logo_url: logoUrl,
+        additional_image_url: additionalImageUrl,
+        generation_type: generationType,
+        was_cropped: willBeCropped,
       })
       .select()
       .single();

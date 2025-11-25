@@ -28,9 +28,10 @@ import { fr } from 'date-fns/locale';
 interface VideoPlayerProps {
   video: Video;
   onDelete: (videoId: string) => void;
+  onRegenerate?: (video: Video) => void;
 }
 
-export const VideoPlayer = ({ video, onDelete }: VideoPlayerProps) => {
+export const VideoPlayer = ({ video, onDelete, onRegenerate }: VideoPlayerProps) => {
   const [videoUrl, setVideoUrl] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
@@ -171,7 +172,7 @@ export const VideoPlayer = ({ video, onDelete }: VideoPlayerProps) => {
         </div>
 
         {/* Footer avec date et prompt */}
-        <div className="p-2 space-y-1">
+        <div className="p-2 space-y-2">
           <p className="text-xs text-muted-foreground">
             {formatDistanceToNow(new Date(video.created_at), { 
               addSuffix: true,
@@ -182,6 +183,18 @@ export const VideoPlayer = ({ video, onDelete }: VideoPlayerProps) => {
             <p className="text-xs text-muted-foreground line-clamp-1">
               {video.prompt}
             </p>
+          )}
+          
+          {/* Bouton Recommencer - visible uniquement si vidéo completed */}
+          {video.status === 'completed' && onRegenerate && (
+            <Button
+              onClick={() => onRegenerate(video)}
+              size="sm"
+              variant="outline"
+              className="w-full"
+            >
+              Recommencer
+            </Button>
           )}
         </div>
       </div>

@@ -15,7 +15,14 @@ export interface Video {
   updated_at: string;
   completed_at?: string;
   timeout_at: string;
+  seed?: number;
+  logo_url?: string;
+  additional_image_url?: string;
+  generation_type: 'FIRST_AND_LAST_FRAMES_2_VIDEO' | 'REFERENCE_2_VIDEO';
+  was_cropped?: boolean;
 }
 
 export type VideoMode = 'packshot' | 'situation' | 'temoignage';
 export type AspectRatio = '9:16' | '16:9';
+export type GenerationType = 'FIRST_AND_LAST_FRAMES_2_VIDEO' | 'REFERENCE_2_VIDEO';
+export type PromptType = 'situation' | 'product' | 'testimonial';
