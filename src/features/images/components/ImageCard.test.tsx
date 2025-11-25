@@ -34,13 +34,15 @@ describe('ImageCard', () => {
 
   const mockOnDelete = vi.fn();
   const mockOnSelect = vi.fn();
+  const mockOnGenerateVideo = vi.fn();
 
   beforeEach(() => {
     vi.clearAllMocks();
     
     const mockStorageFrom = vi.fn().mockReturnValue({
-      getPublicUrl: vi.fn().mockReturnValue({
-        data: { publicUrl: 'https://example.com/image.jpg' },
+      createSignedUrl: vi.fn().mockResolvedValue({
+        data: { signedUrl: 'https://example.com/image.jpg' },
+        error: null,
       }),
     });
     (supabase.storage.from as any) = mockStorageFrom;
@@ -50,7 +52,7 @@ describe('ImageCard', () => {
     const { getByText } = render(<ImageCard image={mockImage} onDelete={mockOnDelete} />);
     
     expect(getByText('image.jpg')).toBeDefined();
-    expect(getByText('1.00MB')).toBeDefined();
+    expect(getByText('0.98 MB')).toBeDefined(); // 1024000 bytes = 0.98 MB
   });
 
   it('should call onSelect when card is clicked', async () => {
@@ -90,10 +92,70 @@ describe('ImageCard', () => {
     }
   });
 
+  it('should call onGenerateVideo when video button is clicked', async () => {
+    const user = userEvent.setup();
+    const { container } = render(
+      <ImageCard 
+        image={mockImage} 
+        onDelete={mockOnDelete} 
+        onGenerateVideo={mockOnGenerateVideo}
+      />
+    );
+    
+    // Trouver le bouton vidéo (icône Video dans l'overlay)
+    const videoButton = container.querySelector('[class*="lucide-video"]')?.closest('button');
+    
+    if (videoButton) {
+      await user.click(videoButton);
+      expect(mockOnGenerateVideo).toHaveBeenCalledWith(mockImage.id);
+    }
+  });
+
+  it('should not call onSelect when clicking video button', async () => {
+    const user = userEvent.setup();
+    const { container } = render(
+      <ImageCard 
+        image={mockImage} 
+        onDelete={mockOnDelete} 
+        onSelect={mockOnSelect}
+        onGenerateVideo={mockOnGenerateVideo}
+      />
+    );
+    
+    const videoButton = container.querySelector('[class*="lucide-video"]')?.closest('button');
+    
+    if (videoButton) {
+      await user.click(videoButton);
+      // Le clic sur le bouton vidéo ne doit pas déclencher onSelect
+      expect(mockOnSelect).not.toHaveBeenCalled();
+      expect(mockOnGenerateVideo).toHaveBeenCalled();
+    }
+  });
+
+  it('should not call onSelect when clicking delete button', async () => {
+    const user = userEvent.setup();
+    const { container } = render(
+      <ImageCard 
+        image={mockImage} 
+        onDelete={mockOnDelete} 
+        onSelect={mockOnSelect}
+      />
+    );
+    
+    const deleteButton = container.querySelector('[class*="lucide-trash-2"]')?.closest('button');
+    
+    if (deleteButton) {
+      await user.click(deleteButton);
+      // Le clic sur le bouton delete ne doit pas déclencher onSelect
+      expect(mockOnSelect).not.toHaveBeenCalled();
+    }
+  });
+
   it('should display loading state for image', () => {
     const mockStorageFrom = vi.fn().mockReturnValue({
-      getPublicUrl: vi.fn().mockReturnValue({
-        data: { publicUrl: null },
+      createSignedUrl: vi.fn().mockResolvedValue({
+        data: null,
+        error: new Error('Failed to create signed URL'),
       }),
     });
     (supabase.storage.from as any) = mockStorageFrom;
