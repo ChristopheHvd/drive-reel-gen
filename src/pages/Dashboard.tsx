@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ImageUploader, ImageGrid, useImages, Image } from "@/features/images";
 import { VideoList, VideoConfigForm, useVideos } from "@/features/videos";
 import { Button } from "@/components/ui/button";
@@ -14,6 +14,13 @@ const Dashboard = () => {
   const [showUploader, setShowUploader] = useState(false);
   const { videos, loading: videosLoading, refetchVideos } = useVideos(selectedImage?.id);
   const { toast } = useToast();
+
+  // Sélectionner automatiquement la première image au chargement
+  useEffect(() => {
+    if (images.length > 0 && !selectedImage) {
+      setSelectedImage(images[0]);
+    }
+  }, [images, selectedImage]);
 
   const handleGenerateVideo = async (config: {
     mode: string;
