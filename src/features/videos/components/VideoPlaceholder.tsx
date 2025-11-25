@@ -25,7 +25,7 @@ export const VideoPlaceholder = ({ image, onGenerateVideo }: VideoPlaceholderPro
   }, [image]);
   
   return (
-    <div className="relative h-full min-h-[500px] flex items-center justify-center overflow-hidden rounded-lg">
+    <div className="relative h-[250px] flex items-center justify-center overflow-hidden rounded-lg">
       {/* Background flouté */}
       {imageUrl && (
         <div 
@@ -38,16 +38,16 @@ export const VideoPlaceholder = ({ image, onGenerateVideo }: VideoPlaceholderPro
       <div className="absolute inset-0 bg-gradient-to-b from-background/80 to-background/40" />
       
       {/* Contenu */}
-      <div className="relative z-10 text-center space-y-6 p-8 max-w-md">
-        <VideoIcon className="w-20 h-20 mx-auto text-primary" strokeWidth={1.5} />
-        <div className="space-y-2">
-          <h3 className="text-2xl font-bold">Aucune vidéo générée</h3>
-          <p className="text-muted-foreground">
-            Créez votre première vidéo Instagram Reels à partir de cette image en quelques clics
+      <div className="relative z-10 text-center space-y-3 p-6">
+        <VideoIcon className="w-12 h-12 mx-auto text-primary" strokeWidth={1.5} />
+        <div className="space-y-1">
+          <h3 className="text-base font-bold">Aucune vidéo générée</h3>
+          <p className="text-xs text-muted-foreground">
+            Créez votre première vidéo Instagram Reels
           </p>
         </div>
-        <Button size="lg" onClick={onGenerateVideo} className="gap-2">
-          <Play className="w-5 h-5" />
+        <Button size="sm" onClick={onGenerateVideo} className="gap-2">
+          <Play className="w-4 h-4" />
           Générer une vidéo
         </Button>
       </div>

@@ -43,7 +43,7 @@ export const ImageGrid = ({
   }
 
   return (
-    <div className="space-y-3">
+    <div className="grid grid-cols-2 gap-2">
       {images.map((image) => (
         <ImageCard
           key={image.id}
