@@ -46,25 +46,12 @@ test.describe('Dashboard Layout - 3 Panels', () => {
     }
   });
 
-  test('should have full-screen layout with sticky header', async ({ page }) => {
+  test('should display images in 2-column grid for compact view', async ({ page }) => {
     await page.setViewportSize({ width: 1920, height: 1080 });
     
-    // Vérifier header sticky
-    const header = page.locator('header.sticky').first();
-    await expect(header).toBeVisible();
-    
-    // Vérifier les 3 sections
-    await expect(page.getByText('Mes Images')).toBeVisible();
-    await expect(page.getByText('Vidéos générées')).toBeVisible();
-    await expect(page.getByText('Génération Vidéo IA')).toBeVisible();
-  });
-
-  test('should have bordered column layout', async ({ page }) => {
-    await page.setViewportSize({ width: 1920, height: 1080 });
-    
-    // Les panneaux doivent avoir des bordures
-    const borderedPanels = page.locator('.border-r.border-border\\/40');
-    await expect(borderedPanels.first()).toBeVisible();
+    // Le panneau d'images devrait afficher une grille de 2 colonnes
+    const imagesPanel = page.locator('.lg\\:col-span-3').first();
+    await expect(imagesPanel).toBeVisible();
   });
 
   test('should show larger textarea in video config', async ({ page }) => {

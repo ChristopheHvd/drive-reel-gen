@@ -43,7 +43,7 @@ describe('VideoLoadingPlaceholder', () => {
     );
 
     expect(getByText('Préparation...')).toBeInTheDocument();
-    expect(getByText(/votre vidéo instagram reels/i)).toBeInTheDocument();
+    expect(getByText(/votre vidéo est en cours de création/i)).toBeInTheDocument();
   });
 
   it('should render with processing status', () => {
@@ -52,7 +52,7 @@ describe('VideoLoadingPlaceholder', () => {
     );
 
     expect(getByText('Génération en cours')).toBeInTheDocument();
-    expect(getByText(/votre vidéo instagram reels/i)).toBeInTheDocument();
+    expect(getByText(/votre vidéo est en cours de création/i)).toBeInTheDocument();
   });
 
   it('should call Supabase to load background image', () => {
@@ -109,12 +109,12 @@ describe('VideoLoadingPlaceholder', () => {
     expect(glowElements.length).toBeGreaterThan(0);
   });
 
-  it('should render with minimum height', () => {
+  it('should render with reduced height (250px)', () => {
     const { container } = render(
       <VideoLoadingPlaceholder image={mockImage} status="pending" />
     );
 
-    const mainContainer = container.querySelector('.min-h-\\[500px\\]');
+    const mainContainer = container.querySelector('.h-\\[250px\\]');
     expect(mainContainer).toBeInTheDocument();
   });
 
