@@ -99,22 +99,32 @@ describe('ImageUploader', () => {
   });
 
   it('should trigger upload on drag and drop', async () => {
+    const user = userEvent.setup();
     mockUploadImages.mockResolvedValue([{ id: 'img-1' }]);
     
     const { container } = render(<ImageUploader />);
     
-    const dropZone = container.querySelector('div');
+    // Trouver la zone de drop (div avec border-dashed)
+    const dropZone = container.querySelector('[class*="border-dashed"]');
+    expect(dropZone).toBeDefined();
+    
     const file = new File(['test'], 'test.jpg', { type: 'image/jpeg' });
     
-    const dataTransfer = {
-      files: [file],
-      items: [{ kind: 'file', type: 'image/jpeg', getAsFile: () => file }],
-      types: ['Files']
-    };
-    
     if (dropZone) {
-      const dropEvent = Object.assign(new Event('drop', { bubbles: true }), { dataTransfer });
+      // Simuler un drop event avec DataTransfer
+      const dataTransfer = new DataTransfer();
+      dataTransfer.items.add(file);
+      
+      const dropEvent = new DragEvent('drop', {
+        bubbles: true,
+        cancelable: true,
+        dataTransfer,
+      });
+      
       dropZone.dispatchEvent(dropEvent);
+      
+      // Attendre que l'upload soit traité
+      await new Promise(resolve => setTimeout(resolve, 100));
       
       expect(mockUploadImages).toHaveBeenCalledWith([file]);
     }
