@@ -3,6 +3,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Video } from "../types";
 import { Image } from "@/features/images/types";
 import { VideoPlaceholder } from "./VideoPlaceholder";
+import { VideoLoadingPlaceholder } from "./VideoLoadingPlaceholder";
 import { VideoPlayer } from "./VideoPlayer";
 
 interface VideoListProps {
@@ -44,6 +45,33 @@ export const VideoList = ({
     );
   }
 
+  // Vérifier si une vidéo est en cours de génération
+  const pendingVideo = videos.find(v => v.status === 'pending' || v.status === 'processing');
+  
+  // Si vidéo en cours de génération → Afficher le placeholder de chargement
+  if (pendingVideo) {
+    return (
+      <div className="space-y-4">
+        <VideoLoadingPlaceholder 
+          image={selectedImage}
+          status={pendingVideo.status as 'pending' | 'processing'}
+        />
+        {/* Afficher les vidéos déjà terminées en dessous */}
+        {videos
+          .filter(v => v.status === 'completed')
+          .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+          .map(video => (
+            <VideoPlayer 
+              key={video.id} 
+              video={video}
+              onDelete={onDeleteVideo}
+            />
+          ))
+        }
+      </div>
+    );
+  }
+  
   // Cas aucune vidéo → Placeholder
   if (videos.length === 0) {
     return (
