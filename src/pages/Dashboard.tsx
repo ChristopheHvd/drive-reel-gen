@@ -92,6 +92,54 @@ const Dashboard = () => {
     document.getElementById("video-config")?.scrollIntoView({ behavior: "smooth" });
   };
 
+  const handleGenerateVideoFromImage = async (imageId: string) => {
+    const image = images.find(img => img.id === imageId);
+    if (!image) return;
+    
+    setSelectedImage(image);
+    
+    // Utiliser le prompt par défaut
+    const defaultPrompt = "Génère une vidéo sympa, très dynamique, respectant les codes d'Instagram";
+    
+    try {
+      const { data, error } = await supabase.functions.invoke('generate-video', {
+        body: {
+          imageId: image.id,
+          mode: 'FIRST_AND_LAST_FRAME',
+          prompt: defaultPrompt,
+          aspectRatio: '9:16',
+        }
+      });
+      
+      if (error) throw error;
+      
+      toast({
+        title: "✅ Génération lancée",
+        description: `Votre vidéo sera prête dans ~2 minutes`,
+      });
+      
+      // Refetch videos immédiatement pour voir le statut 'pending'
+      refetchVideos();
+      
+    } catch (error: any) {
+      console.error('Video generation error:', error);
+      
+      if (error.message?.includes('Quota')) {
+        toast({
+          title: "Quota dépassé",
+          description: "Vous avez atteint votre limite mensuelle de vidéos",
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Erreur",
+          description: error.message || "Impossible de lancer la génération",
+          variant: "destructive",
+        });
+      }
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-dark">
       <header className="border-b border-border bg-background/50 backdrop-blur-sm">
@@ -155,6 +203,7 @@ const Dashboard = () => {
                     }
                   }}
                   selectedImageId={selectedImage?.id}
+                  onGenerateVideo={handleGenerateVideoFromImage}
                 />
               </CardContent>
             </Card>

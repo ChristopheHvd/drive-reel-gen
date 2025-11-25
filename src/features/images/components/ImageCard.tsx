@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Trash2, Download, Eye } from "lucide-react";
+import { Trash2, Eye, Video } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Image } from "../types";
@@ -21,12 +21,13 @@ interface ImageCardProps {
   onDelete: (imageId: string) => void;
   onSelect?: (image: Image) => void;
   isSelected?: boolean;
+  onGenerateVideo?: (imageId: string) => void;
 }
 
 /**
  * Card pour afficher une image avec actions
  */
-export const ImageCard = ({ image, onDelete, onSelect, isSelected }: ImageCardProps) => {
+export const ImageCard = ({ image, onDelete, onSelect, isSelected, onGenerateVideo }: ImageCardProps) => {
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -63,23 +64,9 @@ export const ImageCard = ({ image, onDelete, onSelect, isSelected }: ImageCardPr
     }
   };
 
-  const handleDownload = async () => {
-    if (!imageUrl) return;
-    
-    try {
-      const response = await fetch(imageUrl);
-      const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = image.file_name;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      window.URL.revokeObjectURL(url);
-      toast.success("Téléchargement démarré");
-    } catch {
-      toast.error("Erreur lors du téléchargement");
+  const handleGenerateVideo = () => {
+    if (onGenerateVideo) {
+      onGenerateVideo(image.id);
     }
   };
 
@@ -106,28 +93,33 @@ export const ImageCard = ({ image, onDelete, onSelect, isSelected }: ImageCardPr
           )}
         </div>
 
-        {/* Overlay avec actions */}
-        <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+        {/* Bouton supprimer en haut à droite */}
+        <Button
+          variant="destructive"
+          size="icon"
+          className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity z-10"
+          onClick={(e) => {
+            e.stopPropagation();
+            setShowDeleteDialog(true);
+          }}
+          disabled={isDeleting}
+        >
+          <Trash2 className="w-4 h-4" />
+        </Button>
+
+        {/* Overlay avec bouton génération vidéo */}
+        <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
           <Button
-            variant="secondary"
-            size="sm"
+            variant="default"
+            size="lg"
             onClick={(e) => {
               e.stopPropagation();
-              handleDownload();
+              handleGenerateVideo();
             }}
+            className="gap-2"
           >
-            <Download className="w-4 h-4" />
-          </Button>
-          <Button
-            variant="destructive"
-            size="sm"
-            onClick={(e) => {
-              e.stopPropagation();
-              setShowDeleteDialog(true);
-            }}
-            disabled={isDeleting}
-          >
-            <Trash2 className="w-4 h-4" />
+            <Video className="w-5 h-5" />
+            Générer une vidéo
           </Button>
         </div>
 
