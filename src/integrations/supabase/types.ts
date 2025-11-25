@@ -270,58 +270,73 @@ export type Database = {
       }
       videos: {
         Row: {
+          additional_image_url: string | null
           aspect_ratio: string
           completed_at: string | null
           created_at: string
           duration_seconds: number
           error_message: string | null
+          generation_type: string
           id: string
           image_id: string
           kie_task_id: string
+          logo_url: string | null
           mode: string
           prompt: string
+          seed: number | null
           status: string
           team_id: string
           thumbnail_url: string | null
           timeout_at: string
           updated_at: string
           video_url: string | null
+          was_cropped: boolean | null
         }
         Insert: {
+          additional_image_url?: string | null
           aspect_ratio?: string
           completed_at?: string | null
           created_at?: string
           duration_seconds?: number
           error_message?: string | null
+          generation_type?: string
           id?: string
           image_id: string
           kie_task_id: string
+          logo_url?: string | null
           mode: string
           prompt: string
+          seed?: number | null
           status?: string
           team_id: string
           thumbnail_url?: string | null
           timeout_at?: string
           updated_at?: string
           video_url?: string | null
+          was_cropped?: boolean | null
         }
         Update: {
+          additional_image_url?: string | null
           aspect_ratio?: string
           completed_at?: string | null
           created_at?: string
           duration_seconds?: number
           error_message?: string | null
+          generation_type?: string
           id?: string
           image_id?: string
           kie_task_id?: string
+          logo_url?: string | null
           mode?: string
           prompt?: string
+          seed?: number | null
           status?: string
           team_id?: string
           thumbnail_url?: string | null
           timeout_at?: string
           updated_at?: string
           video_url?: string | null
+          was_cropped?: boolean | null
         }
         Relationships: [
           {

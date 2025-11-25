@@ -20,6 +20,7 @@ const mockVideos: Video[] = [
     created_at: '2024-01-01T00:00:00Z',
     updated_at: '2024-01-01T00:00:00Z',
     timeout_at: '2024-01-01T00:10:00Z',
+    generation_type: 'FIRST_AND_LAST_FRAMES_2_VIDEO',
   },
 ];
 

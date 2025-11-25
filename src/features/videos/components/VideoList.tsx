@@ -13,6 +13,8 @@ interface VideoListProps {
   loading: boolean;
   onGenerateVideo: () => void;
   onDeleteVideo: (videoId: string) => void;
+  onSelectVideo?: (video: Video) => void;
+  onRegenerateVideo?: (video: Video) => void;
 }
 
 /**
@@ -24,7 +26,9 @@ export const VideoList = ({
   videos, 
   loading, 
   onGenerateVideo,
-  onDeleteVideo 
+  onDeleteVideo,
+  onSelectVideo,
+  onRegenerateVideo,
 }: VideoListProps) => {
   if (loading) {
     return (
@@ -63,11 +67,17 @@ export const VideoList = ({
         {completedVideos.length > 0 && (
           <div className="grid grid-cols-2 gap-3">
             {completedVideos.map(video => (
-              <VideoPlayer 
-                key={video.id} 
-                video={video}
-                onDelete={onDeleteVideo}
-              />
+              <div 
+                key={video.id}
+                onClick={() => onSelectVideo?.(video)}
+                className="cursor-pointer"
+              >
+                <VideoPlayer 
+                  video={video}
+                  onDelete={onDeleteVideo}
+                  onRegenerate={onRegenerateVideo}
+                />
+              </div>
             ))}
           </div>
         )}
@@ -89,11 +99,17 @@ export const VideoList = ({
   return (
     <div className="grid grid-cols-2 gap-3">
       {completedVideos.map(video => (
-        <VideoPlayer 
-          key={video.id} 
-          video={video}
-          onDelete={onDeleteVideo}
-        />
+        <div 
+          key={video.id}
+          onClick={() => onSelectVideo?.(video)}
+          className="cursor-pointer"
+        >
+          <VideoPlayer 
+            video={video}
+            onDelete={onDeleteVideo}
+            onRegenerate={onRegenerateVideo}
+          />
+        </div>
       ))}
     </div>
   );

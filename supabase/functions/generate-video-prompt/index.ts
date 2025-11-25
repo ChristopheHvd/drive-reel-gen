@@ -38,7 +38,7 @@ serve(async (req) => {
       });
     }
 
-    const { imageId } = await req.json();
+    const { imageId, promptType = 'situation' } = await req.json();
 
     if (!imageId) {
       return new Response(JSON.stringify({ error: 'imageId requis' }), {
@@ -99,7 +99,29 @@ serve(async (req) => {
       ? `Marque: ${brandProfile.company_name}. ${brandProfile.business_description || ''}` 
       : '';
 
-    console.log('Calling Lovable AI for prompt generation...');
+    // Adapter le system prompt selon le type
+    let systemPrompt = '';
+    let userPrompt = '';
+
+    switch (promptType) {
+      case 'situation':
+        systemPrompt = 'Tu es un expert en marketing Instagram. Génère un prompt court (max 150 caractères) pour créer une vidéo montrant le produit en situation d\'utilisation réelle, avec une ambiance authentique et naturelle.';
+        userPrompt = `Analyse cette image et génère un prompt pour une vidéo en situation. ${brandContext}`;
+        break;
+      case 'product':
+        systemPrompt = 'Tu es un expert en marketing Instagram. Génère un prompt court (max 150 caractères) pour une mise en avant produit professionnelle et élégante, avec focus sur les détails et une ambiance premium.';
+        userPrompt = `Analyse cette image et génère un prompt pour une mise en avant produit. ${brandContext}`;
+        break;
+      case 'testimonial':
+        systemPrompt = 'Tu es un expert en marketing Instagram. Génère un prompt court (max 150 caractères) pour créer une vidéo de témoignage/avis client dynamique et engageante, avec une ambiance chaleureuse.';
+        userPrompt = `Analyse cette image et génère un prompt pour un témoignage. ${brandContext}`;
+        break;
+      default:
+        systemPrompt = 'Tu es un expert en marketing Instagram. Génère un prompt court (max 150 caractères) et percutant pour créer une vidéo Instagram Reels dynamique et engageante.';
+        userPrompt = `Analyse cette image et propose un prompt pour générer une vidéo Instagram. ${brandContext}`;
+    }
+
+    console.log('Calling Lovable AI for prompt generation...', { promptType });
 
     // Appel Lovable AI
     const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
@@ -113,14 +135,14 @@ serve(async (req) => {
         messages: [
           {
             role: 'system',
-            content: 'Tu es un expert en marketing Instagram. Génère un prompt court (max 150 caractères) et percutant pour créer une vidéo Instagram Reels dynamique et engageante basée sur l\'image fournie.'
+            content: systemPrompt
           },
           {
             role: 'user',
             content: [
               { 
                 type: 'text', 
-                text: `Analyse cette image et propose un prompt pour générer une vidéo Instagram. ${brandContext}` 
+                text: userPrompt
               },
               { 
                 type: 'image_url', 
