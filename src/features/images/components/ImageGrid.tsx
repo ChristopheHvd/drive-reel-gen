@@ -9,6 +9,7 @@ interface ImageGridProps {
   onDeleteImage: (imageId: string) => void;
   onSelectImage?: (image: Image) => void;
   selectedImageId?: string;
+  onGenerateVideo?: (imageId: string) => void;
 }
 
 /**
@@ -19,7 +20,8 @@ export const ImageGrid = ({
   loading, 
   onDeleteImage, 
   onSelectImage,
-  selectedImageId 
+  selectedImageId,
+  onGenerateVideo
 }: ImageGridProps) => {
   if (loading) {
     return (
@@ -49,6 +51,7 @@ export const ImageGrid = ({
           onDelete={onDeleteImage}
           onSelect={onSelectImage}
           isSelected={image.id === selectedImageId}
+          onGenerateVideo={onGenerateVideo}
         />
       ))}
     </div>
