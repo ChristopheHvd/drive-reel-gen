@@ -1,30 +1,52 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
 import Dashboard from './Dashboard';
 
+// Créer les mocks configurables avec vi.hoisted (hoisted = remontées au début)
+const { mockUseImages, mockUseVideos, mockVideoConfigFormProps } = vi.hoisted(() => ({
+  mockUseImages: vi.fn(),
+  mockUseVideos: vi.fn(),
+  mockVideoConfigFormProps: vi.fn(),
+}));
+
+// Les mocks utilisent ces fonctions
 vi.mock('@/features/images', () => ({
   ImageUploader: () => <div data-testid="image-uploader">ImageUploader</div>,
   ImageGrid: () => <div data-testid="image-grid">ImageGrid</div>,
-  useImages: () => ({
-    images: [],
-    loading: false,
-    deleteImage: vi.fn(),
-    fetchImages: vi.fn(),
-  }),
+  useImages: () => mockUseImages(),
 }));
 
 vi.mock('@/features/videos', () => ({
   VideoList: () => <div data-testid="video-list">VideoList</div>,
-  VideoConfigForm: () => <div data-testid="video-config">VideoConfigForm</div>,
-  useVideos: () => ({
-    videos: [],
-    loading: false,
-    refetchVideos: vi.fn(),
-  }),
+  VideoConfigForm: (props: any) => {
+    mockVideoConfigFormProps(props); // Capture les props pour les assertions
+    return <div data-testid="video-config">VideoConfigForm</div>;
+  },
+  useVideos: () => mockUseVideos(),
 }));
 
 describe('Dashboard', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    
+    // Configuration par défaut (images et vidéos vides)
+    mockUseImages.mockReturnValue({
+      images: [],
+      loading: false,
+      deleteImage: vi.fn(),
+      fetchImages: vi.fn(),
+    });
+    
+    mockUseVideos.mockReturnValue({
+      videos: [],
+      loading: false,
+      refetchVideos: vi.fn(),
+    });
+    
+    mockVideoConfigFormProps.mockClear();
+  });
+
   const renderDashboard = () => {
     return render(
       <BrowserRouter>
@@ -110,6 +132,11 @@ describe('Dashboard', () => {
 });
 
 describe('Dashboard - Auto-select first image', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockVideoConfigFormProps.mockClear();
+  });
+
   it('should automatically select first image on load when images are available', () => {
     const mockImages = [
       { 
@@ -127,48 +154,89 @@ describe('Dashboard - Auto-select first image', () => {
       },
     ];
 
-    const mockUseImages = vi.fn(() => ({
+    // Reconfigurer le mock pour ce test spécifique
+    mockUseImages.mockReturnValue({
       images: mockImages,
       loading: false,
       deleteImage: vi.fn(),
       fetchImages: vi.fn(),
-    }));
+    });
 
-    const mockImageGrid = vi.fn(() => <div data-testid="image-grid">ImageGrid</div>);
-    const mockVideoConfigForm = vi.fn(() => <div data-testid="video-config">VideoConfigForm</div>);
+    mockUseVideos.mockReturnValue({
+      videos: [],
+      loading: false,
+      refetchVideos: vi.fn(),
+    });
 
-    vi.doMock('@/features/images', () => ({
-      ImageUploader: () => <div data-testid="image-uploader">ImageUploader</div>,
-      ImageGrid: mockImageGrid,
-      useImages: mockUseImages,
-    }));
-
-    vi.doMock('@/features/videos', () => ({
-      VideoList: () => <div data-testid="video-list">VideoList</div>,
-      VideoConfigForm: mockVideoConfigForm,
-      useVideos: () => ({
-        videos: [],
-        loading: false,
-        refetchVideos: vi.fn(),
-      }),
-    }));
-
-    const { queryByText } = render(
+    render(
       <BrowserRouter>
         <Dashboard />
       </BrowserRouter>
     );
 
-    // Vérifier que VideoConfigForm a été appelé avec un selectedImageId
-    // (ce qui signifie qu'une image a été sélectionnée)
-    expect(mockVideoConfigForm).toHaveBeenCalledWith(
+    // Vérifier que VideoConfigForm a reçu selectedImageId = 'img-1'
+    expect(mockVideoConfigFormProps).toHaveBeenCalledWith(
       expect.objectContaining({
         selectedImageId: 'img-1',
-      }),
-      expect.anything()
+      })
+    );
+  });
+
+  it('should NOT auto-select when images array is empty', () => {
+    // Utiliser la configuration par défaut (images vides)
+    mockUseImages.mockReturnValue({
+      images: [],
+      loading: false,
+      deleteImage: vi.fn(),
+      fetchImages: vi.fn(),
+    });
+
+    mockUseVideos.mockReturnValue({
+      videos: [],
+      loading: false,
+      refetchVideos: vi.fn(),
+    });
+
+    render(
+      <BrowserRouter>
+        <Dashboard />
+      </BrowserRouter>
     );
 
-    // Le message "Sélectionnez une image" ne devrait pas être affiché
-    expect(queryByText(/sélectionnez une image pour configurer/i)).not.toBeInTheDocument();
+    // VideoConfigForm ne devrait pas avoir reçu de selectedImageId
+    expect(mockVideoConfigFormProps).toHaveBeenCalledWith(
+      expect.objectContaining({
+        selectedImageId: null,
+      })
+    );
+  });
+
+  it('should NOT auto-select while images are loading', () => {
+    // Configurer avec loading=true
+    mockUseImages.mockReturnValue({
+      images: [],
+      loading: true, // Still loading
+      deleteImage: vi.fn(),
+      fetchImages: vi.fn(),
+    });
+
+    mockUseVideos.mockReturnValue({
+      videos: [],
+      loading: false,
+      refetchVideos: vi.fn(),
+    });
+
+    render(
+      <BrowserRouter>
+        <Dashboard />
+      </BrowserRouter>
+    );
+
+    // VideoConfigForm ne devrait pas avoir reçu de selectedImageId
+    expect(mockVideoConfigFormProps).toHaveBeenCalledWith(
+      expect.objectContaining({
+        selectedImageId: null,
+      })
+    );
   });
 });
