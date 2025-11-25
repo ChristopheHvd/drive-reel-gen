@@ -108,3 +108,67 @@ describe('Dashboard', () => {
     expect(header).toBeInTheDocument();
   });
 });
+
+describe('Dashboard - Auto-select first image', () => {
+  it('should automatically select first image on load when images are available', () => {
+    const mockImages = [
+      { 
+        id: 'img-1', 
+        file_name: 'test1.jpg', 
+        team_id: 'team-1', 
+        uploaded_by: 'user-1', 
+        storage_path: 'path1', 
+        file_size: 1000, 
+        mime_type: 'image/jpeg',
+        width: 800,
+        height: 600,
+        created_at: '2024-01-01', 
+        updated_at: '2024-01-01' 
+      },
+    ];
+
+    const mockUseImages = vi.fn(() => ({
+      images: mockImages,
+      loading: false,
+      deleteImage: vi.fn(),
+      fetchImages: vi.fn(),
+    }));
+
+    const mockImageGrid = vi.fn(() => <div data-testid="image-grid">ImageGrid</div>);
+    const mockVideoConfigForm = vi.fn(() => <div data-testid="video-config">VideoConfigForm</div>);
+
+    vi.doMock('@/features/images', () => ({
+      ImageUploader: () => <div data-testid="image-uploader">ImageUploader</div>,
+      ImageGrid: mockImageGrid,
+      useImages: mockUseImages,
+    }));
+
+    vi.doMock('@/features/videos', () => ({
+      VideoList: () => <div data-testid="video-list">VideoList</div>,
+      VideoConfigForm: mockVideoConfigForm,
+      useVideos: () => ({
+        videos: [],
+        loading: false,
+        refetchVideos: vi.fn(),
+      }),
+    }));
+
+    const { queryByText } = render(
+      <BrowserRouter>
+        <Dashboard />
+      </BrowserRouter>
+    );
+
+    // Vérifier que VideoConfigForm a été appelé avec un selectedImageId
+    // (ce qui signifie qu'une image a été sélectionnée)
+    expect(mockVideoConfigForm).toHaveBeenCalledWith(
+      expect.objectContaining({
+        selectedImageId: 'img-1',
+      }),
+      expect.anything()
+    );
+
+    // Le message "Sélectionnez une image" ne devrait pas être affiché
+    expect(queryByText(/sélectionnez une image pour configurer/i)).not.toBeInTheDocument();
+  });
+});
