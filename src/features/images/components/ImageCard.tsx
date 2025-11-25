@@ -111,19 +111,18 @@ export const ImageCard = ({ image, onDelete, onSelect, isSelected, onGenerateVid
           <Trash2 className="w-3.5 h-3.5" />
         </Button>
 
-        {/* Overlay avec bouton génération vidéo - design premium */}
+        {/* Overlay avec bouton génération vidéo - design minimaliste */}
         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-all duration-300 flex items-center justify-center backdrop-blur-[2px]">
           <Button
             variant="default"
-            size="lg"
+            size="icon"
             onClick={(e) => {
               e.stopPropagation();
               handleGenerateVideo();
             }}
-            className="gap-2 bg-primary/90 hover:bg-primary shadow-[0_0_20px_hsl(var(--primary)/0.5)] hover:shadow-[0_0_30px_hsl(var(--primary)/0.7)] transition-all duration-300 hover:scale-105 font-semibold"
+            className="w-14 h-14 rounded-full bg-primary/90 hover:bg-primary shadow-[0_0_20px_hsl(var(--primary)/0.5)] hover:shadow-[0_0_30px_hsl(var(--primary)/0.7)] transition-all duration-300 hover:scale-110"
           >
-            <Video className="w-5 h-5" />
-            Générer une vidéo
+            <Video className="w-6 h-6" />
           </Button>
         </div>
 
