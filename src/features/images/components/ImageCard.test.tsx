@@ -71,6 +71,10 @@ describe('ImageCard', () => {
     
     const imageContainer = container.querySelector('.ring-2.ring-primary');
     expect(imageContainer).toBeDefined();
+    
+    // Vérifier que le checkmark est visible
+    const checkmark = container.querySelector('svg path[d*="M5 13l4 4L19 7"]');
+    expect(checkmark).toBeDefined();
   });
 
   it('should open delete confirmation dialog', async () => {
@@ -160,7 +164,7 @@ describe('ImageCard', () => {
   });
 
   it('should have video button with correct text in new design', () => {
-    const { getByText } = render(
+    const { getByText, container } = render(
       <ImageCard 
         image={mockImage} 
         onDelete={mockOnDelete} 
@@ -171,6 +175,10 @@ describe('ImageCard', () => {
     const videoButton = getByText('Générer').closest('button');
     expect(videoButton).toBeDefined();
     expect(videoButton?.className).toContain('bg-primary');
+    
+    // Vérifier le positionnement en bas à droite
+    expect(videoButton?.className).toContain('bottom-2');
+    expect(videoButton?.className).toContain('right-2');
   });
 
   it('should not display file info anymore', () => {
