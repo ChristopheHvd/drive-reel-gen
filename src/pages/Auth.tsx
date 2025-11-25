@@ -1,19 +1,11 @@
 import { Button } from "@/components/ui/button";
-import { Link, useNavigate } from "react-router-dom";
-import { useEffect } from "react";
+import { Link } from "react-router-dom";
 import { useAuth } from "@/features/auth";
 import { toast } from "sonner";
 import logo from "@/assets/daft-funk-logo.png";
 
 const Auth = () => {
   const { user, loading, signInWithGoogle } = useAuth();
-  const navigate = useNavigate();
-
-  useEffect(() => {
-    if (user && !loading) {
-      navigate("/app");
-    }
-  }, [user, loading, navigate]);
 
   const handleGoogleLogin = async () => {
     try {
@@ -25,6 +17,11 @@ const Auth = () => {
 
   if (loading) {
     return <div className="min-h-screen bg-gradient-dark flex items-center justify-center"><div className="text-foreground">Chargement...</div></div>;
+  }
+
+  // Si déjà connecté, le hook useAuth redirige automatiquement
+  if (user) {
+    return <div className="min-h-screen bg-gradient-dark flex items-center justify-center"><div className="text-foreground">Redirection...</div></div>;
   }
 
   return (
