@@ -80,31 +80,31 @@ describe('Dashboard', () => {
     expect(uploadButton).toBeInTheDocument();
   });
 
-  it('should use wider layout with max-w-screen-2xl container', () => {
+  it('should use full-screen layout', () => {
     const { container } = renderDashboard();
-    const mainContainer = container.querySelector('.max-w-screen-2xl');
+    const mainContainer = container.querySelector('.h-screen');
     expect(mainContainer).toBeInTheDocument();
   });
 
-  it('should have proper column distribution (4-5-3 on large screens)', () => {
+  it('should have 3-column layout (3-6-3 on large screens)', () => {
     const { container } = renderDashboard();
     
-    // Check left panel (images) - larger for bigger thumbnails
-    const leftPanel = container.querySelector('.lg\\:col-span-4');
+    // Check left panel (images)
+    const leftPanel = container.querySelector('.lg\\:col-span-3');
     expect(leftPanel).toBeInTheDocument();
     
-    // Check center panel
-    const centerPanel = container.querySelector('.lg\\:col-span-5');
+    // Check center panel (videos)
+    const centerPanel = container.querySelector('.lg\\:col-span-6');
     expect(centerPanel).toBeInTheDocument();
     
-    // Check right panel (config)
-    const rightPanel = container.querySelector('.lg\\:col-span-3');
-    expect(rightPanel).toBeInTheDocument();
+    // Check right panel (config) - should be last col-span-3
+    const allColSpan3 = container.querySelectorAll('.lg\\:col-span-3');
+    expect(allColSpan3.length).toBeGreaterThanOrEqual(2);
   });
 
-  it('should have increased gap between columns', () => {
+  it('should have sticky header', () => {
     const { container } = renderDashboard();
-    const gridContainer = container.querySelector('.gap-8');
-    expect(gridContainer).toBeInTheDocument();
+    const header = container.querySelector('header.sticky');
+    expect(header).toBeInTheDocument();
   });
 });
