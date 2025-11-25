@@ -165,4 +165,107 @@ describe('VideoList', () => {
     // VideoPlayer devrait gérer l'affichage des vidéos
     expect(container).toBeInTheDocument();
   });
+
+  it('should show loading placeholder for pending video', () => {
+    const pendingVideos: Video[] = [
+      {
+        ...mockVideos[0],
+        status: 'pending',
+        video_url: null,
+      },
+    ];
+
+    const { getByText } = render(
+      <VideoList
+        imageId="img-1"
+        selectedImage={{
+          id: 'img-1',
+          file_name: 'test.jpg',
+          storage_path: 'path/test.jpg',
+          team_id: 'team-1',
+          uploaded_by: 'user-1',
+          created_at: '2024-01-01',
+          updated_at: '2024-01-01',
+          file_size: 1000,
+          mime_type: 'image/jpeg',
+        }}
+        videos={pendingVideos}
+        loading={false}
+        onGenerateVideo={vi.fn()}
+        onDeleteVideo={vi.fn()}
+      />
+    );
+
+    expect(getByText('Préparation...')).toBeInTheDocument();
+  });
+
+  it('should show loading placeholder for processing video', () => {
+    const processingVideos: Video[] = [
+      {
+        ...mockVideos[0],
+        status: 'processing',
+        video_url: null,
+      },
+    ];
+
+    const { getByText } = render(
+      <VideoList
+        imageId="img-1"
+        selectedImage={{
+          id: 'img-1',
+          file_name: 'test.jpg',
+          storage_path: 'path/test.jpg',
+          team_id: 'team-1',
+          uploaded_by: 'user-1',
+          created_at: '2024-01-01',
+          updated_at: '2024-01-01',
+          file_size: 1000,
+          mime_type: 'image/jpeg',
+        }}
+        videos={processingVideos}
+        loading={false}
+        onGenerateVideo={vi.fn()}
+        onDeleteVideo={vi.fn()}
+      />
+    );
+
+    expect(getByText('Génération en cours')).toBeInTheDocument();
+  });
+
+  it('should display completed videos below pending placeholder', () => {
+    const mixedVideos: Video[] = [
+      {
+        ...mockVideos[0],
+        id: '2',
+        status: 'processing',
+        video_url: null,
+      },
+      mockVideos[0], // completed video
+    ];
+
+    const { getByText } = render(
+      <VideoList
+        imageId="img-1"
+        selectedImage={{
+          id: 'img-1',
+          file_name: 'test.jpg',
+          storage_path: 'path/test.jpg',
+          team_id: 'team-1',
+          uploaded_by: 'user-1',
+          created_at: '2024-01-01',
+          updated_at: '2024-01-01',
+          file_size: 1000,
+          mime_type: 'image/jpeg',
+        }}
+        videos={mixedVideos}
+        loading={false}
+        onGenerateVideo={vi.fn()}
+        onDeleteVideo={vi.fn()}
+      />
+    );
+
+    // Should show both placeholder and completed video
+    expect(getByText('Génération en cours')).toBeInTheDocument();
+    expect(getByText('Test prompt')).toBeInTheDocument();
+  });
 });
