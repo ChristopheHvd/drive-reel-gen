@@ -72,7 +72,10 @@ describe('ImageCard', () => {
     const imageContainer = container.querySelector('.ring-2.ring-primary');
     expect(imageContainer).toBeDefined();
     
-    // Vérifier que le checkmark est visible
+    // Vérifier que le checkmark est visible et centré
+    const checkmarkContainer = container.querySelector('.absolute.inset-0.flex.items-center.justify-center');
+    expect(checkmarkContainer).toBeDefined();
+    
     const checkmark = container.querySelector('svg path[d*="M5 13l4 4L19 7"]');
     expect(checkmark).toBeDefined();
   });
