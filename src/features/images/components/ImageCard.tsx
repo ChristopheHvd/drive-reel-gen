@@ -73,42 +73,46 @@ export const ImageCard = ({ image, onDelete, onSelect, isSelected, onGenerateVid
   return (
     <>
       <Card 
-        className={`group relative overflow-hidden cursor-pointer transition-all hover:shadow-lg ${
-          isSelected ? 'ring-2 ring-primary' : ''
+        className={`group relative overflow-hidden cursor-pointer transition-all duration-300 hover:scale-[1.02] ${
+          isSelected ? 'ring-2 ring-primary shadow-[0_0_20px_hsl(var(--primary)/0.3)]' : 'hover:shadow-[0_8px_30px_hsl(var(--primary)/0.12)]'
         }`}
         onClick={() => onSelect?.(image)}
       >
-        {/* Image */}
-        <div className="aspect-square bg-muted">
+        {/* Image avec overlay gradient subtil */}
+        <div className="aspect-square bg-muted relative">
           {imageUrl ? (
-            <img
-              src={imageUrl}
-              alt={image.file_name}
-              className="w-full h-full object-cover"
-            />
+            <>
+              <img
+                src={imageUrl}
+                alt={image.file_name}
+                className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+              />
+              {/* Gradient overlay subtil pour améliorer la lisibilité */}
+              <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+            </>
           ) : (
-            <div className="w-full h-full flex items-center justify-center">
+            <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-muted to-muted/50">
               <Eye className="w-8 h-8 text-muted-foreground animate-pulse" />
             </div>
           )}
         </div>
 
-        {/* Bouton supprimer en haut à droite */}
+        {/* Bouton supprimer - plus discret et élégant */}
         <Button
-          variant="destructive"
+          variant="ghost"
           size="icon"
-          className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity z-10"
+          className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-all duration-300 bg-background/80 backdrop-blur-sm hover:bg-destructive hover:text-destructive-foreground shadow-lg z-10 w-8 h-8"
           onClick={(e) => {
             e.stopPropagation();
             setShowDeleteDialog(true);
           }}
           disabled={isDeleting}
         >
-          <Trash2 className="w-4 h-4" />
+          <Trash2 className="w-3.5 h-3.5" />
         </Button>
 
-        {/* Overlay avec bouton génération vidéo */}
-        <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+        {/* Overlay avec bouton génération vidéo - design premium */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-all duration-300 flex items-center justify-center backdrop-blur-[2px]">
           <Button
             variant="default"
             size="lg"
@@ -116,18 +120,18 @@ export const ImageCard = ({ image, onDelete, onSelect, isSelected, onGenerateVid
               e.stopPropagation();
               handleGenerateVideo();
             }}
-            className="gap-2"
+            className="gap-2 bg-primary/90 hover:bg-primary shadow-[0_0_20px_hsl(var(--primary)/0.5)] hover:shadow-[0_0_30px_hsl(var(--primary)/0.7)] transition-all duration-300 hover:scale-105 font-semibold"
           >
             <Video className="w-5 h-5" />
             Générer une vidéo
           </Button>
         </div>
 
-        {/* Info en bas */}
-        <div className="p-2 bg-background/95">
-          <p className="text-xs truncate font-medium">{image.file_name}</p>
-          <p className="text-xs text-muted-foreground">
-            {(image.file_size / 1024 / 1024).toFixed(2)}MB
+        {/* Info en bas - design plus soigné */}
+        <div className="absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-background/95 to-background/80 backdrop-blur-sm border-t border-border/50">
+          <p className="text-xs truncate font-semibold text-foreground">{image.file_name}</p>
+          <p className="text-xs text-muted-foreground mt-0.5">
+            {(image.file_size / 1024 / 1024).toFixed(2)} MB
           </p>
         </div>
       </Card>
