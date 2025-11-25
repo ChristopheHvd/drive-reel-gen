@@ -69,8 +69,8 @@ describe('ImageCard', () => {
       />
     );
     
-    const card = container.querySelector('.ring-2.ring-primary');
-    expect(card).toBeDefined();
+    const imageContainer = container.querySelector('.ring-2.ring-primary');
+    expect(imageContainer).toBeDefined();
   });
 
   it('should open delete confirmation dialog', async () => {
@@ -159,8 +159,8 @@ describe('ImageCard', () => {
     expect(eyeIcon).toBeDefined();
   });
 
-  it('should have rounded rectangular video button with text', () => {
-    const { getByText, container } = render(
+  it('should have video button with correct text in new design', () => {
+    const { getByText } = render(
       <ImageCard 
         image={mockImage} 
         onDelete={mockOnDelete} 
@@ -170,11 +170,7 @@ describe('ImageCard', () => {
     
     const videoButton = getByText('Générer').closest('button');
     expect(videoButton).toBeDefined();
-    
-    // Vérifier que le bouton a la classe rounded-xl (rectangulaire arrondi)
-    if (videoButton) {
-      expect(videoButton.className).toContain('rounded-xl');
-    }
+    expect(videoButton?.className).toContain('bg-primary');
   });
 
   it('should not display file info anymore', () => {

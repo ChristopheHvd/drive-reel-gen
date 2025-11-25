@@ -35,15 +35,15 @@ export const ImageGrid = ({
 
   if (images.length === 0) {
     return (
-      <div className="text-center py-12 text-muted-foreground">
-        <p className="text-lg mb-2">Aucune image pour le moment</p>
-        <p className="text-sm">Uploadez vos premières images pour commencer !</p>
+      <div className="flex flex-col items-center justify-center py-12 text-center text-muted-foreground">
+        <p className="text-sm mb-1">Aucune image</p>
+        <p className="text-xs">Uploadez pour commencer</p>
       </div>
     );
   }
 
   return (
-    <div className="grid grid-cols-1 gap-4">
+    <div className="space-y-3">
       {images.map((image) => (
         <ImageCard
           key={image.id}

@@ -46,25 +46,25 @@ test.describe('Dashboard Layout - 3 Panels', () => {
     }
   });
 
-  test('should have wider layout on large screens', async ({ page }) => {
+  test('should have full-screen layout with sticky header', async ({ page }) => {
     await page.setViewportSize({ width: 1920, height: 1080 });
     
-    // Les panneaux doivent avoir plus d'espace avec le nouveau layout
-    const mainContainer = page.locator('.max-w-screen-2xl').first();
-    await expect(mainContainer).toBeVisible();
+    // Vérifier header sticky
+    const header = page.locator('header.sticky').first();
+    await expect(header).toBeVisible();
     
-    // Vérifier que le panneau d'images est plus large (lg:col-span-4)
-    const imagesPanel = page.locator('.lg\\:col-span-4').first();
-    await expect(imagesPanel).toBeVisible();
-  });
-
-  test('should have larger gap between columns', async ({ page }) => {
-    await page.setViewportSize({ width: 1920, height: 1080 });
-    
-    // Vérifier que les 3 panneaux sont présents avec plus d'espace
+    // Vérifier les 3 sections
     await expect(page.getByText('Mes Images')).toBeVisible();
     await expect(page.getByText('Vidéos générées')).toBeVisible();
     await expect(page.getByText('Génération Vidéo IA')).toBeVisible();
+  });
+
+  test('should have bordered column layout', async ({ page }) => {
+    await page.setViewportSize({ width: 1920, height: 1080 });
+    
+    // Les panneaux doivent avoir des bordures
+    const borderedPanels = page.locator('.border-r.border-border\\/40');
+    await expect(borderedPanels.first()).toBeVisible();
   });
 
   test('should show larger textarea in video config', async ({ page }) => {

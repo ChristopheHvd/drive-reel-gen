@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import { Trash2, Eye, Video } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
 import { Image } from "../types";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -72,36 +71,51 @@ export const ImageCard = ({ image, onDelete, onSelect, isSelected, onGenerateVid
 
   return (
     <>
-      <Card 
-        className={`group relative overflow-hidden cursor-pointer transition-all duration-300 hover:scale-[1.02] ${
-          isSelected ? 'ring-2 ring-primary shadow-[0_0_20px_hsl(var(--primary)/0.3)]' : 'hover:shadow-[0_8px_30px_hsl(var(--primary)/0.12)]'
+      <div 
+        className={`group relative overflow-hidden rounded-lg cursor-pointer transition-all duration-300 ${
+          isSelected 
+            ? 'ring-2 ring-primary shadow-[0_0_20px_hsl(var(--primary)/0.4)]' 
+            : 'ring-1 ring-border/50 hover:ring-border'
         }`}
         onClick={() => onSelect?.(image)}
       >
-        {/* Image avec overlay gradient subtil */}
-        <div className="aspect-square bg-muted relative">
+        {/* Image */}
+        <div className="aspect-square bg-muted/50 relative">
           {imageUrl ? (
             <>
               <img
                 src={imageUrl}
                 alt={image.file_name}
-                className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                className="w-full h-full object-cover"
               />
-              {/* Gradient overlay subtil pour améliorer la lisibilité */}
-              <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+              {/* Overlay hover */}
+              <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center">
+                <Button
+                  variant="default"
+                  size="sm"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleGenerateVideo();
+                  }}
+                  className="bg-primary hover:bg-primary/90 gap-2"
+                >
+                  <Video className="w-4 h-4" />
+                  Générer
+                </Button>
+              </div>
             </>
           ) : (
-            <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-muted to-muted/50">
-              <Eye className="w-8 h-8 text-muted-foreground animate-pulse" />
+            <div className="w-full h-full flex items-center justify-center">
+              <Eye className="w-6 h-6 text-muted-foreground animate-pulse" />
             </div>
           )}
         </div>
 
-        {/* Bouton supprimer - plus discret et élégant */}
+        {/* Bouton supprimer */}
         <Button
           variant="ghost"
           size="icon"
-          className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-all duration-300 bg-background/80 backdrop-blur-sm hover:bg-destructive hover:text-destructive-foreground shadow-lg z-10 w-8 h-8"
+          className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 bg-background/90 hover:bg-destructive hover:text-destructive-foreground w-7 h-7 z-10"
           onClick={(e) => {
             e.stopPropagation();
             setShowDeleteDialog(true);
@@ -110,22 +124,7 @@ export const ImageCard = ({ image, onDelete, onSelect, isSelected, onGenerateVid
         >
           <Trash2 className="w-3.5 h-3.5" />
         </Button>
-
-        {/* Overlay avec bouton génération vidéo - design minimaliste */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-all duration-300 flex items-center justify-center backdrop-blur-[2px]">
-          <Button
-            variant="default"
-            onClick={(e) => {
-              e.stopPropagation();
-              handleGenerateVideo();
-            }}
-            className="px-6 py-4 rounded-xl bg-primary/90 hover:bg-primary shadow-[0_0_20px_hsl(var(--primary)/0.5)] hover:shadow-[0_0_30px_hsl(var(--primary)/0.7)] transition-all duration-300 hover:scale-105 flex items-center gap-2"
-          >
-            <Video className="w-5 h-5" />
-            <span className="text-sm font-medium">Générer</span>
-          </Button>
-        </div>
-      </Card>
+      </div>
 
       {/* Dialog de confirmation de suppression */}
       <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
