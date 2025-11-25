@@ -52,6 +52,10 @@ test.describe('Dashboard Layout - 3 Panels', () => {
     // Les panneaux doivent avoir plus d'espace avec le nouveau layout
     const mainContainer = page.locator('.max-w-screen-2xl').first();
     await expect(mainContainer).toBeVisible();
+    
+    // Vérifier que le panneau d'images est plus large (lg:col-span-4)
+    const imagesPanel = page.locator('.lg\\:col-span-4').first();
+    await expect(imagesPanel).toBeVisible();
   });
 
   test('should have larger gap between columns', async ({ page }) => {

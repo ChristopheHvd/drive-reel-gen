@@ -86,19 +86,19 @@ describe('Dashboard', () => {
     expect(mainContainer).toBeInTheDocument();
   });
 
-  it('should have proper column distribution (3-5-4 on large screens)', () => {
+  it('should have proper column distribution (4-5-3 on large screens)', () => {
     const { container } = renderDashboard();
     
-    // Check left panel
-    const leftPanel = container.querySelector('.lg\\:col-span-3');
+    // Check left panel (images) - larger for bigger thumbnails
+    const leftPanel = container.querySelector('.lg\\:col-span-4');
     expect(leftPanel).toBeInTheDocument();
     
     // Check center panel
     const centerPanel = container.querySelector('.lg\\:col-span-5');
     expect(centerPanel).toBeInTheDocument();
     
-    // Check right panel
-    const rightPanel = container.querySelector('.lg\\:col-span-4');
+    // Check right panel (config)
+    const rightPanel = container.querySelector('.lg\\:col-span-3');
     expect(rightPanel).toBeInTheDocument();
   });
 

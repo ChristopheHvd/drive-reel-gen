@@ -162,7 +162,7 @@ const Dashboard = () => {
       <div className="max-w-screen-2xl mx-auto px-6 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
           {/* LEFT PANEL: Images */}
-          <div className="lg:col-span-3">
+          <div className="lg:col-span-4">
             <Card className="h-full">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
                 <CardTitle>Mes Images</CardTitle>
@@ -240,7 +240,7 @@ const Dashboard = () => {
           </div>
 
           {/* RIGHT PANEL: Configuration génération */}
-          <div className="lg:col-span-4" id="video-config">
+          <div className="lg:col-span-3" id="video-config">
             <Card className="h-full">
               <CardHeader>
                 <CardTitle>Génération Vidéo IA</CardTitle>
