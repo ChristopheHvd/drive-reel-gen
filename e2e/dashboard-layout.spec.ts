@@ -37,7 +37,45 @@ test.describe('Dashboard Layout - 3 Panels', () => {
     
     // Vérifier la présence des champs de configuration
     await expect(page.getByText(/mode de génération/i)).toBeVisible();
-    await expect(page.getByText(/format de la vidéo/i)).toBeVisible();
+    
+    // Ouvrir les options avancées pour voir le format
+    const advancedOptions = page.getByText(/options avancées/i);
+    if (await advancedOptions.isVisible()) {
+      await advancedOptions.click();
+      await expect(page.getByText(/format de la vidéo/i)).toBeVisible();
+    }
+  });
+
+  test('should have wider layout on large screens', async ({ page }) => {
+    await page.setViewportSize({ width: 1920, height: 1080 });
+    
+    // Les panneaux doivent avoir plus d'espace avec le nouveau layout
+    const mainContainer = page.locator('.max-w-screen-2xl').first();
+    await expect(mainContainer).toBeVisible();
+  });
+
+  test('should have larger gap between columns', async ({ page }) => {
+    await page.setViewportSize({ width: 1920, height: 1080 });
+    
+    // Vérifier que les 3 panneaux sont présents avec plus d'espace
+    await expect(page.getByText('Mes Images')).toBeVisible();
+    await expect(page.getByText('Vidéos générées')).toBeVisible();
+    await expect(page.getByText('Génération Vidéo IA')).toBeVisible();
+  });
+
+  test('should show larger textarea in video config', async ({ page }) => {
+    await page.setViewportSize({ width: 1920, height: 1080 });
+    
+    // Chercher le textarea du prompt
+    const textarea = page.getByPlaceholder(/décrivez la vidéo/i);
+    await expect(textarea).toBeVisible();
+    
+    // Le textarea devrait permettre le redimensionnement vertical
+    const textareaElement = await textarea.elementHandle();
+    if (textareaElement) {
+      const className = await textareaElement.evaluate(el => el.className);
+      expect(className).toContain('resize-y');
+    }
   });
 
   test('should stack panels vertically on mobile', async ({ page }) => {

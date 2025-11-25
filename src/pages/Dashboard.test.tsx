@@ -79,4 +79,32 @@ describe('Dashboard', () => {
     const uploadButton = getByRole('button', { name: /upload/i });
     expect(uploadButton).toBeInTheDocument();
   });
+
+  it('should use wider layout with max-w-screen-2xl container', () => {
+    const { container } = renderDashboard();
+    const mainContainer = container.querySelector('.max-w-screen-2xl');
+    expect(mainContainer).toBeInTheDocument();
+  });
+
+  it('should have proper column distribution (3-5-4 on large screens)', () => {
+    const { container } = renderDashboard();
+    
+    // Check left panel
+    const leftPanel = container.querySelector('.lg\\:col-span-3');
+    expect(leftPanel).toBeInTheDocument();
+    
+    // Check center panel
+    const centerPanel = container.querySelector('.lg\\:col-span-5');
+    expect(centerPanel).toBeInTheDocument();
+    
+    // Check right panel
+    const rightPanel = container.querySelector('.lg\\:col-span-4');
+    expect(rightPanel).toBeInTheDocument();
+  });
+
+  it('should have increased gap between columns', () => {
+    const { container } = renderDashboard();
+    const gridContainer = container.querySelector('.gap-8');
+    expect(gridContainer).toBeInTheDocument();
+  });
 });

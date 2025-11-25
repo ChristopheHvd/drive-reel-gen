@@ -124,4 +124,18 @@ describe('VideoConfigForm', () => {
     
     expect(getByText(/génération en cours/i)).toBeInTheDocument();
   });
+
+  it('should have larger textarea with 8 rows', () => {
+    const { getByPlaceholderText } = render(<VideoConfigForm onGenerate={vi.fn()} />);
+    
+    const textarea = getByPlaceholderText(/décrivez la vidéo/i) as HTMLTextAreaElement;
+    expect(textarea.rows).toBe(8);
+  });
+
+  it('should allow textarea to be resized vertically', () => {
+    const { getByPlaceholderText } = render(<VideoConfigForm onGenerate={vi.fn()} />);
+    
+    const textarea = getByPlaceholderText(/décrivez la vidéo/i);
+    expect(textarea.className).toContain('resize-y');
+  });
 });

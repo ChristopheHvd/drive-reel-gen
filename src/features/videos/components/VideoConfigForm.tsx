@@ -143,8 +143,8 @@ export const VideoConfigForm = ({ selectedImageId, onGenerate, disabled, loading
           placeholder="Décrivez la vidéo que vous souhaitez générer..."
           value={prompt}
           onChange={(e) => setPrompt(e.target.value)}
-          rows={4}
-          className="resize-none"
+          rows={8}
+          className="resize-y"
         />
         <p className="text-xs text-muted-foreground">
           Par exemple: 'Produit tournant doucement sur fond blanc avec éclairage doux, ambiance professionnelle et élégante'
