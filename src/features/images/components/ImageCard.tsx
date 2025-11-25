@@ -115,23 +115,15 @@ export const ImageCard = ({ image, onDelete, onSelect, isSelected, onGenerateVid
         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-all duration-300 flex items-center justify-center backdrop-blur-[2px]">
           <Button
             variant="default"
-            size="icon"
             onClick={(e) => {
               e.stopPropagation();
               handleGenerateVideo();
             }}
-            className="w-14 h-14 rounded-full bg-primary/90 hover:bg-primary shadow-[0_0_20px_hsl(var(--primary)/0.5)] hover:shadow-[0_0_30px_hsl(var(--primary)/0.7)] transition-all duration-300 hover:scale-110"
+            className="px-6 py-4 rounded-xl bg-primary/90 hover:bg-primary shadow-[0_0_20px_hsl(var(--primary)/0.5)] hover:shadow-[0_0_30px_hsl(var(--primary)/0.7)] transition-all duration-300 hover:scale-105 flex items-center gap-2"
           >
-            <Video className="w-6 h-6" />
+            <Video className="w-5 h-5" />
+            <span className="text-sm font-medium">Générer</span>
           </Button>
-        </div>
-
-        {/* Info en bas - design plus soigné */}
-        <div className="absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-background/95 to-background/80 backdrop-blur-sm border-t border-border/50">
-          <p className="text-xs truncate font-semibold text-foreground">{image.file_name}</p>
-          <p className="text-xs text-muted-foreground mt-0.5">
-            {(image.file_size / 1024 / 1024).toFixed(2)} MB
-          </p>
         </div>
       </Card>
 

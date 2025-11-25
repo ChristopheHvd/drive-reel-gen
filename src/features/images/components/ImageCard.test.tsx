@@ -48,13 +48,6 @@ describe('ImageCard', () => {
     (supabase.storage.from as any) = mockStorageFrom;
   });
 
-  it('should render image card with file info', () => {
-    const { getByText } = render(<ImageCard image={mockImage} onDelete={mockOnDelete} />);
-    
-    expect(getByText('image.jpg')).toBeDefined();
-    expect(getByText('0.98 MB')).toBeDefined(); // 1024000 bytes = 0.98 MB
-  });
-
   it('should call onSelect when card is clicked', async () => {
     const user = userEvent.setup();
     const { container } = render(<ImageCard image={mockImage} onDelete={mockOnDelete} onSelect={mockOnSelect} />);
@@ -94,7 +87,7 @@ describe('ImageCard', () => {
 
   it('should call onGenerateVideo when video button is clicked', async () => {
     const user = userEvent.setup();
-    const { container } = render(
+    const { container, getByText } = render(
       <ImageCard 
         image={mockImage} 
         onDelete={mockOnDelete} 
@@ -102,8 +95,8 @@ describe('ImageCard', () => {
       />
     );
     
-    // Trouver le bouton vidéo (icône Video dans l'overlay)
-    const videoButton = container.querySelector('[class*="lucide-video"]')?.closest('button');
+    // Trouver le bouton vidéo avec le texte "Générer"
+    const videoButton = getByText('Générer').closest('button');
     
     if (videoButton) {
       await user.click(videoButton);
@@ -113,7 +106,7 @@ describe('ImageCard', () => {
 
   it('should not call onSelect when clicking video button', async () => {
     const user = userEvent.setup();
-    const { container } = render(
+    const { getByText } = render(
       <ImageCard 
         image={mockImage} 
         onDelete={mockOnDelete} 
@@ -122,7 +115,7 @@ describe('ImageCard', () => {
       />
     );
     
-    const videoButton = container.querySelector('[class*="lucide-video"]')?.closest('button');
+    const videoButton = getByText('Générer').closest('button');
     
     if (videoButton) {
       await user.click(videoButton);
@@ -164,5 +157,31 @@ describe('ImageCard', () => {
     
     const eyeIcon = container.querySelector('.lucide-eye');
     expect(eyeIcon).toBeDefined();
+  });
+
+  it('should have rounded rectangular video button with text', () => {
+    const { getByText, container } = render(
+      <ImageCard 
+        image={mockImage} 
+        onDelete={mockOnDelete} 
+        onGenerateVideo={mockOnGenerateVideo}
+      />
+    );
+    
+    const videoButton = getByText('Générer').closest('button');
+    expect(videoButton).toBeDefined();
+    
+    // Vérifier que le bouton a la classe rounded-xl (rectangulaire arrondi)
+    if (videoButton) {
+      expect(videoButton.className).toContain('rounded-xl');
+    }
+  });
+
+  it('should not display file info anymore', () => {
+    const { queryByText } = render(<ImageCard image={mockImage} onDelete={mockOnDelete} />);
+    
+    // Les infos de fichier ne doivent plus être affichées
+    expect(queryByText('image.jpg')).toBeNull();
+    expect(queryByText('0.98 MB')).toBeNull();
   });
 });
