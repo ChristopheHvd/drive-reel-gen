@@ -41,7 +41,7 @@ export const useVideos = (imageId?: string) => {
     fetchVideos();
   }, [fetchVideos]);
 
-  // Polling temps réel (optionnel)
+  // Polling temps réel avec logging
   useEffect(() => {
     if (!imageId) return;
 
@@ -56,16 +56,34 @@ export const useVideos = (imageId?: string) => {
           filter: `image_id=eq.${imageId}`,
         },
         (payload) => {
-          console.log('Video updated:', payload);
+          console.log('Video realtime update received:', payload);
           fetchVideos();
         }
       )
-      .subscribe();
+      .subscribe((status) => {
+        console.log('Realtime subscription status:', status);
+      });
 
     return () => {
       supabase.removeChannel(channel);
     };
   }, [imageId, fetchVideos]);
+
+  // Polling fallback pour vidéos en pending/processing
+  useEffect(() => {
+    const hasPendingVideos = videos.some(
+      v => v.status === 'pending' || v.status === 'processing'
+    );
+    
+    if (!hasPendingVideos) return;
+
+    console.log('Polling fallback active for pending/processing videos');
+    const interval = setInterval(() => {
+      fetchVideos();
+    }, 5000); // Toutes les 5 secondes
+
+    return () => clearInterval(interval);
+  }, [videos, fetchVideos]);
 
   return {
     videos,
