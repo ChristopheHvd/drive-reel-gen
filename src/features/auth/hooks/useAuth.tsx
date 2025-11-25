@@ -32,9 +32,15 @@ export const useAuth = () => {
     // Set up auth state listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
+        console.log('Auth state change:', event, session?.user?.id);
         setSession(session);
         setUser(session?.user ?? null);
         setLoading(false);
+        
+        // Rediriger vers /app après connexion réussie
+        if (event === 'SIGNED_IN' && session) {
+          navigate('/app');
+        }
       }
     );
 
@@ -46,7 +52,7 @@ export const useAuth = () => {
     });
 
     return () => subscription.unsubscribe();
-  }, []);
+  }, [navigate]);
 
   const signInWithGoogle = async () => {
     const { error } = await supabase.auth.signInWithOAuth({
