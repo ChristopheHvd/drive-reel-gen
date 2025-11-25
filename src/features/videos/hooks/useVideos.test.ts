@@ -5,7 +5,18 @@ import { supabase } from '@/integrations/supabase/client';
 
 vi.mock('@/integrations/supabase/client', () => ({
   supabase: {
-    from: vi.fn(),
+    from: vi.fn(() => ({
+      select: vi.fn(() => ({
+        eq: vi.fn(() => ({
+          order: vi.fn(() => Promise.resolve({ data: [], error: null }))
+        }))
+      }))
+    })),
+    channel: vi.fn(() => ({
+      on: vi.fn().mockReturnThis(),
+      subscribe: vi.fn().mockReturnThis(),
+    })),
+    removeChannel: vi.fn(),
   },
 }));
 

@@ -30,29 +30,35 @@ describe('VideoConfigForm', () => {
     expect(packshot).toBeChecked();
   });
 
-  it('should have 9:16 as default aspect ratio', () => {
-    const { getByLabelText } = render(<VideoConfigForm onGenerate={vi.fn()} />);
+  it('should have 9:16 as default aspect ratio', async () => {
+    const user = userEvent.setup();
+    const { getByLabelText, getByText } = render(<VideoConfigForm onGenerate={vi.fn()} />);
+    
+    // Ouvrir les options avancées pour voir l'aspect ratio
+    await user.click(getByText(/options avancées/i));
     
     const vertical = getByLabelText(/9:16 \(Vertical\)/i);
     expect(vertical).toBeChecked();
   });
 
-  it('should disable submit button when prompt is empty', () => {
+  it('should enable submit button with default prompt', () => {
     const { getByRole } = render(<VideoConfigForm onGenerate={vi.fn()} />);
     
+    // Le prompt a une valeur par défaut, donc le bouton devrait être enabled
     const submitButton = getByRole('button', { name: /générer une vidéo/i });
-    expect(submitButton).toBeDisabled();
+    expect(submitButton).not.toBeDisabled();
   });
 
-  it('should enable submit button when prompt is filled', async () => {
+  it('should disable submit button when prompt is cleared', async () => {
     const user = userEvent.setup();
     const { getByPlaceholderText, getByRole } = render(<VideoConfigForm onGenerate={vi.fn()} />);
     
+    // Effacer le prompt
     const promptInput = getByPlaceholderText(/décrivez la vidéo/i);
-    await user.type(promptInput, 'Test prompt');
+    await user.clear(promptInput);
     
     const submitButton = getByRole('button', { name: /générer une vidéo/i });
-    expect(submitButton).not.toBeDisabled();
+    expect(submitButton).toBeDisabled();
   });
 
   it('should call onGenerate with correct config on submit', async () => {
@@ -61,8 +67,9 @@ describe('VideoConfigForm', () => {
     
     const { getByPlaceholderText, getByRole } = render(<VideoConfigForm onGenerate={onGenerate} />);
     
-    // Remplir le prompt
+    // Modifier le prompt (clear puis type pour remplacer le défaut)
     const promptInput = getByPlaceholderText(/décrivez la vidéo/i);
+    await user.clear(promptInput);
     await user.type(promptInput, 'Test prompt');
     
     // Soumettre
@@ -98,12 +105,9 @@ describe('VideoConfigForm', () => {
   it('should have 9:16 as default in collapsed advanced options', async () => {
     const user = userEvent.setup();
     const onGenerate = vi.fn();
-    const { getByPlaceholderText, getByRole } = render(<VideoConfigForm onGenerate={onGenerate} />);
+    const { getByRole } = render(<VideoConfigForm onGenerate={onGenerate} />);
     
-    // Remplir prompt sans toucher aux options avancées
-    await user.type(getByPlaceholderText(/décrivez la vidéo/i), 'Test');
-    
-    // Soumettre
+    // Soumettre avec les valeurs par défaut (sans ouvrir les options avancées)
     await user.click(getByRole('button', { name: /générer une vidéo/i }));
     
     // Vérifier que 9:16 est utilisé par défaut
