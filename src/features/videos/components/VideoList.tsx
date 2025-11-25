@@ -47,27 +47,30 @@ export const VideoList = ({
 
   // Vérifier si une vidéo est en cours de génération
   const pendingVideo = videos.find(v => v.status === 'pending' || v.status === 'processing');
+  const completedVideos = videos
+    .filter(v => v.status === 'completed')
+    .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
   
   // Si vidéo en cours de génération → Afficher le placeholder de chargement
   if (pendingVideo) {
     return (
-      <div className="space-y-4">
+      <div className="space-y-6">
         <VideoLoadingPlaceholder 
           image={selectedImage}
           status={pendingVideo.status as 'pending' | 'processing'}
         />
-        {/* Afficher les vidéos déjà terminées en dessous */}
-        {videos
-          .filter(v => v.status === 'completed')
-          .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
-          .map(video => (
-            <VideoPlayer 
-              key={video.id} 
-              video={video}
-              onDelete={onDeleteVideo}
-            />
-          ))
-        }
+        {/* Afficher les vidéos déjà terminées en dessous en grille */}
+        {completedVideos.length > 0 && (
+          <div className="grid grid-cols-2 gap-3">
+            {completedVideos.map(video => (
+              <VideoPlayer 
+                key={video.id} 
+                video={video}
+                onDelete={onDeleteVideo}
+              />
+            ))}
+          </div>
+        )}
       </div>
     );
   }
@@ -82,14 +85,10 @@ export const VideoList = ({
     );
   }
 
-  // Afficher les vidéos (plus récente en premier)
-  const sortedVideos = [...videos].sort((a, b) => 
-    new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-  );
-
+  // Afficher les vidéos en grille (plus récente en premier)
   return (
-    <div className="space-y-4">
-      {sortedVideos.map(video => (
+    <div className="grid grid-cols-2 gap-3">
+      {completedVideos.map(video => (
         <VideoPlayer 
           key={video.id} 
           video={video}

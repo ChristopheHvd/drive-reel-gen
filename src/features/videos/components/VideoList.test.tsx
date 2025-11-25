@@ -114,7 +114,7 @@ describe('VideoList', () => {
   });
 
   it('should render video cards when videos exist', () => {
-    const { getByText } = render(
+    const { getByText, container } = render(
       <VideoList
         imageId="img-1"
         selectedImage={{
@@ -138,6 +138,10 @@ describe('VideoList', () => {
     expect(getByText('Test prompt')).toBeInTheDocument();
     expect(getByText('packshot')).toBeInTheDocument();
     expect(getByText('9:16')).toBeInTheDocument();
+    
+    // Vérifier que les vidéos sont affichées en grille
+    const videoGrid = container.querySelector('.grid.grid-cols-2');
+    expect(videoGrid).toBeInTheDocument();
   });
 
   it('should display thumbnail when available', () => {
@@ -243,7 +247,7 @@ describe('VideoList', () => {
       mockVideos[0], // completed video
     ];
 
-    const { getByText } = render(
+    const { getByText, container } = render(
       <VideoList
         imageId="img-1"
         selectedImage={{
@@ -267,5 +271,9 @@ describe('VideoList', () => {
     // Should show both placeholder and completed video
     expect(getByText('Génération en cours')).toBeInTheDocument();
     expect(getByText('Test prompt')).toBeInTheDocument();
+    
+    // Vérifier que les vidéos complétées sont affichées en grille
+    const videoGrid = container.querySelector('.grid.grid-cols-2');
+    expect(videoGrid).toBeInTheDocument();
   });
 });
