@@ -98,14 +98,14 @@ const Dashboard = () => {
     
     setSelectedImage(image);
     
-    // Utiliser le prompt par défaut
+    // Utiliser le prompt par défaut et le mode packshot (valeur autorisée par la contrainte DB)
     const defaultPrompt = "Génère une vidéo sympa, très dynamique, respectant les codes d'Instagram";
     
     try {
       const { data, error } = await supabase.functions.invoke('generate-video', {
         body: {
           imageId: image.id,
-          mode: 'FIRST_AND_LAST_FRAME',
+          mode: 'packshot',
           prompt: defaultPrompt,
           aspectRatio: '9:16',
         }
