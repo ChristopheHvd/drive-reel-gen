@@ -15,6 +15,7 @@ const Dashboard = () => {
   const [selectedVideo, setSelectedVideo] = useState<Video | null>(null);
   const [showUploader, setShowUploader] = useState(false);
   const [showQuotaDialog, setShowQuotaDialog] = useState(false);
+  const [generatingVideo, setGeneratingVideo] = useState(false);
   const { videos, loading: videosLoading, refetchVideos } = useVideos(selectedImage?.id);
   const { toast } = useToast();
   const { subscription, videosRemaining, isQuotaExceeded, nextResetDate, loading: subscriptionLoading } = useSubscription();
@@ -49,6 +50,8 @@ const Dashboard = () => {
       setShowQuotaDialog(true);
       return;
     }
+
+    setGeneratingVideo(true);
     
     try {
       // Upload logo si présent
@@ -107,6 +110,8 @@ const Dashboard = () => {
         description: error.message || "Impossible de lancer la génération",
         variant: "destructive",
       });
+    } finally {
+      setGeneratingVideo(false);
     }
   };
 
@@ -143,6 +148,7 @@ const Dashboard = () => {
     }
     
     setSelectedImage(image);
+    setGeneratingVideo(true);
     
     // Utiliser le prompt par défaut
     const defaultPrompt = "Génère une vidéo sympa, très dynamique, respectant les codes d'Instagram";
@@ -174,6 +180,8 @@ const Dashboard = () => {
         description: error.message || "Impossible de lancer la génération",
         variant: "destructive",
       });
+    } finally {
+      setGeneratingVideo(false);
     }
   };
 
@@ -318,6 +326,7 @@ const Dashboard = () => {
                 initialPrompt={selectedVideo?.prompt}
                 onGenerate={handleGenerateVideo}
                 disabled={!selectedImage}
+                loading={generatingVideo}
               />
             ) : (
               <div className="flex items-center justify-center h-full text-center">
