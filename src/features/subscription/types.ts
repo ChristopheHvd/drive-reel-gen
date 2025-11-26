@@ -26,7 +26,6 @@ export const PLAN_CONFIGS: Record<"free" | "pro" | "business", PlanConfig> = {
     price: 0,
     videoLimit: 6,
     features: ["6 vidéos par mois", "Génération IA de prompts", "Formats 9:16 et 16:9"],
-    stripePriceId: "", // À remplir par l'utilisateur
   },
   pro: {
     name: "Pro",
