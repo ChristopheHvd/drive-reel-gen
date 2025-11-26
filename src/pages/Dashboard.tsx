@@ -32,6 +32,8 @@ const Dashboard = () => {
     logoFile?: File;
     additionalImageFile?: File;
     seed?: number;
+    logoUrl?: string;           // Pour régénération avec logo existant
+    additionalImageUrl?: string; // Pour régénération avec image existante
   }) => {
     if (!selectedImage) {
       toast({
@@ -80,8 +82,9 @@ const Dashboard = () => {
           imageId: selectedImage.id,
           prompt: config.prompt,
           aspectRatio: config.aspectRatio,
-          logoUrl,
-          additionalImageUrl,
+          // Priorité aux nouveaux fichiers uploadés, sinon utiliser les URLs existantes
+          logoUrl: logoUrl || config.logoUrl,
+          additionalImageUrl: additionalImageUrl || config.additionalImageUrl,
           seed: config.seed,
         }
       });
@@ -175,12 +178,15 @@ const Dashboard = () => {
   };
 
   const handleRegenerateVideo = (video: Video) => {
-    // Régénérer avec les mêmes paramètres mais nouveau seed
-    const newSeed = Math.floor(Math.random() * 1000000);
+    // Régénérer avec les mêmes paramètres mais nouveau seed dans la plage valide Kie.ai
+    const newSeed = Math.floor(Math.random() * 89999) + 10000;
     handleGenerateVideo({
       prompt: video.prompt,
       aspectRatio: video.aspect_ratio,
       seed: newSeed,
+      // Passer logo et image additionnelle s'ils existent (peuvent être null/undefined)
+      logoUrl: video.logo_url || undefined,
+      additionalImageUrl: video.additional_image_url || undefined,
     });
   };
 

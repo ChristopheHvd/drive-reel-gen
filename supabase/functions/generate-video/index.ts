@@ -136,8 +136,9 @@ serve(async (req) => {
     // Générer prompt par défaut si absent
     const finalPrompt = prompt || "Génère une vidéo sympa, très dynamique, respectant les codes d'Instagram";
 
-    // Générer seed si absent
-    const finalSeed = seed || Math.floor(Math.random() * 1000000);
+    // Générer seed dans la plage valide Kie.ai: 10000-99999
+    const generateValidSeed = () => Math.floor(Math.random() * 89999) + 10000;
+    const finalSeed = (seed && seed >= 10000 && seed <= 99999) ? seed : generateValidSeed();
 
     // Déterminer le generationType et les imageUrls
     let generationType = "FIRST_AND_LAST_FRAMES_2_VIDEO";
@@ -186,7 +187,7 @@ serve(async (req) => {
         aspectRatio: targetAspectRatio,
         callBackUrl: `${supabaseUrl}/functions/v1/video-callback`,
         model: "veo3_fast",
-        seeds: [finalSeed],
+        seeds: finalSeed, // Integer, pas tableau
       }),
     });
 
@@ -200,11 +201,16 @@ serve(async (req) => {
     }
 
     const kieData = await kieResponse.json();
+    console.log("Kie.ai response complète:", JSON.stringify(kieData));
+    
     const taskId = kieData.taskId || kieData.data?.taskId;
 
     if (!taskId) {
-      console.error("No taskId in Kie.ai response:", kieData);
-      return new Response(JSON.stringify({ error: "Pas de taskId dans la réponse Kie.ai" }), {
+      console.error("No taskId in Kie.ai response. Full response:", JSON.stringify(kieData));
+      return new Response(JSON.stringify({ 
+        error: "Pas de taskId dans la réponse Kie.ai",
+        kieResponse: kieData, // Inclure pour debug
+      }), {
         status: 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
