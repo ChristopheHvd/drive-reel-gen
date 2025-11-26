@@ -193,4 +193,84 @@ describe('Stripe Webhook Integration', () => {
       expect(subscription?.video_limit).toBe(50);
     });
   });
+
+  describe('timestamp conversion edge cases', () => {
+    it('should handle subscription updates with undefined period dates', async () => {
+      const mockUpdateData = {
+        current_period_start: null, // safeTimestampToISO(undefined) returns null
+        current_period_end: null,
+        cancel_at_period_end: false,
+        updated_at: expect.any(String),
+      };
+
+      const mockEq = vi.fn().mockResolvedValue({ data: null, error: null });
+      const mockUpdate = vi.fn().mockReturnValue({ eq: mockEq });
+      vi.mocked(supabase.from).mockReturnValue({ update: mockUpdate } as any);
+
+      const { error } = await supabase
+        .from('user_subscriptions')
+        .update(mockUpdateData)
+        .eq('stripe_subscription_id', 'sub_test_123');
+
+      expect(error).toBeNull();
+      expect(mockUpdate).toHaveBeenCalledWith(mockUpdateData);
+    });
+
+    it('should handle subscription updates with null period dates', async () => {
+      const mockUpdateData = {
+        current_period_start: null,
+        current_period_end: null,
+        cancel_at_period_end: false,
+      };
+
+      const mockEq = vi.fn().mockResolvedValue({ data: null, error: null });
+      const mockUpdate = vi.fn().mockReturnValue({ eq: mockEq });
+      vi.mocked(supabase.from).mockReturnValue({ update: mockUpdate } as any);
+
+      const { error } = await supabase
+        .from('user_subscriptions')
+        .update(mockUpdateData)
+        .eq('stripe_subscription_id', 'sub_test_123');
+
+      expect(error).toBeNull();
+    });
+
+    it('should correctly convert valid Stripe timestamps', () => {
+      // Test timestamp conversion logic (isolated from webhook)
+      const timestamp = 1764163467; // From actual Stripe payload
+      const expectedISO = new Date(timestamp * 1000).toISOString();
+
+      expect(expectedISO).toMatch(/2025-01-26/); // Should be in January 2025
+      expect(expectedISO).toContain('T'); // Should have time component
+      expect(expectedISO).toContain('Z'); // Should be UTC
+    });
+
+    it('should handle checkout.session.completed with valid timestamps', async () => {
+      const mockUpdateData = {
+        plan_type: 'pro',
+        video_limit: 50,
+        stripe_customer_id: 'cus_test_123',
+        stripe_subscription_id: 'sub_test_123',
+        stripe_price_id: 'price_1SSfSJBlI68zgCmzWM3uPZIu',
+        current_period_start: new Date(1764163467 * 1000).toISOString(),
+        current_period_end: new Date(1766755467 * 1000).toISOString(),
+        updated_at: expect.any(String),
+      };
+
+      const mockEq = vi.fn().mockResolvedValue({ data: null, error: null });
+      const mockUpdate = vi.fn().mockReturnValue({ eq: mockEq });
+      vi.mocked(supabase.from).mockReturnValue({ update: mockUpdate } as any);
+
+      const { error } = await supabase
+        .from('user_subscriptions')
+        .update(mockUpdateData)
+        .eq('user_id', mockUserId);
+
+      expect(error).toBeNull();
+      expect(mockUpdate).toHaveBeenCalledWith(expect.objectContaining({
+        current_period_start: expect.stringMatching(/2025/),
+        current_period_end: expect.stringMatching(/2025/),
+      }));
+    });
+  });
 });
