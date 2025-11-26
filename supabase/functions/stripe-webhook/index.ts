@@ -11,6 +11,22 @@ const supabaseAdmin = createClient(
   Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
 );
 
+/**
+ * Convertit un timestamp Unix Stripe en ISO string de manière sécurisée
+ * @param timestamp - Timestamp Unix en secondes (peut être undefined/null)
+ * @returns ISO string ou null si invalide
+ */
+const safeTimestampToISO = (timestamp: number | undefined | null): string | null => {
+  if (timestamp === undefined || timestamp === null || isNaN(timestamp)) {
+    return null;
+  }
+  const date = new Date(timestamp * 1000);
+  if (isNaN(date.getTime())) {
+    return null;
+  }
+  return date.toISOString();
+};
+
 serve(async (req) => {
   const signature = req.headers.get("stripe-signature");
   
@@ -39,9 +55,25 @@ serve(async (req) => {
           break;
         }
 
+        if (!session.subscription) {
+          console.error("No subscription in session");
+          break;
+        }
+
         const subscription = await stripe.subscriptions.retrieve(
           session.subscription as string
         );
+
+        console.log("Subscription data:", {
+          id: subscription.id,
+          current_period_start: subscription.current_period_start,
+          current_period_end: subscription.current_period_end,
+        });
+
+        if (!subscription.items.data[0]?.price?.id) {
+          console.error("No price found in subscription items");
+          break;
+        }
 
         const priceId = subscription.items.data[0].price.id;
         
@@ -58,8 +90,8 @@ serve(async (req) => {
             stripe_customer_id: session.customer as string,
             stripe_subscription_id: session.subscription as string,
             stripe_price_id: priceId,
-            current_period_start: new Date(subscription.current_period_start * 1000).toISOString(),
-            current_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
+            current_period_start: safeTimestampToISO(subscription.current_period_start),
+            current_period_end: safeTimestampToISO(subscription.current_period_end),
             updated_at: new Date().toISOString(),
           })
           .eq('user_id', userId);
@@ -73,11 +105,17 @@ serve(async (req) => {
       case "customer.subscription.updated": {
         const subscription = event.data.object as Stripe.Subscription;
         
+        console.log("Updating subscription:", {
+          id: subscription.id,
+          current_period_start: subscription.current_period_start,
+          current_period_end: subscription.current_period_end,
+        });
+        
         const { error } = await supabaseAdmin
           .from('user_subscriptions')
           .update({
-            current_period_start: new Date(subscription.current_period_start * 1000).toISOString(),
-            current_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
+            current_period_start: safeTimestampToISO(subscription.current_period_start),
+            current_period_end: safeTimestampToISO(subscription.current_period_end),
             cancel_at_period_end: subscription.cancel_at_period_end,
             updated_at: new Date().toISOString(),
           })
