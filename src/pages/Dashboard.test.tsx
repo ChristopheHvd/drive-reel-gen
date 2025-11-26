@@ -4,10 +4,11 @@ import { BrowserRouter } from 'react-router-dom';
 import Dashboard from './Dashboard';
 
 // Créer les mocks configurables avec vi.hoisted (hoisted = remontées au début)
-const { mockUseImages, mockUseVideos, mockVideoConfigFormProps } = vi.hoisted(() => ({
+const { mockUseImages, mockUseVideos, mockVideoConfigFormProps, mockUseSubscription } = vi.hoisted(() => ({
   mockUseImages: vi.fn(),
   mockUseVideos: vi.fn(),
   mockVideoConfigFormProps: vi.fn(),
+  mockUseSubscription: vi.fn(),
 }));
 
 // Les mocks utilisent ces fonctions
@@ -26,6 +27,11 @@ vi.mock('@/features/videos', () => ({
   useVideos: () => mockUseVideos(),
 }));
 
+vi.mock('@/features/subscription', () => ({
+  useSubscription: () => mockUseSubscription(),
+  QuotaExceededDialog: () => null,
+}));
+
 describe('Dashboard', () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -42,6 +48,18 @@ describe('Dashboard', () => {
       videos: [],
       loading: false,
       refetchVideos: vi.fn(),
+    });
+    
+    mockUseSubscription.mockReturnValue({
+      subscription: { 
+        plan_type: 'free', 
+        video_limit: 6, 
+        videos_generated_this_month: 0 
+      },
+      videosRemaining: 6,
+      isQuotaExceeded: false,
+      nextResetDate: '1 janvier 2025',
+      loading: false,
     });
     
     mockVideoConfigFormProps.mockClear();
@@ -83,6 +101,26 @@ describe('Dashboard', () => {
   });
 
   it('should render VideoConfigForm in right panel', () => {
+    // Fournir au moins 1 image pour que selectedImage soit défini
+    mockUseImages.mockReturnValue({
+      images: [{ 
+        id: 'img-1', 
+        file_name: 'test1.jpg', 
+        team_id: 'team-1', 
+        uploaded_by: 'user-1', 
+        storage_path: 'path1', 
+        file_size: 1000, 
+        mime_type: 'image/jpeg',
+        width: 800,
+        height: 600,
+        created_at: '2024-01-01', 
+        updated_at: '2024-01-01' 
+      }],
+      loading: false,
+      deleteImage: vi.fn(),
+      fetchImages: vi.fn(),
+    });
+    
     const { getByTestId } = renderDashboard();
     
     expect(getByTestId('video-config')).toBeInTheDocument();
@@ -197,18 +235,17 @@ describe('Dashboard - Auto-select first image', () => {
       refetchVideos: vi.fn(),
     });
 
-    render(
+    const { getByText, queryByTestId } = render(
       <BrowserRouter>
         <Dashboard />
       </BrowserRouter>
     );
 
-    // VideoConfigForm ne devrait pas avoir reçu de selectedImageId
-    expect(mockVideoConfigFormProps).toHaveBeenCalledWith(
-      expect.objectContaining({
-        selectedImageId: null,
-      })
-    );
+    // VideoConfigForm ne devrait pas être rendu
+    expect(queryByTestId('video-config')).not.toBeInTheDocument();
+    
+    // Le message placeholder devrait apparaître
+    expect(getByText(/sélectionnez une image/i)).toBeInTheDocument();
   });
 
   it('should NOT auto-select while images are loading', () => {
@@ -226,17 +263,16 @@ describe('Dashboard - Auto-select first image', () => {
       refetchVideos: vi.fn(),
     });
 
-    render(
+    const { getByText, queryByTestId } = render(
       <BrowserRouter>
         <Dashboard />
       </BrowserRouter>
     );
 
-    // VideoConfigForm ne devrait pas avoir reçu de selectedImageId
-    expect(mockVideoConfigFormProps).toHaveBeenCalledWith(
-      expect.objectContaining({
-        selectedImageId: null,
-      })
-    );
+    // VideoConfigForm ne devrait pas être rendu pendant le chargement
+    expect(queryByTestId('video-config')).not.toBeInTheDocument();
+    
+    // Le message placeholder devrait apparaître
+    expect(getByText(/sélectionnez une image/i)).toBeInTheDocument();
   });
 });
