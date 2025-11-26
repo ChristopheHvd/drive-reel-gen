@@ -5,29 +5,28 @@ import { VideoConfigForm } from './VideoConfigForm';
 
 describe('VideoConfigForm', () => {
   it('should render all form fields', async () => {
-    const user = userEvent.setup();
-    const { getByText, getByRole } = render(<VideoConfigForm onGenerate={vi.fn()} />);
+    const { getByText, getByRole, getByLabelText } = render(<VideoConfigForm onGenerate={vi.fn()} />);
     
-    // Vérifier champs visibles par défaut
-    expect(getByText(/mode de génération/i)).toBeInTheDocument();
-    expect(getByText(/entrez le prompt/i)).toBeInTheDocument();
+    // Prompt field
+    expect(getByLabelText(/prompt de génération/i)).toBeInTheDocument();
+    
+    // Boutons de génération de prompt IA
+    expect(getByText(/situation/i)).toBeInTheDocument();
+    expect(getByText(/produit/i)).toBeInTheDocument();
+    expect(getByText(/témoignage/i)).toBeInTheDocument();
+    
+    // Bouton submit
     expect(getByRole('button', { name: /générer une vidéo/i })).toBeInTheDocument();
     
-    // Options avancées (collapsées par défaut)
+    // Options avancées collapsées
     expect(getByText(/options avancées/i)).toBeInTheDocument();
-    
-    // Ouvrir les options avancées
-    await user.click(getByText(/options avancées/i));
-    
-    // Format maintenant visible
-    expect(getByText(/format de la vidéo/i)).toBeInTheDocument();
   });
 
-  it('should have packshot as default mode', () => {
+  it('should have prompt field visible by default', () => {
     const { getByLabelText } = render(<VideoConfigForm onGenerate={vi.fn()} />);
     
-    const packshot = getByLabelText('Packshot');
-    expect(packshot).toBeChecked();
+    const promptField = getByLabelText(/prompt de génération/i);
+    expect(promptField).toBeInTheDocument();
   });
 
   it('should have 9:16 as default aspect ratio', async () => {
@@ -37,7 +36,7 @@ describe('VideoConfigForm', () => {
     // Ouvrir les options avancées pour voir l'aspect ratio
     await user.click(getByText(/options avancées/i));
     
-    const vertical = getByLabelText(/9:16 \(Vertical\)/i);
+    const vertical = getByLabelText(/9:16 \(Vertical - Instagram Reels\)/i);
     expect(vertical).toBeChecked();
   });
 
@@ -77,28 +76,26 @@ describe('VideoConfigForm', () => {
     await user.click(submitButton);
     
     expect(onGenerate).toHaveBeenCalledWith({
-      mode: 'packshot',
       prompt: 'Test prompt',
       aspectRatio: '9:16',
+      logoFile: undefined,
+      additionalImageFile: undefined,
     });
   });
 
-  it('should have no restrictions between mode and aspect ratio', async () => {
+  it('should allow switching aspect ratio in advanced options', async () => {
     const user = userEvent.setup();
     const { getByLabelText, getByText } = render(<VideoConfigForm onGenerate={vi.fn()} />);
     
     // Ouvrir options avancées
     await user.click(getByText(/options avancées/i));
     
-    // Sélectionner "En situation"
-    await user.click(getByLabelText('En situation'));
-    
-    // Vérifier que 9:16 est toujours sélectionné (pas de changement forcé)
-    const vertical = getByLabelText(/9:16 \(Vertical\)/i);
+    // Vérifier que 9:16 est sélectionné par défaut
+    const vertical = getByLabelText(/9:16 \(Vertical - Instagram Reels\)/i);
     expect(vertical).toBeChecked();
     
     // Vérifier qu'on peut sélectionner 16:9 manuellement
-    const horizontal = getByLabelText(/16:9 \(Horizontal\)/i);
+    const horizontal = getByLabelText(/16:9 \(Horizontal - Paysage\)/i);
     expect(horizontal).not.toBeDisabled();
   });
 
@@ -129,11 +126,11 @@ describe('VideoConfigForm', () => {
     expect(getByText(/génération en cours/i)).toBeInTheDocument();
   });
 
-  it('should have larger textarea with 8 rows', () => {
+  it('should have textarea with 6 rows', () => {
     const { getByPlaceholderText } = render(<VideoConfigForm onGenerate={vi.fn()} />);
     
     const textarea = getByPlaceholderText(/décrivez la vidéo/i) as HTMLTextAreaElement;
-    expect(textarea.rows).toBe(8);
+    expect(textarea.rows).toBe(6);
   });
 
   it('should allow textarea to be resized vertically', () => {
