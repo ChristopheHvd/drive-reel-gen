@@ -7,14 +7,17 @@ import { Link } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import logo from "@/assets/daft-funk-logo.png";
+import { useSubscription, QuotaExceededDialog } from "@/features/subscription";
 
 const Dashboard = () => {
   const { images, loading, deleteImage, fetchImages } = useImages();
   const [selectedImage, setSelectedImage] = useState<Image | null>(null);
   const [selectedVideo, setSelectedVideo] = useState<Video | null>(null);
   const [showUploader, setShowUploader] = useState(false);
+  const [showQuotaDialog, setShowQuotaDialog] = useState(false);
   const { videos, loading: videosLoading, refetchVideos } = useVideos(selectedImage?.id);
   const { toast } = useToast();
+  const { subscription, videosRemaining, isQuotaExceeded, nextResetDate, loading: subscriptionLoading } = useSubscription();
 
   // Sélectionner automatiquement la première image au chargement
   useEffect(() => {
@@ -91,11 +94,7 @@ const Dashboard = () => {
       console.error('Video generation error:', error);
       
       if (error.message?.includes('Quota')) {
-        toast({
-          title: "Quota dépassé",
-          description: "Vous avez atteint votre limite mensuelle de vidéos",
-          variant: "destructive",
-        });
+        setShowQuotaDialog(true);
       } else {
         toast({
           title: "Erreur",
@@ -160,11 +159,7 @@ const Dashboard = () => {
       console.error('Video generation error:', error);
       
       if (error.message?.includes('Quota')) {
-        toast({
-          title: "Quota dépassé",
-          description: "Vous avez atteint votre limite mensuelle de vidéos",
-          variant: "destructive",
-        });
+        setShowQuotaDialog(true);
       } else {
         toast({
           title: "Erreur",
@@ -197,10 +192,23 @@ const Dashboard = () => {
             </span>
           </Link>
           <div className="ml-auto flex items-center gap-4">
-            <span className="text-sm text-muted-foreground">Free • 0/6 vidéos</span>
-            <Button variant="outline" size="sm" className="border-primary/20 hover:border-primary/40">
-              Passer à Pro
-            </Button>
+            {!subscriptionLoading && subscription && (
+              <span className="text-sm text-muted-foreground">
+                <span className="font-medium capitalize">{subscription.plan_type}</span>
+                {' • '}
+                <span>{videosRemaining}/{subscription.video_limit} vidéos</span>
+              </span>
+            )}
+            {subscription?.plan_type === 'free' && (
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="border-primary/20 hover:border-primary/40"
+                onClick={() => setShowQuotaDialog(true)}
+              >
+                Passer à Pro
+              </Button>
+            )}
           </div>
         </div>
       </header>
@@ -311,6 +319,13 @@ const Dashboard = () => {
           </div>
         </div>
       </div>
+
+      <QuotaExceededDialog
+        open={showQuotaDialog}
+        onOpenChange={setShowQuotaDialog}
+        nextResetDate={nextResetDate}
+        currentPlan={subscription?.plan_type || 'free'}
+      />
     </div>
   );
 };
