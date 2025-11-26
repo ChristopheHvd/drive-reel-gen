@@ -126,6 +126,34 @@ describe('Dashboard', () => {
     expect(getByTestId('video-config')).toBeInTheDocument();
   });
 
+  it('should pass loading=false to VideoConfigForm by default', () => {
+    mockUseImages.mockReturnValue({
+      images: [{ 
+        id: 'img-1', 
+        file_name: 'test1.jpg', 
+        team_id: 'team-1', 
+        uploaded_by: 'user-1', 
+        storage_path: 'path1', 
+        file_size: 1000, 
+        mime_type: 'image/jpeg',
+        width: 800,
+        height: 600,
+        created_at: '2024-01-01', 
+        updated_at: '2024-01-01' 
+      }],
+      loading: false,
+      deleteImage: vi.fn(),
+      fetchImages: vi.fn(),
+    });
+    
+    renderDashboard();
+    
+    // Vérifier que loading=false est passé par défaut
+    expect(mockVideoConfigFormProps).toHaveBeenCalledWith(
+      expect.objectContaining({ loading: false })
+    );
+  });
+
   it('should show subscription info in header', () => {
     const { getByText, getByRole } = renderDashboard();
     
