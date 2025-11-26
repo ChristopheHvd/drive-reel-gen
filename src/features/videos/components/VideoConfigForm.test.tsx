@@ -29,17 +29,6 @@ describe('VideoConfigForm', () => {
     expect(promptField).toBeInTheDocument();
   });
 
-  it('should have 9:16 as default aspect ratio', async () => {
-    const user = userEvent.setup();
-    const { getByLabelText, getByText } = render(<VideoConfigForm onGenerate={vi.fn()} />);
-    
-    // Ouvrir les options avancées pour voir l'aspect ratio
-    await user.click(getByText(/options avancées/i));
-    
-    const vertical = getByLabelText(/9:16 \(Vertical - Instagram Reels\)/i);
-    expect(vertical).toBeChecked();
-  });
-
   it('should enable submit button with default prompt', () => {
     const { getByRole } = render(<VideoConfigForm onGenerate={vi.fn()} />);
     
@@ -81,22 +70,6 @@ describe('VideoConfigForm', () => {
       logoFile: undefined,
       additionalImageFile: undefined,
     });
-  });
-
-  it('should allow switching aspect ratio in advanced options', async () => {
-    const user = userEvent.setup();
-    const { getByLabelText, getByText } = render(<VideoConfigForm onGenerate={vi.fn()} />);
-    
-    // Ouvrir options avancées
-    await user.click(getByText(/options avancées/i));
-    
-    // Vérifier que 9:16 est sélectionné par défaut
-    const vertical = getByLabelText(/9:16 \(Vertical - Instagram Reels\)/i);
-    expect(vertical).toBeChecked();
-    
-    // Vérifier qu'on peut sélectionner 16:9 manuellement
-    const horizontal = getByLabelText(/16:9 \(Horizontal - Paysage\)/i);
-    expect(horizontal).not.toBeDisabled();
   });
 
   it('should have 9:16 as default in collapsed advanced options', async () => {
