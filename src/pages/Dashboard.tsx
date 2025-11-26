@@ -41,6 +41,12 @@ const Dashboard = () => {
       });
       return;
     }
+
+    // Vérification instantanée du quota
+    if (isQuotaExceeded) {
+      setShowQuotaDialog(true);
+      return;
+    }
     
     try {
       // Upload logo si présent
@@ -93,15 +99,11 @@ const Dashboard = () => {
     } catch (error: any) {
       console.error('Video generation error:', error);
       
-      if (error.message?.includes('Quota')) {
-        setShowQuotaDialog(true);
-      } else {
-        toast({
-          title: "Erreur",
-          description: error.message || "Impossible de lancer la génération",
-          variant: "destructive",
-        });
-      }
+      toast({
+        title: "Erreur",
+        description: error.message || "Impossible de lancer la génération",
+        variant: "destructive",
+      });
     }
   };
 
@@ -130,6 +132,12 @@ const Dashboard = () => {
   const handleGenerateVideoFromImage = async (imageId: string) => {
     const image = images.find(img => img.id === imageId);
     if (!image) return;
+
+    // Vérification instantanée du quota
+    if (isQuotaExceeded) {
+      setShowQuotaDialog(true);
+      return;
+    }
     
     setSelectedImage(image);
     
@@ -158,15 +166,11 @@ const Dashboard = () => {
     } catch (error: any) {
       console.error('Video generation error:', error);
       
-      if (error.message?.includes('Quota')) {
-        setShowQuotaDialog(true);
-      } else {
-        toast({
-          title: "Erreur",
-          description: error.message || "Impossible de lancer la génération",
-          variant: "destructive",
-        });
-      }
+      toast({
+        title: "Erreur",
+        description: error.message || "Impossible de lancer la génération",
+        variant: "destructive",
+      });
     }
   };
 
