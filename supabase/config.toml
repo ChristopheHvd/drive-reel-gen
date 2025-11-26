@@ -15,3 +15,12 @@ verify_jwt = false
 
 [[functions.check-video-timeouts.schedule]]
 cron = "*/5 * * * *"
+
+[functions.create-checkout]
+verify_jwt = true
+
+[functions.stripe-webhook]
+verify_jwt = false
+
+[functions.customer-portal]
+verify_jwt = true
