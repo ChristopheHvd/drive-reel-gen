@@ -19,14 +19,15 @@ serve(async (req) => {
   }
 
   try {
+    console.log("Webhook received, validating signature...");
     const body = await req.text();
     const webhookSecret = Deno.env.get("STRIPE_WEBHOOK_SECRET");
     
     const event = webhookSecret
-      ? stripe.webhooks.constructEvent(body, signature, webhookSecret)
+      ? await stripe.webhooks.constructEventAsync(body, signature, webhookSecret)
       : JSON.parse(body);
 
-    console.log(`Webhook received: ${event.type}`);
+    console.log(`Webhook validated: ${event.type}`);
 
     switch (event.type) {
       case "checkout.session.completed": {
