@@ -4,6 +4,20 @@ import userEvent from '@testing-library/user-event';
 import { VideoList } from './VideoList';
 import { Video } from '../types';
 
+// Mock du client Supabase
+vi.mock('@/integrations/supabase/client', () => ({
+  supabase: {
+    storage: {
+      from: () => ({
+        createSignedUrl: vi.fn().mockResolvedValue({
+          data: { signedUrl: 'https://example.com/signed-video.mp4' },
+          error: null,
+        }),
+      }),
+    },
+  },
+}));
+
 const mockVideos: Video[] = [
   {
     id: '1',

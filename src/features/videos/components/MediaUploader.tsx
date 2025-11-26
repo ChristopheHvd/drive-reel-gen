@@ -69,6 +69,7 @@ export const MediaUploader = ({ label, onFileSelect, accept = "image/*", classNa
           <div className="relative h-24 border border-border rounded-lg overflow-hidden bg-muted">
             <img src={preview} alt="Preview" className="w-full h-full object-contain" />
             <Button
+              type="button"
               size="icon"
               variant="ghost"
               className="absolute top-1 right-1 h-6 w-6 bg-background/80 hover:bg-background"
