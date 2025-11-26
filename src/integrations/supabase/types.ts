@@ -274,6 +274,7 @@ export type Database = {
           aspect_ratio: string
           completed_at: string | null
           created_at: string
+          current_segment: number | null
           duration_seconds: number
           error_message: string | null
           generation_type: string
@@ -284,7 +285,9 @@ export type Database = {
           mode: string
           prompt: string
           seed: number | null
+          segment_prompts: Json | null
           status: string
+          target_duration_seconds: number | null
           team_id: string
           thumbnail_url: string | null
           timeout_at: string
@@ -297,6 +300,7 @@ export type Database = {
           aspect_ratio?: string
           completed_at?: string | null
           created_at?: string
+          current_segment?: number | null
           duration_seconds?: number
           error_message?: string | null
           generation_type?: string
@@ -307,7 +311,9 @@ export type Database = {
           mode: string
           prompt: string
           seed?: number | null
+          segment_prompts?: Json | null
           status?: string
+          target_duration_seconds?: number | null
           team_id: string
           thumbnail_url?: string | null
           timeout_at?: string
@@ -320,6 +326,7 @@ export type Database = {
           aspect_ratio?: string
           completed_at?: string | null
           created_at?: string
+          current_segment?: number | null
           duration_seconds?: number
           error_message?: string | null
           generation_type?: string
@@ -330,7 +337,9 @@ export type Database = {
           mode?: string
           prompt?: string
           seed?: number | null
+          segment_prompts?: Json | null
           status?: string
+          target_duration_seconds?: number | null
           team_id?: string
           thumbnail_url?: string | null
           timeout_at?: string

@@ -4,12 +4,13 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Collapsible, CollapsibleTrigger, CollapsibleContent } from "@/components/ui/collapsible";
-import { Video, Loader2, ChevronRight, PackageOpen, Users, MessageSquareQuote, AlertCircle } from "lucide-react";
-import { AspectRatio, PromptType } from "../types";
+import { Video, Loader2, ChevronRight, PackageOpen, Users, MessageSquareQuote, AlertCircle, Info } from "lucide-react";
+import { AspectRatio, PromptType, VideoDuration } from "../types";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { MediaUploader } from "./MediaUploader";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface VideoConfigFormProps {
   selectedImageId?: string;
@@ -17,6 +18,7 @@ interface VideoConfigFormProps {
   onGenerate: (config: {
     prompt: string;
     aspectRatio: AspectRatio;
+    durationSeconds: VideoDuration;
     logoFile?: File;
     additionalImageFile?: File;
   }) => void;
@@ -39,6 +41,10 @@ export const VideoConfigForm = ({
 }: VideoConfigFormProps) => {
   const [prompt, setPrompt] = useState(initialPrompt || "Génère une vidéo sympa, très dynamique, respectant les codes d'Instagram");
   const [aspectRatio, setAspectRatio] = useState<AspectRatio>("9:16");
+  const [durationSeconds, setDurationSeconds] = useState<VideoDuration>(() => {
+    const saved = localStorage.getItem('daftfunk-video-duration');
+    return saved ? (Number(saved) as VideoDuration) : 8;
+  });
   const [logoFile, setLogoFile] = useState<File | null>(null);
   const [additionalImageFile, setAdditionalImageFile] = useState<File | null>(null);
   const [loadingPrompt, setLoadingPrompt] = useState(false);
@@ -56,6 +62,7 @@ export const VideoConfigForm = ({
     onGenerate({ 
       prompt, 
       aspectRatio,
+      durationSeconds,
       logoFile: logoFile || undefined,
       additionalImageFile: additionalImageFile || undefined,
     });
@@ -176,6 +183,54 @@ export const VideoConfigForm = ({
         </CollapsibleTrigger>
         
         <CollapsibleContent className="space-y-4 pt-4">
+          {/* Durée de la vidéo */}
+          <div className="space-y-3">
+            <Label>Durée de la vidéo</Label>
+            <RadioGroup 
+              value={String(durationSeconds)} 
+              onValueChange={(v) => {
+                const val = Number(v) as VideoDuration;
+                setDurationSeconds(val);
+                localStorage.setItem('daftfunk-video-duration', String(val));
+              }}
+            >
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="8" id="dur-8" />
+                <Label htmlFor="dur-8" className="font-normal cursor-pointer">
+                  8 secondes <span className="text-muted-foreground">(~2min)</span>
+                </Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="16" id="dur-16" />
+                <Label htmlFor="dur-16" className="font-normal cursor-pointer flex items-center gap-1">
+                  16 secondes <span className="text-muted-foreground">(~4min)</span>
+                  <Tooltip>
+                    <TooltipTrigger type="button">
+                      <Info className="w-3 h-3 text-muted-foreground" />
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Comptera pour 2 vidéos générées dans votre crédit</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="24" id="dur-24" />
+                <Label htmlFor="dur-24" className="font-normal cursor-pointer flex items-center gap-1">
+                  24 secondes <span className="text-muted-foreground">(~6min)</span>
+                  <Tooltip>
+                    <TooltipTrigger type="button">
+                      <Info className="w-3 h-3 text-muted-foreground" />
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Comptera pour 3 vidéos générées dans votre crédit</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </Label>
+              </div>
+            </RadioGroup>
+          </div>
+
           {/* Aspect ratio */}
           <div className="space-y-3">
             <Label>Format de la vidéo</Label>

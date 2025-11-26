@@ -20,9 +20,13 @@ export interface Video {
   additional_image_url?: string;
   generation_type: 'FIRST_AND_LAST_FRAMES_2_VIDEO' | 'REFERENCE_2_VIDEO';
   was_cropped?: boolean;
+  target_duration_seconds: number;
+  current_segment: number;
+  segment_prompts: string[] | null;
 }
 
 export type VideoMode = 'packshot' | 'situation' | 'temoignage';
 export type AspectRatio = '9:16' | '16:9';
 export type GenerationType = 'FIRST_AND_LAST_FRAMES_2_VIDEO' | 'REFERENCE_2_VIDEO';
 export type PromptType = 'situation' | 'product' | 'testimonial';
+export type VideoDuration = 8 | 16 | 24;

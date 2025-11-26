@@ -35,6 +35,9 @@ const mockVideos: Video[] = [
     updated_at: '2024-01-01T00:00:00Z',
     timeout_at: '2024-01-01T00:10:00Z',
     generation_type: 'FIRST_AND_LAST_FRAMES_2_VIDEO',
+    target_duration_seconds: 8,
+    current_segment: 1,
+    segment_prompts: null,
   },
 ];
 

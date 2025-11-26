@@ -46,7 +46,8 @@ serve(async (req) => {
       imageId, 
       prompt, 
       aspectRatio = "9:16", 
-      durationSeconds = 8,
+      targetDurationSeconds = 8,
+      segmentPrompts,
       seed,
       logoUrl,
       additionalImageUrl,
@@ -90,6 +91,9 @@ serve(async (req) => {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
+
+    // Calculer le coût en crédits (8s=1, 16s=2, 24s=3)
+    const videoCredits = Math.ceil(targetDurationSeconds / 8);
 
     if (subscription.videos_generated_this_month >= subscription.video_limit) {
       return new Response(
@@ -228,7 +232,10 @@ serve(async (req) => {
         mode: "packshot", // Mode legacy pour compatibilité DB
         prompt: finalPrompt,
         aspect_ratio: aspectRatio,
-        duration_seconds: durationSeconds,
+        duration_seconds: 8, // Toujours 8s pour le premier segment
+        target_duration_seconds: targetDurationSeconds,
+        current_segment: 1,
+        segment_prompts: segmentPrompts,
         status: "pending",
         seed: finalSeed,
         logo_url: logoUrl,
@@ -247,10 +254,10 @@ serve(async (req) => {
       });
     }
 
-    // Incrémenter quota
+    // Incrémenter quota selon le nombre de segments
     const { error: quotaError } = await supabase
       .from("user_subscriptions")
-      .update({ videos_generated_this_month: subscription.videos_generated_this_month + 1 })
+      .update({ videos_generated_this_month: subscription.videos_generated_this_month + videoCredits })
       .eq("user_id", user.id);
 
     if (quotaError) {
