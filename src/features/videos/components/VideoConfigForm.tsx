@@ -47,7 +47,7 @@ export const VideoConfigForm = ({
   });
   const [logoFile, setLogoFile] = useState<File | null>(null);
   const [additionalImageFile, setAdditionalImageFile] = useState<File | null>(null);
-  const [loadingPrompt, setLoadingPrompt] = useState(false);
+  const [loadingPromptType, setLoadingPromptType] = useState<PromptType | null>(null);
   const [showAdvanced, setShowAdvanced] = useState(false);
 
   // Mettre à jour le prompt quand initialPrompt change
@@ -74,7 +74,7 @@ export const VideoConfigForm = ({
       return;
     }
     
-    setLoadingPrompt(true);
+    setLoadingPromptType(promptType);
     try {
       const { data, error } = await supabase.functions.invoke('generate-video-prompt', {
         body: { imageId: selectedImageId, promptType }
@@ -90,7 +90,7 @@ export const VideoConfigForm = ({
       console.error('Error generating prompt:', error);
       toast.error("Erreur lors de la génération du prompt");
     } finally {
-      setLoadingPrompt(false);
+      setLoadingPromptType(null);
     }
   };
 
@@ -108,7 +108,7 @@ export const VideoConfigForm = ({
           onChange={(e) => setPrompt(e.target.value)}
           rows={6}
           className="resize-y"
-          disabled={loadingPrompt || disabled}
+          disabled={loadingPromptType !== null || disabled}
         />
         <p className="text-xs text-muted-foreground">
           Décrivez l'ambiance, les mouvements, et l'esthétique souhaitée
@@ -124,10 +124,10 @@ export const VideoConfigForm = ({
             variant="outline"
             size="sm"
             onClick={() => handleGeneratePrompt('situation')}
-            disabled={loadingPrompt || !selectedImageId || disabled}
+            disabled={loadingPromptType !== null || !selectedImageId || disabled}
             className="flex flex-col gap-1 h-auto py-2"
           >
-            {loadingPrompt ? (
+            {loadingPromptType === 'situation' ? (
               <Loader2 className="w-4 h-4 animate-spin" />
             ) : (
               <Users className="w-4 h-4" />
@@ -139,10 +139,10 @@ export const VideoConfigForm = ({
             variant="outline"
             size="sm"
             onClick={() => handleGeneratePrompt('product')}
-            disabled={loadingPrompt || !selectedImageId || disabled}
+            disabled={loadingPromptType !== null || !selectedImageId || disabled}
             className="flex flex-col gap-1 h-auto py-2"
           >
-            {loadingPrompt ? (
+            {loadingPromptType === 'product' ? (
               <Loader2 className="w-4 h-4 animate-spin" />
             ) : (
               <PackageOpen className="w-4 h-4" />
@@ -154,10 +154,10 @@ export const VideoConfigForm = ({
             variant="outline"
             size="sm"
             onClick={() => handleGeneratePrompt('testimonial')}
-            disabled={loadingPrompt || !selectedImageId || disabled}
+            disabled={loadingPromptType !== null || !selectedImageId || disabled}
             className="flex flex-col gap-1 h-auto py-2"
           >
-            {loadingPrompt ? (
+            {loadingPromptType === 'testimonial' ? (
               <Loader2 className="w-4 h-4 animate-spin" />
             ) : (
               <MessageSquareQuote className="w-4 h-4" />
@@ -165,14 +165,6 @@ export const VideoConfigForm = ({
             <span className="text-xs">Témoignage</span>
           </Button>
         </div>
-        
-        {/* Loader avec message pendant génération */}
-        {loadingPrompt && (
-          <div className="flex items-center justify-center gap-2 py-3 text-sm text-muted-foreground animate-in fade-in duration-300">
-            <Loader2 className="w-4 h-4 animate-spin" />
-            <span>Génération du prompt en cours...</span>
-          </div>
-        )}
       </div>
 
       {/* Options avancées */}
@@ -282,7 +274,7 @@ export const VideoConfigForm = ({
         type="submit" 
         className="w-full" 
         size="lg" 
-        disabled={disabled || loading || loadingPrompt || !prompt.trim()}
+        disabled={disabled || loading || loadingPromptType !== null || !prompt.trim()}
       >
         {loading ? (
           <>
