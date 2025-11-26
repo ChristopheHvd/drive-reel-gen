@@ -40,9 +40,4 @@ test.describe('Video Callback Flow E2E', () => {
     // Template pour vérifier l'affichage des erreurs
     test.skip();
   });
-
-  test('should poll every 5 seconds when video is in pending/processing state', async ({ page }) => {
-    // Template pour vérifier le polling fallback
-    test.skip();
-  });
 });
