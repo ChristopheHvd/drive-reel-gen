@@ -122,7 +122,94 @@ serve(async (req) => {
 
       console.log('Video uploaded successfully');
 
-      // Mettre à jour le statut en DB
+      // Vérifier si extension nécessaire
+      const targetDuration = video.target_duration_seconds || 8;
+      const currentSegment = video.current_segment || 1;
+      const segmentsNeeded = Math.ceil(targetDuration / 8);
+      const segmentPrompts = video.segment_prompts || [video.prompt];
+
+      if (currentSegment < segmentsNeeded) {
+        // Extension nécessaire
+        const nextPrompt = segmentPrompts[currentSegment]; // Index 1 pour segment 2, etc.
+        console.log(`Extension needed: segment ${currentSegment + 1}/${segmentsNeeded} with prompt: ${nextPrompt}`);
+        
+        const kieApiKey = Deno.env.get('KIE_API_KEY')!;
+        
+        // Appeler API Kie.ai extend
+        const extendResponse = await fetch("https://api.kie.ai/api/v1/veo/extend", {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${kieApiKey}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            taskId: taskId,
+            prompt: nextPrompt,
+            seeds: video.seed,
+            watermark: "",
+            callBackUrl: `${supabaseUrl}/functions/v1/video-callback`,
+          }),
+        });
+
+        if (!extendResponse.ok) {
+          const errorText = await extendResponse.text();
+          console.error('Kie.ai extend error:', errorText);
+          await supabase
+            .from('videos')
+            .update({
+              status: 'failed',
+              error_message: `Erreur extension: ${errorText}`,
+            })
+            .eq('id', video.id);
+          
+          return new Response(JSON.stringify({ error: 'Extend failed' }), {
+            status: 500,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          });
+        }
+
+        const extendData = await extendResponse.json();
+        const newTaskId = extendData.taskId || extendData.data?.taskId;
+
+        if (!newTaskId) {
+          console.error('No taskId in extend response');
+          await supabase
+            .from('videos')
+            .update({
+              status: 'failed',
+              error_message: 'Pas de taskId dans la réponse extend',
+            })
+            .eq('id', video.id);
+          
+          return new Response(JSON.stringify({ error: 'No taskId in extend' }), {
+            status: 500,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          });
+        }
+
+        // Mettre à jour pour le prochain segment
+        const { error: updateError } = await supabase
+          .from('videos')
+          .update({
+            kie_task_id: newTaskId,
+            current_segment: currentSegment + 1,
+            status: 'processing',
+          })
+          .eq('id', video.id);
+
+        if (updateError) {
+          console.error('Update error:', updateError);
+        }
+
+        console.log(`Extension started with new taskId: ${newTaskId} for segment ${currentSegment + 1}`);
+        
+        return new Response(JSON.stringify({ success: true, extended: true }), {
+          status: 200,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        });
+      }
+
+      // Toutes les extensions terminées -> marquer completed
       const { error: updateError } = await supabase
         .from('videos')
         .update({

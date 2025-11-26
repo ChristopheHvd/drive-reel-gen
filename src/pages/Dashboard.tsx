@@ -30,6 +30,7 @@ const Dashboard = () => {
   const handleGenerateVideo = async (config: {
     prompt: string;
     aspectRatio: string;
+    durationSeconds: number;
     logoFile?: File;
     additionalImageFile?: File;
     seed?: number;
@@ -54,6 +55,37 @@ const Dashboard = () => {
     setGeneratingVideo(true);
     
     try {
+      // Générer les prompts segmentés si durée > 8s
+      let segmentPrompts: string[] | null = null;
+      
+      if (config.durationSeconds > 8) {
+        console.log(`Generating ${config.durationSeconds / 8} segment prompts...`);
+        
+        const { data: promptsData, error: promptsError } = await supabase.functions.invoke(
+          'generate-segment-prompts',
+          {
+            body: {
+              originalPrompt: config.prompt,
+              targetDuration: config.durationSeconds,
+              imageId: selectedImage.id,
+            },
+          }
+        );
+        
+        if (promptsError) {
+          console.error('Error generating segment prompts:', promptsError);
+          toast({
+            title: "Erreur",
+            description: "Impossible de générer les prompts segmentés",
+            variant: "destructive",
+          });
+          return;
+        }
+        
+        segmentPrompts = promptsData.prompts;
+        console.log('Segment prompts generated:', segmentPrompts);
+      }
+      
       // Upload logo si présent
       let logoUrl: string | undefined;
       if (config.logoFile) {
@@ -83,8 +115,10 @@ const Dashboard = () => {
       const { data, error } = await supabase.functions.invoke('generate-video', {
         body: {
           imageId: selectedImage.id,
-          prompt: config.prompt,
+          prompt: segmentPrompts ? segmentPrompts[0] : config.prompt,
           aspectRatio: config.aspectRatio,
+          targetDurationSeconds: config.durationSeconds,
+          segmentPrompts: segmentPrompts,
           // Priorité aux nouveaux fichiers uploadés, sinon utiliser les URLs existantes
           logoUrl: logoUrl || config.logoUrl,
           additionalImageUrl: additionalImageUrl || config.additionalImageUrl,
@@ -191,6 +225,7 @@ const Dashboard = () => {
     handleGenerateVideo({
       prompt: video.prompt,
       aspectRatio: video.aspect_ratio,
+      durationSeconds: video.target_duration_seconds,
       seed: newSeed,
       // Passer logo et image additionnelle s'ils existent (peuvent être null/undefined)
       logoUrl: video.logo_url || undefined,
