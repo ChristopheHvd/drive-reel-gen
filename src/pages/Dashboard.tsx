@@ -196,7 +196,7 @@ const Dashboard = () => {
               <span className="text-sm text-muted-foreground">
                 <span className="font-medium capitalize">{subscription.plan_type}</span>
                 {' • '}
-                <span>{videosRemaining}/{subscription.video_limit} vidéos</span>
+                <span>{subscription.videos_generated_this_month}/{subscription.video_limit} vidéos</span>
               </span>
             )}
             {subscription?.plan_type === 'free' && (
