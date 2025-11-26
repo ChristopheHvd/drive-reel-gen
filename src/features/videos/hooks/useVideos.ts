@@ -69,22 +69,6 @@ export const useVideos = (imageId?: string) => {
     };
   }, [imageId, fetchVideos]);
 
-  // Polling fallback pour vidéos en pending/processing
-  useEffect(() => {
-    const hasPendingVideos = videos.some(
-      v => v.status === 'pending' || v.status === 'processing'
-    );
-    
-    if (!hasPendingVideos) return;
-
-    console.log('Polling fallback active for pending/processing videos');
-    const interval = setInterval(() => {
-      fetchVideos();
-    }, 5000); // Toutes les 5 secondes
-
-    return () => clearInterval(interval);
-  }, [videos, fetchVideos]);
-
   return {
     videos,
     loading,
