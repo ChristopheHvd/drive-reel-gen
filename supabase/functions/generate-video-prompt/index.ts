@@ -105,20 +105,66 @@ serve(async (req) => {
 
     switch (promptType) {
       case 'situation':
-        systemPrompt = 'Tu es un expert en marketing Instagram. Génère un prompt court (max 150 caractères) pour créer une vidéo montrant le produit en situation d\'utilisation réelle, avec une ambiance authentique et naturelle.';
-        userPrompt = `Analyse cette image et génère un prompt pour une vidéo en situation. ${brandContext}`;
+        systemPrompt = `Tu es un expert en génération vidéo IA. Analyse l'image et génère un prompt de 200-250 caractères en FRANÇAIS pour créer une vidéo promotionnelle.
+
+Le prompt doit UNIQUEMENT contenir des instructions techniques visuelles :
+- Mouvements de caméra (zoom lent, travelling, rotation, plan rapproché)
+- Actions dans la scène (main qui prend le produit, utilisation naturelle, interaction)
+- Éclairage (lumière naturelle, douce, chaude, dramatique)
+- Ambiance et rythme (mouvement fluide, transition douce, dynamique)
+
+IMPORTANT : 
+- PAS de hashtags ni de mots marketing
+- UNIQUEMENT des instructions de mouvement et visuelles
+- Répondre en FRANÇAIS
+
+Exemple : "Travelling avant lent vers le produit sur une table en bois. Une main le saisit délicatement et le fait tourner. Lumière naturelle chaude venant de la gauche. Mouvement fluide et élégant."`;
+        userPrompt = `Analyse cette image et génère un prompt technique pour une vidéo en situation d'utilisation. ${brandContext}`;
         break;
       case 'product':
-        systemPrompt = 'Tu es un expert en marketing Instagram. Génère un prompt court (max 150 caractères) pour une mise en avant produit professionnelle et élégante, avec focus sur les détails et une ambiance premium.';
-        userPrompt = `Analyse cette image et génère un prompt pour une mise en avant produit. ${brandContext}`;
+        systemPrompt = `Tu es un expert en génération vidéo IA. Analyse l'image et génère un prompt de 200-250 caractères en FRANÇAIS pour une vidéo de mise en avant produit premium.
+
+Le prompt doit UNIQUEMENT contenir des instructions techniques visuelles :
+- Mouvements de caméra (rotation 360°, zoom sur détails, plan orbital)
+- Mise en valeur (reflets, textures, matériaux, finitions)
+- Éclairage studio (éclairage trois points, contre-jour, softbox)
+- Style cinématographique (élégant, professionnel, premium)
+
+IMPORTANT : 
+- PAS de hashtags ni de mots marketing
+- UNIQUEMENT des instructions de mouvement et visuelles
+- Répondre en FRANÇAIS
+
+Exemple : "Rotation 360° lente du produit sur surface noire réfléchissante. Éclairage studio avec contre-jour doux sur les contours. Mouvement cinématique fluide, ambiance premium."`;
+        userPrompt = `Analyse cette image et génère un prompt technique pour une mise en avant produit professionnelle. ${brandContext}`;
         break;
       case 'testimonial':
-        systemPrompt = 'Tu es un expert en marketing Instagram. Génère un prompt court (max 150 caractères) pour créer une vidéo de témoignage/avis client dynamique et engageante, avec une ambiance chaleureuse.';
-        userPrompt = `Analyse cette image et génère un prompt pour un témoignage. ${brandContext}`;
+        systemPrompt = `Tu es un expert en génération vidéo IA. Analyse l'image et génère un prompt de 200-250 caractères en FRANÇAIS pour une vidéo dynamique style témoignage/unboxing.
+
+Le prompt doit UNIQUEMENT contenir des instructions techniques visuelles :
+- Mouvements de caméra (caméra portée, zoom rapide, transitions)
+- Actions humaines (mains qui déballent, réaction, présentation)
+- Éclairage naturel (lumière du jour, ambiance authentique, lifestyle)
+- Dynamisme (rythme rapide, énergie, transitions fluides)
+
+IMPORTANT : 
+- PAS de hashtags ni de mots marketing
+- UNIQUEMENT des instructions de mouvement et visuelles
+- Répondre en FRANÇAIS
+
+Exemple : "Mains qui déballent le produit avec enthousiasme. Zoom rapide sur la révélation du produit. Lumière naturelle du jour, ambiance lifestyle authentique. Énergie dynamique avec transitions fluides."`;
+        userPrompt = `Analyse cette image et génère un prompt technique pour une vidéo témoignage/unboxing dynamique. ${brandContext}`;
         break;
       default:
-        systemPrompt = 'Tu es un expert en marketing Instagram. Génère un prompt court (max 150 caractères) et percutant pour créer une vidéo Instagram Reels dynamique et engageante.';
-        userPrompt = `Analyse cette image et propose un prompt pour générer une vidéo Instagram. ${brandContext}`;
+        systemPrompt = `Tu es un expert en génération vidéo IA. Analyse l'image et génère un prompt de 200-250 caractères en FRANÇAIS pour créer une vidéo Instagram Reels dynamique.
+
+Le prompt doit contenir des instructions visuelles claires : mouvements de caméra, actions, éclairage, ambiance.
+
+IMPORTANT : 
+- PAS de hashtags ni de mots marketing
+- UNIQUEMENT des instructions techniques visuelles
+- Répondre en FRANÇAIS`;
+        userPrompt = `Analyse cette image et génère un prompt technique pour une vidéo Instagram Reels. ${brandContext}`;
     }
 
     console.log('Calling Lovable AI for prompt generation...', { promptType });
