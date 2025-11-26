@@ -28,7 +28,7 @@ describe('QuotaExceededDialog', () => {
   });
 
   it('should display correct message for free plan', () => {
-    const { container } = render(
+    render(
       <QuotaExceededDialog
         open={true}
         onOpenChange={mockOnOpenChange}
@@ -37,13 +37,13 @@ describe('QuotaExceededDialog', () => {
       />
     );
 
-    expect(container).toHaveTextContent('Vous avez utilisé vos 6 vidéos gratuites ce mois-ci');
-    expect(container).toHaveTextContent('Votre quota sera réinitialisé le');
-    expect(container).toHaveTextContent('1 janvier 2026');
+    expect(document.body).toHaveTextContent('Vous avez utilisé vos 6 vidéos gratuites ce mois-ci');
+    expect(document.body).toHaveTextContent('Votre quota sera réinitialisé le');
+    expect(document.body).toHaveTextContent('1 janvier 2026');
   });
 
   it('should display correct message for pro plan', () => {
-    const { container } = render(
+    render(
       <QuotaExceededDialog
         open={true}
         onOpenChange={mockOnOpenChange}
@@ -52,11 +52,11 @@ describe('QuotaExceededDialog', () => {
       />
     );
 
-    expect(container).toHaveTextContent('Vous avez utilisé vos 50 vidéos du plan Pro ce mois-ci');
+    expect(document.body).toHaveTextContent('Vous avez utilisé vos 50 vidéos du plan Pro ce mois-ci');
   });
 
   it('should render all three plan cards', () => {
-    const { container } = render(
+    render(
       <QuotaExceededDialog
         open={true}
         onOpenChange={mockOnOpenChange}
@@ -65,13 +65,13 @@ describe('QuotaExceededDialog', () => {
       />
     );
 
-    expect(container).toHaveTextContent('Free');
-    expect(container).toHaveTextContent('Pro');
-    expect(container).toHaveTextContent('Business');
+    expect(document.body).toHaveTextContent('Free');
+    expect(document.body).toHaveTextContent('Pro');
+    expect(document.body).toHaveTextContent('Business');
   });
 
   it('should mark current plan correctly', () => {
-    const { container } = render(
+    render(
       <QuotaExceededDialog
         open={true}
         onOpenChange={mockOnOpenChange}
@@ -80,7 +80,7 @@ describe('QuotaExceededDialog', () => {
       />
     );
 
-    expect(container).toHaveTextContent('Votre plan');
+    expect(document.body).toHaveTextContent('Votre plan');
   });
 
   it('should call create-checkout when subscribing to Pro', async () => {
@@ -90,7 +90,7 @@ describe('QuotaExceededDialog', () => {
       error: null,
     } as any);
 
-    const { container } = render(
+    render(
       <QuotaExceededDialog
         open={true}
         onOpenChange={mockOnOpenChange}
@@ -99,10 +99,10 @@ describe('QuotaExceededDialog', () => {
       />
     );
 
-    const buttons = Array.from(container.querySelectorAll('button')).filter(
-      (btn) => (btn as HTMLButtonElement).textContent === "S'abonner"
+    const buttons = Array.from(document.querySelectorAll('button')).filter(
+      (btn) => btn.textContent === "S'abonner"
     );
-    const proButton = buttons[0] as HTMLButtonElement;
+    const proButton = buttons[0];
     
     await user.click(proButton);
 
@@ -124,7 +124,7 @@ describe('QuotaExceededDialog', () => {
       error,
     } as any);
 
-    const { container } = render(
+    render(
       <QuotaExceededDialog
         open={true}
         onOpenChange={mockOnOpenChange}
@@ -133,10 +133,10 @@ describe('QuotaExceededDialog', () => {
       />
     );
 
-    const buttons = Array.from(container.querySelectorAll('button')).filter(
-      (btn) => (btn as HTMLButtonElement).textContent === "S'abonner"
+    const buttons = Array.from(document.querySelectorAll('button')).filter(
+      (btn) => btn.textContent === "S'abonner"
     );
-    const proButton = buttons[0] as HTMLButtonElement;
+    const proButton = buttons[0];
     
     await user.click(proButton);
 
@@ -153,7 +153,7 @@ describe('QuotaExceededDialog', () => {
 
   it('should close dialog when Fermer button is clicked', async () => {
     const user = userEvent.setup();
-    const { container } = render(
+    render(
       <QuotaExceededDialog
         open={true}
         onOpenChange={mockOnOpenChange}
@@ -162,8 +162,8 @@ describe('QuotaExceededDialog', () => {
       />
     );
 
-    const closeButton = Array.from(container.querySelectorAll('button')).find(
-      (btn) => (btn as HTMLButtonElement).textContent === 'Fermer'
+    const closeButton = Array.from(document.querySelectorAll('button')).find(
+      (btn) => btn.textContent === 'Fermer'
     ) as HTMLButtonElement;
     
     await user.click(closeButton);
@@ -180,7 +180,7 @@ describe('QuotaExceededDialog', () => {
       }) as any
     );
 
-    const { container } = render(
+    render(
       <QuotaExceededDialog
         open={true}
         onOpenChange={mockOnOpenChange}
@@ -189,15 +189,15 @@ describe('QuotaExceededDialog', () => {
       />
     );
 
-    const buttons = Array.from(container.querySelectorAll('button')).filter(
-      (btn) => (btn as HTMLButtonElement).textContent === "S'abonner"
+    const buttons = Array.from(document.querySelectorAll('button')).filter(
+      (btn) => btn.textContent === "S'abonner"
     );
-    const proButton = buttons[0] as HTMLButtonElement;
+    const proButton = buttons[0];
     
     await user.click(proButton);
 
     await vi.waitFor(() => {
-      expect(container).toHaveTextContent('Chargement...');
+      expect(document.body).toHaveTextContent('Chargement...');
     });
 
     resolvePromise({ data: { url: 'test' }, error: null });

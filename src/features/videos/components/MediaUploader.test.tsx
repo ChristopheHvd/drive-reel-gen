@@ -1,9 +1,42 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MediaUploader } from './MediaUploader';
 
 describe('MediaUploader', () => {
+  beforeEach(() => {
+    // Mock FileReader
+    global.FileReader = vi.fn(function() {
+      return {
+        readAsDataURL: vi.fn(function(this: any) {
+          setTimeout(() => {
+            this.onload?.({ target: { result: 'data:image/jpeg;base64,test' } });
+          }, 0);
+        }),
+        result: 'data:image/jpeg;base64,test',
+      };
+    }) as any;
+
+    // Mock Image
+    global.Image = vi.fn(function(this: any) {
+      const img = {
+        width: 800,
+        height: 600,
+        onload: null as any,
+      };
+      
+      Object.defineProperty(img, 'src', {
+        set: function(value: string) {
+          setTimeout(() => {
+            if (img.onload) img.onload();
+          }, 0);
+        }
+      });
+      
+      return img;
+    }) as any;
+  });
+
   it('should render upload zone', () => {
     const onFileSelect = vi.fn();
     

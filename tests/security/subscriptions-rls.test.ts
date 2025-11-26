@@ -185,12 +185,21 @@ describe('User Subscriptions RLS Security', () => {
   });
 
   it('should not allow user to delete their subscription record', async () => {
-    const { error } = await user1Client
+    // Attempt to delete
+    await user1Client
       .from('user_subscriptions')
       .delete()
       .eq('user_id', user1.id);
 
-    expect(error).not.toBeNull();
-    // Subscriptions should not be deletable by users
+    // Verify the record still exists
+    const { data, error } = await user1Client
+      .from('user_subscriptions')
+      .select('id')
+      .eq('user_id', user1.id)
+      .single();
+
+    expect(error).toBeNull();
+    expect(data).not.toBeNull();
+    expect(data!.id).toBe(subscription1Id);
   });
 });

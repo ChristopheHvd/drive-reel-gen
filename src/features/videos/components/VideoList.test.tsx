@@ -117,7 +117,6 @@ describe('VideoList', () => {
   it('should render video cards when videos exist', () => {
     const { getByText, container } = render(
       <VideoList
-        imageId="img-1"
         selectedImage={{
           id: 'img-1',
           file_name: 'test.jpg',
@@ -133,12 +132,16 @@ describe('VideoList', () => {
         loading={false}
         onGenerateVideo={vi.fn()}
         onDeleteVideo={vi.fn()}
+        onSelectVideo={vi.fn()}
+        onRegenerateVideo={vi.fn()}
       />
     );
     
+    // Le prompt est affiché
     expect(getByText('Test prompt')).toBeInTheDocument();
-    expect(getByText('packshot')).toBeInTheDocument();
-    expect(getByText('9:16')).toBeInTheDocument();
+    
+    // Le badge de statut "Terminée" est affiché
+    expect(getByText('Terminée')).toBeInTheDocument();
     
     // Vérifier que les vidéos sont affichées en grille
     const videoGrid = container.querySelector('.grid.grid-cols-2');
