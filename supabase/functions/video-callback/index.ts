@@ -6,6 +6,65 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+/**
+ * Fusionne plusieurs segments vidéo via fal.ai
+ */
+async function mergeVideoSegments(
+  supabase: any,
+  video: any,
+  segmentsCount: number
+): Promise<string> {
+  const falApiKey = Deno.env.get('FAL_API_KEY');
+  if (!falApiKey) {
+    throw new Error('FAL_API_KEY not configured');
+  }
+
+  console.log(`Merging ${segmentsCount} segments for video ${video.id}`);
+
+  // Générer les signed URLs pour tous les segments
+  const segmentUrls: string[] = [];
+  for (let i = 1; i <= segmentsCount; i++) {
+    const segmentPath = `${video.team_id}/${video.id}_segment_${i}.mp4`;
+    const { data, error } = await supabase.storage
+      .from('team-videos')
+      .createSignedUrl(segmentPath, 3600);
+    
+    if (error || !data?.signedUrl) {
+      throw new Error(`Failed to get signed URL for segment ${i}: ${error?.message}`);
+    }
+    
+    segmentUrls.push(data.signedUrl);
+  }
+
+  console.log('Segment URLs ready, calling fal.ai merge API...');
+
+  // Appeler fal.ai merge-videos
+  const response = await fetch('https://queue.fal.run/fal-ai/ffmpeg-api/merge-videos', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Key ${falApiKey}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      video_urls: segmentUrls,
+    }),
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(`fal.ai merge failed: ${response.status} - ${errorText}`);
+  }
+
+  const result = await response.json();
+  console.log('fal.ai merge response:', JSON.stringify(result));
+  
+  if (!result.video?.url) {
+    throw new Error('No video URL in fal.ai response');
+  }
+
+  return result.video.url;
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -93,8 +152,17 @@ serve(async (req) => {
       const videoBlob = await videoResponse.blob();
       const videoArrayBuffer = await videoBlob.arrayBuffer();
 
-      // Uploader vers Supabase Storage
-      const storagePath = `${video.team_id}/${video.id}.mp4`;
+      // Vérifier si extension nécessaire
+      const targetDuration = video.target_duration_seconds || 8;
+      const currentSegment = video.current_segment || 1;
+      const segmentsNeeded = Math.ceil(targetDuration / 8);
+      const segmentPrompts = video.segment_prompts || [video.prompt];
+
+      // Stocker le segment (ou vidéo complète si 8s)
+      const storagePath = segmentsNeeded > 1 
+        ? `${video.team_id}/${video.id}_segment_${currentSegment}.mp4`
+        : `${video.team_id}/${video.id}.mp4`;
+      
       console.log('Uploading video to:', storagePath);
 
       const { error: uploadError } = await supabase.storage
@@ -120,13 +188,7 @@ serve(async (req) => {
         });
       }
 
-      console.log('Video uploaded successfully');
-
-      // Vérifier si extension nécessaire
-      const targetDuration = video.target_duration_seconds || 8;
-      const currentSegment = video.current_segment || 1;
-      const segmentsNeeded = Math.ceil(targetDuration / 8);
-      const segmentPrompts = video.segment_prompts || [video.prompt];
+      console.log('Video segment uploaded successfully');
 
       if (currentSegment < segmentsNeeded) {
         // Extension nécessaire
@@ -209,15 +271,79 @@ serve(async (req) => {
         });
       }
 
-      // Toutes les extensions terminées -> marquer completed
+      // Tous les segments sont terminés
+      let finalPath = storagePath; // Par défaut pour vidéo 8s
+
+      if (segmentsNeeded > 1) {
+        // Fusion nécessaire pour vidéos multi-segments
+        console.log(`All ${segmentsNeeded} segments complete, starting merge...`);
+        
+        try {
+          // Fusionner les segments via fal.ai
+          const mergedVideoUrl = await mergeVideoSegments(supabase, video, segmentsNeeded);
+          
+          // Télécharger la vidéo fusionnée
+          console.log('Downloading merged video from:', mergedVideoUrl);
+          const mergedResponse = await fetch(mergedVideoUrl);
+          if (!mergedResponse.ok) {
+            throw new Error(`Failed to download merged video: ${mergedResponse.status}`);
+          }
+          
+          const mergedBlob = await mergedResponse.blob();
+          const mergedArrayBuffer = await mergedBlob.arrayBuffer();
+          
+          // Uploader la vidéo finale
+          finalPath = `${video.team_id}/${video.id}.mp4`;
+          console.log('Uploading merged video to:', finalPath);
+          
+          const { error: finalUploadError } = await supabase.storage
+            .from('team-videos')
+            .upload(finalPath, mergedArrayBuffer, {
+              contentType: 'video/mp4',
+              upsert: true,
+            });
+          
+          if (finalUploadError) {
+            throw new Error(`Failed to upload merged video: ${finalUploadError.message}`);
+          }
+          
+          // Supprimer les segments individuels
+          console.log('Cleaning up segment files...');
+          for (let i = 1; i <= segmentsNeeded; i++) {
+            const segmentPath = `${video.team_id}/${video.id}_segment_${i}.mp4`;
+            await supabase.storage
+              .from('team-videos')
+              .remove([segmentPath]);
+          }
+          
+          console.log('Merge completed successfully');
+          
+        } catch (mergeError) {
+          console.error('Merge error:', mergeError);
+          await supabase
+            .from('videos')
+            .update({
+              status: 'failed',
+              error_message: `Erreur fusion: ${(mergeError as Error).message}`,
+            })
+            .eq('id', video.id);
+          
+          return new Response(JSON.stringify({ error: 'Merge failed' }), {
+            status: 500,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          });
+        }
+      }
+
+      // Marquer comme completed
       const { error: updateError } = await supabase
         .from('videos')
         .update({
           status: 'completed',
-          video_url: storagePath,
+          video_url: finalPath,
           completed_at: new Date().toISOString(),
         })
-        .eq('kie_task_id', taskId);
+        .eq('id', video.id);
 
       if (updateError) {
         console.error('Update error:', updateError);
