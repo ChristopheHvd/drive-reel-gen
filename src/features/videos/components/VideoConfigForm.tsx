@@ -101,6 +101,7 @@ export const VideoConfigForm = ({
           onChange={(e) => setPrompt(e.target.value)}
           rows={6}
           className="resize-y"
+          disabled={loadingPrompt || disabled}
         />
         <p className="text-xs text-muted-foreground">
           Décrivez l'ambiance, les mouvements, et l'esthétique souhaitée
@@ -116,10 +117,14 @@ export const VideoConfigForm = ({
             variant="outline"
             size="sm"
             onClick={() => handleGeneratePrompt('situation')}
-            disabled={loadingPrompt || !selectedImageId}
+            disabled={loadingPrompt || !selectedImageId || disabled}
             className="flex flex-col gap-1 h-auto py-2"
           >
-            <Users className="w-4 h-4" />
+            {loadingPrompt ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : (
+              <Users className="w-4 h-4" />
+            )}
             <span className="text-xs">Situation</span>
           </Button>
           <Button
@@ -127,10 +132,14 @@ export const VideoConfigForm = ({
             variant="outline"
             size="sm"
             onClick={() => handleGeneratePrompt('product')}
-            disabled={loadingPrompt || !selectedImageId}
+            disabled={loadingPrompt || !selectedImageId || disabled}
             className="flex flex-col gap-1 h-auto py-2"
           >
-            <PackageOpen className="w-4 h-4" />
+            {loadingPrompt ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : (
+              <PackageOpen className="w-4 h-4" />
+            )}
             <span className="text-xs">Produit</span>
           </Button>
           <Button
@@ -138,13 +147,25 @@ export const VideoConfigForm = ({
             variant="outline"
             size="sm"
             onClick={() => handleGeneratePrompt('testimonial')}
-            disabled={loadingPrompt || !selectedImageId}
+            disabled={loadingPrompt || !selectedImageId || disabled}
             className="flex flex-col gap-1 h-auto py-2"
           >
-            <MessageSquareQuote className="w-4 h-4" />
+            {loadingPrompt ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : (
+              <MessageSquareQuote className="w-4 h-4" />
+            )}
             <span className="text-xs">Témoignage</span>
           </Button>
         </div>
+        
+        {/* Loader avec message pendant génération */}
+        {loadingPrompt && (
+          <div className="flex items-center justify-center gap-2 py-3 text-sm text-muted-foreground animate-in fade-in duration-300">
+            <Loader2 className="w-4 h-4 animate-spin" />
+            <span>Génération du prompt en cours...</span>
+          </div>
+        )}
       </div>
 
       {/* Options avancées */}
@@ -206,7 +227,7 @@ export const VideoConfigForm = ({
         type="submit" 
         className="w-full" 
         size="lg" 
-        disabled={disabled || loading || !prompt.trim()}
+        disabled={disabled || loading || loadingPrompt || !prompt.trim()}
       >
         {loading ? (
           <>
