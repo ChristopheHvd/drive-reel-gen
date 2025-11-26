@@ -55,32 +55,28 @@ export const VideoList = ({
     .filter(v => v.status === 'completed')
     .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
   
-  // Si vidéo en cours de génération → Afficher le placeholder de chargement
+  // Si vidéo en cours de génération → Afficher le placeholder dans la grille avec les autres
   if (pendingVideo) {
     return (
-      <div className="space-y-6">
+      <div className="grid grid-cols-2 gap-3">
         <VideoLoadingPlaceholder 
           image={selectedImage}
           status={pendingVideo.status as 'pending' | 'processing'}
         />
-        {/* Afficher les vidéos déjà terminées en dessous en grille */}
-        {completedVideos.length > 0 && (
-          <div className="grid grid-cols-2 gap-3">
-            {completedVideos.map(video => (
-              <div 
-                key={video.id}
-                onClick={() => onSelectVideo?.(video)}
-                className="cursor-pointer"
-              >
-                <VideoPlayer 
-                  video={video}
-                  onDelete={onDeleteVideo}
-                  onRegenerate={onRegenerateVideo}
-                />
-              </div>
-            ))}
+        {/* Afficher les vidéos déjà terminées dans la même grille */}
+        {completedVideos.map(video => (
+          <div 
+            key={video.id}
+            onClick={() => onSelectVideo?.(video)}
+            className="cursor-pointer"
+          >
+            <VideoPlayer 
+              video={video}
+              onDelete={onDeleteVideo}
+              onRegenerate={onRegenerateVideo}
+            />
           </div>
-        )}
+        ))}
       </div>
     );
   }

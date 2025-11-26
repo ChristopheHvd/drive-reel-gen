@@ -24,25 +24,27 @@ export const VideoLoadingPlaceholder = ({ image, status }: VideoLoadingPlacehold
   }, [image]);
   
   return (
-    <div className="relative h-[250px] flex items-center justify-center overflow-hidden rounded-lg border border-border/50">
-      {/* Background flouté avec l'image */}
-      {imageUrl && (
-        <div 
-          className="absolute inset-0 bg-cover bg-center blur-3xl opacity-10 animate-pulse"
-          style={{ backgroundImage: `url(${imageUrl})` }}
-        />
-      )}
-      
-      {/* Overlay gradient animé */}
-      <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-background to-accent/5 animate-pulse" />
-      
-      {/* Cercles de glow animés */}
-      <div className="absolute inset-0 flex items-center justify-center">
-        <div className="w-32 h-32 rounded-full bg-primary/20 blur-3xl animate-pulse" style={{ animationDuration: '3s' }} />
-      </div>
-      
-      {/* Contenu central */}
-      <div className="relative z-10 text-center space-y-3 p-6">
+    <div className="group relative overflow-hidden rounded-lg bg-card/50 backdrop-blur-sm border border-border/50">
+      {/* Container avec aspect-video pour correspondre au VideoPlayer */}
+      <div className="relative aspect-video flex items-center justify-center overflow-hidden">
+        {/* Background flouté avec l'image */}
+        {imageUrl && (
+          <div 
+            className="absolute inset-0 bg-cover bg-center blur-3xl opacity-10 animate-pulse"
+            style={{ backgroundImage: `url(${imageUrl})` }}
+          />
+        )}
+        
+        {/* Overlay gradient animé */}
+        <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-background to-accent/5 animate-pulse" />
+        
+        {/* Cercles de glow animés */}
+        <div className="absolute inset-0 flex items-center justify-center">
+          <div className="w-32 h-32 rounded-full bg-primary/20 blur-3xl animate-pulse" style={{ animationDuration: '3s' }} />
+        </div>
+        
+        {/* Contenu central */}
+        <div className="relative z-10 text-center space-y-3 p-6">
         {/* Icône animée avec effet de rotation et glow */}
         <div className="relative">
           <div className="absolute inset-0 flex items-center justify-center">
@@ -86,6 +88,14 @@ export const VideoLoadingPlaceholder = ({ image, status }: VideoLoadingPlacehold
           <div className="w-1.5 h-1.5 rounded-full bg-primary animate-bounce" style={{ animationDelay: '0.2s' }} />
           <div className="w-1.5 h-1.5 rounded-full bg-primary animate-bounce" style={{ animationDelay: '0.4s' }} />
         </div>
+        </div>
+      </div>
+      
+      {/* Footer similaire au VideoPlayer pour maintenir l'alignement */}
+      <div className="p-2 space-y-2">
+        <p className="text-xs text-muted-foreground opacity-50">
+          Génération en cours...
+        </p>
       </div>
       
       <style>{`
