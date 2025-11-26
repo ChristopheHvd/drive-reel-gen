@@ -24,7 +24,7 @@ describe('safeTimestampToISO', () => {
   it('should handle recent timestamp (2024)', () => {
     const timestamp = 1764163467; // Timestamp from the Stripe payload
     const result = safeTimestampToISO(timestamp);
-    expect(result).toMatch(/2025-01-26/); // Should be in January 2025
+    expect(result).toMatch(/2025-11-26/); // Should be November 26, 2025
     expect(result).not.toBeNull();
   });
 

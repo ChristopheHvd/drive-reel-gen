@@ -129,7 +129,9 @@ describe('Dashboard', () => {
   it('should show subscription info in header', () => {
     const { getByText, getByRole } = renderDashboard();
     
-    expect(getByText(/free • 0\/6 vidéos/i)).toBeInTheDocument();
+    // Le texte est réparti entre plusieurs <span>, donc chercher chaque partie
+    expect(getByText('free', { exact: false })).toBeInTheDocument();
+    expect(getByText('0/6 vidéos')).toBeInTheDocument();
     expect(getByRole('button', { name: /passer à pro/i })).toBeInTheDocument();
   });
 
