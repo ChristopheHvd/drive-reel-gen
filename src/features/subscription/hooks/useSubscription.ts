@@ -36,6 +36,30 @@ export const useSubscription = () => {
 
   useEffect(() => {
     loadSubscription();
+
+    // Écouter les changements realtime sur l'abonnement
+    const channel = supabase
+      .channel('subscription-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'user_subscriptions',
+        },
+        (payload) => {
+          // Mettre à jour le state si c'est bien la mise à jour de l'abonnement
+          if (payload.new) {
+            setSubscription(payload.new as Subscription);
+            setError(null);
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   const getNextResetDate = (): string => {
