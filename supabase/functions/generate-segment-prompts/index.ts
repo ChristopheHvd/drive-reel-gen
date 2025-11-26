@@ -117,10 +117,18 @@ Génère ${segmentsCount} prompts qui s'enchaînent naturellement.`;
       });
     }
 
-    // Parser le JSON
+    // Fonction pour extraire le JSON des backticks markdown
+    const extractJsonFromMarkdown = (text: string): string => {
+      const jsonBlockRegex = /```(?:json)?\s*([\s\S]*?)\s*```/;
+      const match = text.match(jsonBlockRegex);
+      return match && match[1] ? match[1].trim() : text.trim();
+    };
+
+    // Parser le JSON (en nettoyant les éventuels backticks markdown)
     let parsedResponse;
     try {
-      parsedResponse = JSON.parse(content);
+      const cleanedContent = extractJsonFromMarkdown(content);
+      parsedResponse = JSON.parse(cleanedContent);
     } catch (e) {
       console.error("Failed to parse AI response:", content);
       return new Response(JSON.stringify({ error: "Format de réponse invalide", details: content }), {
