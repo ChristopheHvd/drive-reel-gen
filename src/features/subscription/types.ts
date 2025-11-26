@@ -2,7 +2,7 @@ export interface Subscription {
   id: string;
   user_id: string;
   team_id: string | null;
-  plan_type: 'free' | 'pro' | 'business';
+  plan_type: "free" | "pro" | "business";
   video_limit: number;
   videos_generated_this_month: number;
   current_period_end: string | null;
@@ -14,51 +14,39 @@ export interface Subscription {
 export interface PlanConfig {
   name: string;
   price: number;
-  videoLimit: number | 'unlimited';
+  videoLimit: number | "unlimited";
   features: string[];
   stripePriceId: string;
   isPopular?: boolean;
 }
 
-export const PLAN_CONFIGS: Record<'free' | 'pro' | 'business', PlanConfig> = {
+export const PLAN_CONFIGS: Record<"free" | "pro" | "business", PlanConfig> = {
   free: {
-    name: 'Free',
+    name: "Free",
     price: 0,
     videoLimit: 6,
-    features: [
-      '6 vidéos par mois',
-      'Génération IA de prompts',
-      'Formats 9:16 et 16:9',
-      'Support communautaire',
-    ],
-    stripePriceId: '', // À remplir par l'utilisateur
+    features: ["6 vidéos par mois", "Génération IA de prompts", "Formats 9:16 et 16:9"],
+    stripePriceId: "", // À remplir par l'utilisateur
   },
   pro: {
-    name: 'Pro',
+    name: "Pro",
     price: 100,
     videoLimit: 50,
-    features: [
-      '50 vidéos par mois',
-      'Génération IA de prompts',
-      'Formats 9:16 et 16:9',
-      'Logo et images additionnelles',
-      'Support prioritaire',
-    ],
-    stripePriceId: '', // À remplir par l'utilisateur
+    features: ["50 vidéos par mois", "Génération IA de prompts", "Formats 9:16 et 16:9", "Support prioritaire"],
+    stripePriceId: "price_1SSfSJBlI68zgCmzWM3uPZIu", // À remplir par l'utilisateur
     isPopular: true,
   },
   business: {
-    name: 'Business',
+    name: "Business",
     price: 350,
-    videoLimit: 'unlimited',
+    videoLimit: "unlimited",
     features: [
-      'Vidéos illimitées',
-      'Génération IA de prompts',
-      'Formats 9:16 et 16:9',
-      'Logo et images additionnelles',
-      'Support dédié 24/7',
-      'API access',
+      "Vidéos illimitées",
+      "Profil de marque intégré",
+      "Formats 9:16 et 16:9",
+      "Logo et images additionnelles",
+      "Support dédié 24/7",
     ],
-    stripePriceId: '', // À remplir par l'utilisateur
+    stripePriceId: "price_1SSfSxBlI68zgCmzD8NPr8Aq", // À remplir par l'utilisateur
   },
 };
