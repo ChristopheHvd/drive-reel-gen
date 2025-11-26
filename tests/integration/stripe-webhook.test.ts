@@ -240,7 +240,7 @@ describe('Stripe Webhook Integration', () => {
       const timestamp = 1764163467; // From actual Stripe payload
       const expectedISO = new Date(timestamp * 1000).toISOString();
 
-      expect(expectedISO).toMatch(/2025-01-26/); // Should be in January 2025
+      expect(expectedISO).toMatch(/2025-11-26/); // Should be November 26, 2025
       expect(expectedISO).toContain('T'); // Should have time component
       expect(expectedISO).toContain('Z'); // Should be UTC
     });
