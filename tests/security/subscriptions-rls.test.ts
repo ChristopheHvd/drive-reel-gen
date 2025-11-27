@@ -66,8 +66,14 @@ describe('User Subscriptions RLS Security', () => {
   });
 
   afterAll(async () => {
-    // Cleanup test users (requires service role)
-    // In real tests, you'd use service role client to delete
+    // ⚠️ ATTENTION: Ces tests créent de vrais utilisateurs dans la DB de production
+    // Le cleanup automatique nécessite un service_role client qui n'est pas disponible côté client
+    // Les utilisateurs de test doivent être nettoyés manuellement via migration SQL
+    // 
+    // Alternative recommandée: Convertir ces tests en tests mockés pour éviter 
+    // de polluer la base de données de production
+    console.warn('⚠️ Test users created but not cleaned up:', user1?.email, user2?.email);
+    console.warn('💡 Run SQL migration to clean: DELETE FROM auth.users WHERE email LIKE \'test-%@example.com\'');
   });
 
   it('should allow user to read their own subscription', async () => {
