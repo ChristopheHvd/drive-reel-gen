@@ -318,6 +318,12 @@ serve(async (req) => {
         // Fusion nécessaire pour vidéos multi-segments
         console.log(`All ${segmentsNeeded} segments complete, starting merge...`);
         
+        // Mettre à jour le statut pour indiquer la fusion
+        await supabase
+          .from('videos')
+          .update({ status: 'merging' })
+          .eq('id', video.id);
+        
         try {
           // Fusionner les segments via fal.ai
           const mergedVideoUrl = await mergeVideoSegments(supabase, video, segmentsNeeded);
