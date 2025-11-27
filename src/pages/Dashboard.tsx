@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { ImageUploader, ImageGrid, useImages, Image } from "@/features/images";
 import { VideoList, VideoConfigForm, useVideos, Video } from "@/features/videos";
 import { Button } from "@/components/ui/button";
-import { Upload, ChevronRight } from "lucide-react";
+import { Upload, ChevronRight, Settings, UserPlus } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -244,6 +244,17 @@ const Dashboard = () => {
               Daft Funk
             </span>
           </Link>
+          
+          <Button
+            variant="ghost"
+            size="sm"
+            className="ml-4 gap-2"
+            disabled
+          >
+            <Settings className="w-4 h-4" />
+            Paramètres de marque
+          </Button>
+          
           <div className="ml-auto flex items-center gap-4">
             {!subscriptionLoading && subscription && (
               <span className="text-sm text-muted-foreground">
@@ -262,6 +273,15 @@ const Dashboard = () => {
                 Passer à Pro
               </Button>
             )}
+            <Button
+              variant="outline"
+              size="sm"
+              className="gap-2"
+              disabled
+            >
+              <UserPlus className="w-4 h-4" />
+              Inviter
+            </Button>
           </div>
         </div>
       </header>
