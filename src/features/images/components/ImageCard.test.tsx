@@ -34,7 +34,6 @@ describe('ImageCard', () => {
 
   const mockOnDelete = vi.fn();
   const mockOnSelect = vi.fn();
-  const mockOnGenerateVideo = vi.fn();
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -92,43 +91,22 @@ describe('ImageCard', () => {
     }
   });
 
-  it('should call onGenerateVideo when video button is clicked', async () => {
+  it('should not call onSelect when clicking delete button', async () => {
     const user = userEvent.setup();
-    const { container, getByText } = render(
-      <ImageCard 
-        image={mockImage} 
-        onDelete={mockOnDelete} 
-        onGenerateVideo={mockOnGenerateVideo}
-      />
-    );
-    
-    // Trouver le bouton vidéo avec le texte "Générer"
-    const videoButton = getByText('Générer').closest('button');
-    
-    if (videoButton) {
-      await user.click(videoButton);
-      expect(mockOnGenerateVideo).toHaveBeenCalledWith(mockImage.id);
-    }
-  });
-
-  it('should not call onSelect when clicking video button', async () => {
-    const user = userEvent.setup();
-    const { getByText } = render(
+    const { container } = render(
       <ImageCard 
         image={mockImage} 
         onDelete={mockOnDelete} 
         onSelect={mockOnSelect}
-        onGenerateVideo={mockOnGenerateVideo}
       />
     );
     
-    const videoButton = getByText('Générer').closest('button');
+    const deleteButton = container.querySelector('[class*="lucide-trash-2"]')?.closest('button');
     
-    if (videoButton) {
-      await user.click(videoButton);
-      // Le clic sur le bouton vidéo ne doit pas déclencher onSelect
+    if (deleteButton) {
+      await user.click(deleteButton);
+      // Le clic sur le bouton delete ne doit pas déclencher onSelect
       expect(mockOnSelect).not.toHaveBeenCalled();
-      expect(mockOnGenerateVideo).toHaveBeenCalled();
     }
   });
 
@@ -164,24 +142,6 @@ describe('ImageCard', () => {
     
     const eyeIcon = container.querySelector('.lucide-eye');
     expect(eyeIcon).toBeDefined();
-  });
-
-  it('should have video button with correct text in new design', () => {
-    const { getByText, container } = render(
-      <ImageCard 
-        image={mockImage} 
-        onDelete={mockOnDelete} 
-        onGenerateVideo={mockOnGenerateVideo}
-      />
-    );
-    
-    const videoButton = getByText('Générer').closest('button');
-    expect(videoButton).toBeDefined();
-    expect(videoButton?.className).toContain('bg-primary');
-    
-    // Vérifier le positionnement en bas à droite
-    expect(videoButton?.className).toContain('bottom-2');
-    expect(videoButton?.className).toContain('right-2');
   });
 
   it('should not display file info anymore', () => {

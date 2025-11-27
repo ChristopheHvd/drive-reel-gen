@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Trash2, Eye, Video } from "lucide-react";
+import { Trash2, Eye } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Image } from "../types";
 import { supabase } from "@/integrations/supabase/client";
@@ -20,13 +20,12 @@ interface ImageCardProps {
   onDelete: (imageId: string) => void;
   onSelect?: (image: Image) => void;
   isSelected?: boolean;
-  onGenerateVideo?: (imageId: string) => void;
 }
 
 /**
  * Card pour afficher une image avec actions
  */
-export const ImageCard = ({ image, onDelete, onSelect, isSelected, onGenerateVideo }: ImageCardProps) => {
+export const ImageCard = ({ image, onDelete, onSelect, isSelected }: ImageCardProps) => {
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -60,12 +59,6 @@ export const ImageCard = ({ image, onDelete, onSelect, isSelected, onGenerateVid
     } finally {
       setIsDeleting(false);
       setShowDeleteDialog(false);
-    }
-  };
-
-  const handleGenerateVideo = () => {
-    if (onGenerateVideo) {
-      onGenerateVideo(image.id);
     }
   };
 
@@ -107,22 +100,6 @@ export const ImageCard = ({ image, onDelete, onSelect, isSelected, onGenerateVid
                 </svg>
               </div>
             </div>
-          )}
-
-          {/* Bouton générer en bas à droite */}
-          {!isSelected && (
-            <Button
-              variant="default"
-              size="sm"
-              onClick={(e) => {
-                e.stopPropagation();
-                handleGenerateVideo();
-              }}
-              className="absolute bottom-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 bg-primary hover:bg-primary/90 gap-1.5 h-8 px-3 z-10"
-            >
-              <Video className="w-3.5 h-3.5" />
-              <span className="text-xs">Générer</span>
-            </Button>
           )}
 
           {/* Bouton supprimer en haut à droite */}
