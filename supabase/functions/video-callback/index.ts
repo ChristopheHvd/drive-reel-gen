@@ -7,19 +7,25 @@ const corsHeaders = {
 };
 
 /**
- * Fusionne plusieurs segments vidéo via fal.ai avec polling asynchrone
+ * Déclenche la fusion des segments via fal.ai avec webhook callback
+ * Retourne immédiatement - le résultat sera reçu par fal-merge-callback
  */
-async function mergeVideoSegments(
+async function triggerMergeWithWebhook(
   supabase: any,
   video: any,
   segmentsCount: number
-): Promise<string> {
+): Promise<void> {
   const falApiKey = Deno.env.get('FAL_API_KEY');
   if (!falApiKey) {
     throw new Error('FAL_API_KEY not configured');
   }
 
-  console.log(`Merging ${segmentsCount} segments for video ${video.id}`);
+  const supabaseUrl = Deno.env.get('SUPABASE_URL');
+  if (!supabaseUrl) {
+    throw new Error('SUPABASE_URL not configured');
+  }
+
+  console.log(`Triggering merge for ${segmentsCount} segments, video ${video.id}`);
 
   // Générer les signed URLs pour tous les segments
   const segmentUrls: string[] = [];
@@ -27,7 +33,7 @@ async function mergeVideoSegments(
     const segmentPath = `${video.team_id}/${video.id}_segment_${i}.mp4`;
     const { data, error } = await supabase.storage
       .from('team-videos')
-      .createSignedUrl(segmentPath, 3600);
+      .createSignedUrl(segmentPath, 3600); // 1h de validité
     
     if (error || !data?.signedUrl) {
       throw new Error(`Failed to get signed URL for segment ${i}: ${error?.message}`);
@@ -36,73 +42,36 @@ async function mergeVideoSegments(
     segmentUrls.push(data.signedUrl);
   }
 
-  console.log('Segment URLs ready, calling fal.ai merge API...');
-
-  // Envoyer la requête à fal.ai queue
-  const queueResponse = await fetch('https://queue.fal.run/fal-ai/ffmpeg-api/merge-videos', {
-    method: 'POST',
-    headers: {
-      'Authorization': `Key ${falApiKey}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      video_urls: segmentUrls,
-    }),
-  });
-
-  if (!queueResponse.ok) {
-    const errorText = await queueResponse.text();
-    throw new Error(`fal.ai queue request failed: ${queueResponse.status} - ${errorText}`);
-  }
-
-  const queueResult = await queueResponse.json();
-  console.log('fal.ai queue response:', JSON.stringify(queueResult));
+  // URL du webhook avec videoId en paramètre
+  const webhookUrl = `${supabaseUrl}/functions/v1/fal-merge-callback?videoId=${video.id}`;
   
-  const responseUrl = queueResult.response_url;
-  if (!responseUrl) {
-    throw new Error('No response_url in fal.ai queue response');
-  }
+  console.log('Calling fal.ai merge with webhook:', webhookUrl);
 
-  // Polling jusqu'à completion
-  const maxAttempts = 60;
-  const pollInterval = 2000; // 2 secondes
-  
-  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
-    console.log(`Polling fal.ai merge status (attempt ${attempt}/${maxAttempts})...`);
-    
-    await new Promise(resolve => setTimeout(resolve, pollInterval));
-    
-    const statusResponse = await fetch(responseUrl, {
-      method: 'GET',
+  // Appeler fal.ai avec le webhook
+  const response = await fetch(
+    `https://queue.fal.run/fal-ai/ffmpeg-api/merge-videos?fal_webhook=${encodeURIComponent(webhookUrl)}`,
+    {
+      method: 'POST',
       headers: {
         'Authorization': `Key ${falApiKey}`,
+        'Content-Type': 'application/json',
       },
-    });
-
-    if (!statusResponse.ok) {
-      console.error(`Status check failed: ${statusResponse.status}`);
-      continue;
+      body: JSON.stringify({
+        video_urls: segmentUrls,
+      }),
     }
+  );
 
-    const result = await statusResponse.json();
-    console.log(`Polling result (attempt ${attempt}):`, result.status);
-
-    if (result.status === 'COMPLETED') {
-      if (!result.video?.url) {
-        throw new Error('No video URL in completed fal.ai response');
-      }
-      console.log('Merge completed, video URL:', result.video.url);
-      return result.video.url;
-    }
-
-    if (result.status === 'FAILED') {
-      throw new Error(`fal.ai merge failed: ${result.error || 'Unknown error'}`);
-    }
-
-    // Status IN_QUEUE or IN_PROGRESS → continue polling
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(`fal.ai queue request failed: ${response.status} - ${errorText}`);
   }
 
-  throw new Error(`fal.ai merge timeout after ${maxAttempts} attempts (${maxAttempts * 2}s)`);
+  const result = await response.json();
+  console.log('fal.ai merge queued:', JSON.stringify(result));
+  // result: { request_id, gateway_request_id }
+  
+  // On retourne immédiatement - fal.ai appellera fal-merge-callback
 }
 
 serve(async (req) => {
@@ -325,56 +294,26 @@ serve(async (req) => {
           .eq('id', video.id);
         
         try {
-          // Fusionner les segments via fal.ai
-          const mergedVideoUrl = await mergeVideoSegments(supabase, video, segmentsNeeded);
+          // Déclencher la fusion avec webhook (retourne immédiatement)
+          await triggerMergeWithWebhook(supabase, video, segmentsNeeded);
           
-          // Télécharger la vidéo fusionnée
-          console.log('Downloading merged video from:', mergedVideoUrl);
-          const mergedResponse = await fetch(mergedVideoUrl);
-          if (!mergedResponse.ok) {
-            throw new Error(`Failed to download merged video: ${mergedResponse.status}`);
-          }
-          
-          const mergedBlob = await mergedResponse.blob();
-          const mergedArrayBuffer = await mergedBlob.arrayBuffer();
-          
-          // Uploader la vidéo finale
-          finalPath = `${video.team_id}/${video.id}.mp4`;
-          console.log('Uploading merged video to:', finalPath);
-          
-          const { error: finalUploadError } = await supabase.storage
-            .from('team-videos')
-            .upload(finalPath, mergedArrayBuffer, {
-              contentType: 'video/mp4',
-              upsert: true,
-            });
-          
-          if (finalUploadError) {
-            throw new Error(`Failed to upload merged video: ${finalUploadError.message}`);
-          }
-          
-          // Supprimer les segments individuels
-          console.log('Cleaning up segment files...');
-          for (let i = 1; i <= segmentsNeeded; i++) {
-            const segmentPath = `${video.team_id}/${video.id}_segment_${i}.mp4`;
-            await supabase.storage
-              .from('team-videos')
-              .remove([segmentPath]);
-          }
-          
-          console.log('Merge completed successfully');
+          // On retourne 200 à Kie.ai - le reste sera géré par fal-merge-callback
+          return new Response(JSON.stringify({ success: true, merging: true }), {
+            status: 200,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          });
           
         } catch (mergeError) {
-          console.error('Merge error:', mergeError);
+          console.error('Merge trigger error:', mergeError);
           await supabase
             .from('videos')
             .update({
               status: 'failed',
-              error_message: `Erreur fusion: ${(mergeError as Error).message}`,
+              error_message: `Erreur déclenchement fusion: ${(mergeError as Error).message}`,
             })
             .eq('id', video.id);
           
-          return new Response(JSON.stringify({ error: 'Merge failed' }), {
+          return new Response(JSON.stringify({ error: 'Merge trigger failed' }), {
             status: 500,
             headers: { ...corsHeaders, 'Content-Type': 'application/json' }
           });
