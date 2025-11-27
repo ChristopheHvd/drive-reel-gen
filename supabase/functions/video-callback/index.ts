@@ -7,7 +7,7 @@ const corsHeaders = {
 };
 
 /**
- * Fusionne plusieurs segments vidéo via fal.ai
+ * Fusionne plusieurs segments vidéo via fal.ai avec polling asynchrone
  */
 async function mergeVideoSegments(
   supabase: any,
@@ -38,8 +38,8 @@ async function mergeVideoSegments(
 
   console.log('Segment URLs ready, calling fal.ai merge API...');
 
-  // Appeler fal.ai merge-videos
-  const response = await fetch('https://queue.fal.run/fal-ai/ffmpeg-api/merge-videos', {
+  // Envoyer la requête à fal.ai queue
+  const queueResponse = await fetch('https://queue.fal.run/fal-ai/ffmpeg-api/merge-videos', {
     method: 'POST',
     headers: {
       'Authorization': `Key ${falApiKey}`,
@@ -50,19 +50,59 @@ async function mergeVideoSegments(
     }),
   });
 
-  if (!response.ok) {
-    const errorText = await response.text();
-    throw new Error(`fal.ai merge failed: ${response.status} - ${errorText}`);
+  if (!queueResponse.ok) {
+    const errorText = await queueResponse.text();
+    throw new Error(`fal.ai queue request failed: ${queueResponse.status} - ${errorText}`);
   }
 
-  const result = await response.json();
-  console.log('fal.ai merge response:', JSON.stringify(result));
+  const queueResult = await queueResponse.json();
+  console.log('fal.ai queue response:', JSON.stringify(queueResult));
   
-  if (!result.video?.url) {
-    throw new Error('No video URL in fal.ai response');
+  const responseUrl = queueResult.response_url;
+  if (!responseUrl) {
+    throw new Error('No response_url in fal.ai queue response');
   }
 
-  return result.video.url;
+  // Polling jusqu'à completion
+  const maxAttempts = 60;
+  const pollInterval = 2000; // 2 secondes
+  
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    console.log(`Polling fal.ai merge status (attempt ${attempt}/${maxAttempts})...`);
+    
+    await new Promise(resolve => setTimeout(resolve, pollInterval));
+    
+    const statusResponse = await fetch(responseUrl, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Key ${falApiKey}`,
+      },
+    });
+
+    if (!statusResponse.ok) {
+      console.error(`Status check failed: ${statusResponse.status}`);
+      continue;
+    }
+
+    const result = await statusResponse.json();
+    console.log(`Polling result (attempt ${attempt}):`, result.status);
+
+    if (result.status === 'COMPLETED') {
+      if (!result.video?.url) {
+        throw new Error('No video URL in completed fal.ai response');
+      }
+      console.log('Merge completed, video URL:', result.video.url);
+      return result.video.url;
+    }
+
+    if (result.status === 'FAILED') {
+      throw new Error(`fal.ai merge failed: ${result.error || 'Unknown error'}`);
+    }
+
+    // Status IN_QUEUE or IN_PROGRESS → continue polling
+  }
+
+  throw new Error(`fal.ai merge timeout after ${maxAttempts} attempts (${maxAttempts * 2}s)`);
 }
 
 serve(async (req) => {
