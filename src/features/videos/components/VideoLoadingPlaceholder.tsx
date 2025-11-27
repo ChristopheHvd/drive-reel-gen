@@ -1,14 +1,20 @@
 import { useState, useEffect } from 'react';
 import { VideoIcon, Sparkles } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
-import { Image } from '@/features/images/types';
+import { cn } from '@/lib/utils';
+import type { Video } from '@/features/videos/types';
+import type { Image } from '@/features/images/types';
 
 interface VideoLoadingPlaceholderProps {
   image: Image;
-  status: 'pending' | 'processing';
+  video: Video;
 }
 
-export const VideoLoadingPlaceholder = ({ image, status }: VideoLoadingPlaceholderProps) => {
+/**
+ * Affiche un placeholder animé pendant la génération de vidéo
+ * Gère l'affichage progressif des étapes pour les vidéos multi-segments
+ */
+export const VideoLoadingPlaceholder = ({ image, video }: VideoLoadingPlaceholderProps) => {
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   
   useEffect(() => {
@@ -22,6 +28,44 @@ export const VideoLoadingPlaceholder = ({ image, status }: VideoLoadingPlacehold
     
     loadImageUrl();
   }, [image]);
+  
+  // Calculer le nombre de segments nécessaires
+  const segmentsNeeded = Math.ceil((video.target_duration_seconds || 8) / 8);
+  const currentSegment = video.current_segment || 1;
+  
+  // Déterminer le texte à afficher selon l'étape
+  const getProgressInfo = () => {
+    if (video.status === 'pending') {
+      return { 
+        title: 'Préparation...', 
+        subtitle: 'Initialisation de la génération'
+      };
+    }
+    
+    if (video.status === 'merging') {
+      return { 
+        title: 'Assemblage en cours', 
+        subtitle: `Fusion ${segmentsNeeded === 2 ? 'des 2 morceaux' : 'des 3 morceaux'} de vidéo`
+      };
+    }
+    
+    // status === 'processing'
+    if (segmentsNeeded === 1) {
+      return { 
+        title: 'Génération en cours', 
+        subtitle: 'Création de votre vidéo'
+      };
+    }
+    
+    // Vidéo multi-segments
+    const segmentLabel = currentSegment === 1 ? 'premier' : currentSegment === 2 ? 'deuxième' : 'troisième';
+    return { 
+      title: `Morceau ${currentSegment}/${segmentsNeeded}`, 
+      subtitle: `Génération du ${segmentLabel} segment`
+    };
+  };
+  
+  const progressInfo = getProgressInfo();
   
   return (
     <div className="group relative overflow-hidden rounded-lg bg-card/50 backdrop-blur-sm border border-border/50">
@@ -65,10 +109,10 @@ export const VideoLoadingPlaceholder = ({ image, status }: VideoLoadingPlacehold
         {/* Texte */}
         <div className="space-y-2">
           <h3 className="text-base font-bold bg-gradient-to-r from-primary via-foreground to-accent bg-clip-text text-transparent">
-            {status === 'pending' ? 'Préparation...' : 'Génération en cours'}
+            {progressInfo.title}
           </h3>
           <p className="text-xs text-muted-foreground">
-            Votre vidéo est en cours de création
+            {progressInfo.subtitle}
           </p>
           
           {/* Barre de progression animée */}
@@ -91,10 +135,53 @@ export const VideoLoadingPlaceholder = ({ image, status }: VideoLoadingPlacehold
         </div>
       </div>
       
-      {/* Footer similaire au VideoPlayer pour maintenir l'alignement */}
-      <div className="p-2 space-y-2">
-        <p className="text-xs text-muted-foreground opacity-50">
-          Génération en cours...
+      {/* Footer avec indicateurs d'étapes pour vidéos multi-segments */}
+      <div className="p-3 space-y-2">
+        {segmentsNeeded > 1 && (
+          <div className="flex items-center justify-center gap-2">
+            {/* Indicateurs visuels des étapes */}
+            {Array.from({ length: segmentsNeeded + 1 }).map((_, i) => {
+              const isSegmentStep = i < segmentsNeeded;
+              const isMergeStep = i === segmentsNeeded;
+              
+              // Déterminer l'état de chaque étape
+              let isCompleted = false;
+              let isCurrent = false;
+              
+              if (video.status === 'merging') {
+                // En fusion : tous les segments sont complétés, la fusion est en cours
+                isCompleted = isSegmentStep;
+                isCurrent = isMergeStep;
+              } else {
+                // En génération : les segments avant current_segment sont complétés
+                isCompleted = isSegmentStep && i < currentSegment - 1;
+                isCurrent = isSegmentStep && i === currentSegment - 1;
+              }
+              
+              return (
+                <div 
+                  key={i}
+                  className={cn(
+                    "w-2 h-2 rounded-full transition-colors",
+                    isCompleted && "bg-primary",
+                    isCurrent && "bg-primary animate-pulse",
+                    !isCompleted && !isCurrent && "bg-muted"
+                  )}
+                  title={
+                    isMergeStep 
+                      ? "Assemblage" 
+                      : `Segment ${i + 1}`
+                  }
+                />
+              );
+            })}
+          </div>
+        )}
+        <p className="text-xs text-muted-foreground text-center">
+          {video.status === 'pending' && 'En attente de traitement...'}
+          {video.status === 'processing' && segmentsNeeded === 1 && 'Génération en cours...'}
+          {video.status === 'processing' && segmentsNeeded > 1 && `Segment ${currentSegment}/${segmentsNeeded}`}
+          {video.status === 'merging' && 'Assemblage final...'}
         </p>
       </div>
       

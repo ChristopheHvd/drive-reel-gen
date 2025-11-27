@@ -50,7 +50,7 @@ export const VideoList = ({
   }
 
   // Vérifier si une vidéo est en cours de génération
-  const pendingVideo = videos.find(v => v.status === 'pending' || v.status === 'processing');
+  const pendingVideo = videos.find(v => v.status === 'pending' || v.status === 'processing' || v.status === 'merging');
   const completedVideos = videos
     .filter(v => v.status === 'completed')
     .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
@@ -61,7 +61,7 @@ export const VideoList = ({
       <div className="grid grid-cols-2 gap-3">
         <VideoLoadingPlaceholder 
           image={selectedImage}
-          status={pendingVideo.status as 'pending' | 'processing'}
+          video={pendingVideo}
         />
         {/* Afficher les vidéos déjà terminées dans la même grille */}
         {completedVideos.map(video => (

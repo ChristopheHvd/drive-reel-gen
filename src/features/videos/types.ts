@@ -5,7 +5,7 @@ export interface Video {
   kie_task_id: string;
   video_url: string;
   thumbnail_url?: string;
-  status: 'pending' | 'processing' | 'completed' | 'failed' | 'timeout';
+  status: 'pending' | 'processing' | 'merging' | 'completed' | 'failed' | 'timeout';
   mode: 'packshot' | 'situation' | 'temoignage';
   prompt: string;
   aspect_ratio: '9:16' | '16:9';
