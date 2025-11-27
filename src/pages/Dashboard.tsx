@@ -309,7 +309,6 @@ const Dashboard = () => {
                 }
               }}
               selectedImageId={selectedImage?.id}
-              onGenerateVideo={handleGenerateVideoFromImage}
             />
           </div>
         </div>
