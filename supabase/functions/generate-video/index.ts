@@ -236,7 +236,7 @@ serve(async (req) => {
         target_duration_seconds: targetDurationSeconds,
         current_segment: 1,
         segment_prompts: segmentPrompts,
-        status: "pending",
+        status: "processing",
         seed: finalSeed,
         logo_url: logoUrl,
         additional_image_url: additionalImageUrl,
