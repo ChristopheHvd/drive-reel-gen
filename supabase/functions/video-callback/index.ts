@@ -240,7 +240,26 @@ serve(async (req) => {
         }
 
         const extendData = await extendResponse.json();
-        const newTaskId = extendData.taskId || extendData.data?.taskId;
+        console.log('Kie.ai extend response:', JSON.stringify(extendData));
+
+        // Vérifier le code interne de l'API
+        if (extendData.code !== 200) {
+          console.error('Kie.ai extend API error:', extendData.code, extendData.msg);
+          await supabase
+            .from('videos')
+            .update({
+              status: 'failed',
+              error_message: `Erreur API extend: ${extendData.msg || extendData.code}`,
+            })
+            .eq('id', video.id);
+          
+          return new Response(JSON.stringify({ error: 'Extend API error' }), {
+            status: 500,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          });
+        }
+
+        const newTaskId = extendData.data?.taskId;
 
         if (!newTaskId) {
           console.error('No taskId in extend response');
