@@ -109,13 +109,13 @@ describe('VideoLoadingPlaceholder', () => {
     expect(glowElements.length).toBeGreaterThan(0);
   });
 
-  it('should render with reduced height (250px)', () => {
+  it('should have aspect-video container', () => {
     const { container } = render(
       <VideoLoadingPlaceholder image={mockImage} status="pending" />
     );
 
-    const mainContainer = container.querySelector('.h-\\[250px\\]');
-    expect(mainContainer).toBeInTheDocument();
+    const aspectContainer = container.querySelector('.aspect-video');
+    expect(aspectContainer).toBeInTheDocument();
   });
 
   it('should have video and sparkles icons', () => {

@@ -67,6 +67,7 @@ describe('VideoConfigForm', () => {
     expect(onGenerate).toHaveBeenCalledWith({
       prompt: 'Test prompt',
       aspectRatio: '9:16',
+      durationSeconds: 8,
       logoFile: undefined,
       additionalImageFile: undefined,
     });
@@ -80,9 +81,12 @@ describe('VideoConfigForm', () => {
     // Soumettre avec les valeurs par défaut (sans ouvrir les options avancées)
     await user.click(getByRole('button', { name: /générer une vidéo/i }));
     
-    // Vérifier que 9:16 est utilisé par défaut
+    // Vérifier que 9:16 et 8s sont utilisés par défaut
     expect(onGenerate).toHaveBeenCalledWith(
-      expect.objectContaining({ aspectRatio: '9:16' })
+      expect.objectContaining({ 
+        aspectRatio: '9:16',
+        durationSeconds: 8
+      })
     );
   });
 
