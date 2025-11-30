@@ -1,5 +1,11 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
+import * as React from 'https://esm.sh/react@18.3.1';
+import { Resend } from 'https://esm.sh/resend@4.0.0';
+import { renderAsync } from 'https://esm.sh/@react-email/components@0.0.22';
+import { TeamInvitationEmail } from './_templates/team-invitation.tsx';
+
+const resend = new Resend(Deno.env.get('RESEND_API_KEY') as string);
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -120,16 +126,62 @@ serve(async (req) => {
 
     console.log("Invitation created:", invitation.id);
 
-    // TODO: Envoyer l'email d'invitation
-    // Pour l'instant, on retourne juste le lien d'invitation
+    // Générer le lien d'invitation
     const inviteUrl = `${req.headers.get("origin")}/invite?token=${invitation.token}`;
+
+    // Récupérer le nom de la team et les infos de l'inviteur
+    const { data: teamData } = await supabaseClient
+      .from('teams')
+      .select('name')
+      .eq('id', teamId)
+      .single();
+
+    const { data: inviterData } = await supabaseClient
+      .from('user_profiles')
+      .select('full_name, email')
+      .eq('user_id', user.id)
+      .single();
+
+    // Préparer les données pour l'email
+    const teamName = teamData?.name || 'votre équipe';
+    const inviterName = inviterData?.full_name || inviterData?.email || 'Un membre';
+
+    // Générer le HTML de l'email avec React Email
+    const html = await renderAsync(
+      React.createElement(TeamInvitationEmail, {
+        inviteUrl,
+        teamName,
+        inviterName,
+        role,
+      })
+    );
+
+    // Envoyer l'email via Resend
+    try {
+      const { error: emailError } = await resend.emails.send({
+        from: 'Daft Funk <onboarding@resend.dev>',
+        to: [email.toLowerCase().trim()],
+        subject: `Invitation à rejoindre ${teamName} sur Daft Funk`,
+        html,
+      });
+
+      if (emailError) {
+        console.error('Error sending email:', emailError);
+        // On ne bloque pas si l'email échoue, on log juste l'erreur
+      } else {
+        console.log('Invitation email sent to:', email);
+      }
+    } catch (emailError) {
+      console.error('Error sending email:', emailError);
+      // On ne bloque pas si l'email échoue
+    }
 
     return new Response(
       JSON.stringify({
         success: true,
         invitation,
         inviteUrl,
-        message: "Invitation créée avec succès",
+        message: "Invitation envoyée avec succès",
       }),
       {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
