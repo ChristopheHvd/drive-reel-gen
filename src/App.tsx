@@ -9,6 +9,7 @@ import Auth from "./pages/Auth";
 import Pricing from "./pages/Pricing";
 import Dashboard from "./pages/Dashboard";
 import NotFound from "./pages/NotFound";
+import { Invite } from "./pages/Invite";
 
 const queryClient = new QueryClient();
 
@@ -22,6 +23,7 @@ const App = () => (
           <Route path="/" element={<Landing />} />
           <Route path="/auth" element={<Auth />} />
           <Route path="/pricing" element={<Pricing />} />
+          <Route path="/invite" element={<Invite />} />
           <Route path="/app" element={
             <ProtectedRoute>
               <Dashboard />
