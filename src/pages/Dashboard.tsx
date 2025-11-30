@@ -8,6 +8,7 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import logo from "@/assets/daft-funk-logo.png";
 import { useSubscription, QuotaExceededDialog } from "@/features/subscription";
+import { InviteModal, useCurrentTeam } from "@/features/team";
 
 const Dashboard = () => {
   const { images, loading, deleteImage, fetchImages } = useImages();
@@ -15,10 +16,12 @@ const Dashboard = () => {
   const [selectedVideo, setSelectedVideo] = useState<Video | null>(null);
   const [showUploader, setShowUploader] = useState(false);
   const [showQuotaDialog, setShowQuotaDialog] = useState(false);
+  const [showInviteModal, setShowInviteModal] = useState(false);
   const [generatingVideo, setGeneratingVideo] = useState(false);
   const { videos, loading: videosLoading, refetchVideos } = useVideos(selectedImage?.id);
   const { toast } = useToast();
   const { subscription, videosRemaining, isQuotaExceeded, nextResetDate, loading: subscriptionLoading } = useSubscription();
+  const { teamId } = useCurrentTeam();
 
   // Sélectionner automatiquement la première image au chargement
   useEffect(() => {
@@ -277,7 +280,8 @@ const Dashboard = () => {
               variant="outline"
               size="sm"
               className="gap-2"
-              disabled
+              onClick={() => setShowInviteModal(true)}
+              disabled={!teamId}
             >
               <UserPlus className="w-4 h-4" />
               Inviter
@@ -399,6 +403,14 @@ const Dashboard = () => {
         nextResetDate={nextResetDate}
         currentPlan={subscription?.plan_type || 'free'}
       />
+
+      {teamId && (
+        <InviteModal
+          open={showInviteModal}
+          onOpenChange={setShowInviteModal}
+          teamId={teamId}
+        />
+      )}
     </div>
   );
 };

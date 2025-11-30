@@ -120,6 +120,53 @@ export type Database = {
           },
         ]
       }
+      team_invitations: {
+        Row: {
+          accepted_at: string | null
+          created_at: string
+          email: string
+          expires_at: string
+          id: string
+          invited_by: string
+          role: Database["public"]["Enums"]["team_role"]
+          status: string | null
+          team_id: string
+          token: string
+        }
+        Insert: {
+          accepted_at?: string | null
+          created_at?: string
+          email: string
+          expires_at?: string
+          id?: string
+          invited_by: string
+          role?: Database["public"]["Enums"]["team_role"]
+          status?: string | null
+          team_id: string
+          token?: string
+        }
+        Update: {
+          accepted_at?: string | null
+          created_at?: string
+          email?: string
+          expires_at?: string
+          id?: string
+          invited_by?: string
+          role?: Database["public"]["Enums"]["team_role"]
+          status?: string | null
+          team_id?: string
+          token?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "team_invitations_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       team_members: {
         Row: {
           id: string
@@ -369,8 +416,13 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      can_invite_to_team: {
+        Args: { _inviter_id: string; _team_id: string }
+        Returns: boolean
+      }
       is_team_admin: { Args: { _team_id: string }; Returns: boolean }
       is_team_owner: { Args: { _team_id: string }; Returns: boolean }
+      user_has_team: { Args: never; Returns: string }
       user_teams: { Args: never; Returns: string[] }
     }
     Enums: {
