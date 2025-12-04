@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { Check } from "lucide-react";
-import logo from "@/assets/daft-funk-logo.png";
+import logo from "@/assets/quickie-video-logo.png";
 
 const Pricing = () => {
   const plans = [
@@ -64,9 +64,9 @@ const Pricing = () => {
       <header className="border-b border-border bg-background/50 backdrop-blur-sm sticky top-0 z-50">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <Link to="/" className="flex items-center gap-3">
-            <img src={logo} alt="Daft Funk" className="h-10 w-10" />
+            <img src={logo} alt="Quickie Video" className="h-10 w-10" />
             <span className="text-2xl font-bold bg-gradient-gold bg-clip-text text-transparent">
-              Daft Funk
+              Quickie Video
             </span>
           </Link>
           <nav className="flex items-center gap-4">

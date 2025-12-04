@@ -6,7 +6,7 @@ import { Upload, ChevronRight, Settings, UserPlus } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import logo from "@/assets/daft-funk-logo.png";
+import logo from "@/assets/quickie-video-logo.png";
 import { useSubscription, QuotaExceededDialog } from "@/features/subscription";
 import { InviteModal, useCurrentTeam } from "@/features/team";
 
@@ -242,9 +242,9 @@ const Dashboard = () => {
       <header className="sticky top-0 z-50 border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="flex h-16 items-center px-6">
           <Link to="/" className="flex items-center gap-3">
-            <img src={logo} alt="Daft Funk" className="h-8 w-8" />
+            <img src={logo} alt="Quickie Video" className="h-8 w-8" />
             <span className="text-xl font-bold bg-gradient-gold bg-clip-text text-transparent">
-              Daft Funk
+              Quickie Video
             </span>
           </Link>
           
