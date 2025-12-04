@@ -420,6 +420,19 @@ export type Database = {
         Args: { _inviter_id: string; _team_id: string }
         Returns: boolean
       }
+      get_invitation_by_token: {
+        Args: { _token: string }
+        Returns: {
+          created_at: string
+          email: string
+          expires_at: string
+          id: string
+          role: Database["public"]["Enums"]["team_role"]
+          status: string
+          team_id: string
+          team_name: string
+        }[]
+      }
       is_team_admin: { Args: { _team_id: string }; Returns: boolean }
       is_team_owner: { Args: { _team_id: string }; Returns: boolean }
       user_has_team: { Args: never; Returns: string }

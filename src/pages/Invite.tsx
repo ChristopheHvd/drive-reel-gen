@@ -37,32 +37,31 @@ export const Invite = () => {
     try {
       setLoading(true);
       
-      // Charger l'invitation
+      // Charger l'invitation via la fonction sécurisée (pas de SELECT direct)
       const { data: invitationData, error: invitationError } = await supabase
-        .from('team_invitations')
-        .select('*, teams!team_invitations_team_id_fkey(name)')
-        .eq('token', token)
-        .single();
+        .rpc('get_invitation_by_token', { _token: token });
 
       if (invitationError) throw invitationError;
 
-      if (!invitationData) {
+      if (!invitationData || invitationData.length === 0) {
         setError('Invitation introuvable');
         return;
       }
 
-      if (invitationData.status !== 'pending') {
-        setError(`Cette invitation a déjà été ${invitationData.status === 'accepted' ? 'acceptée' : 'annulée'}`);
+      const invitation = invitationData[0];
+
+      if (invitation.status !== 'pending') {
+        setError(`Cette invitation a déjà été ${invitation.status === 'accepted' ? 'acceptée' : 'annulée'}`);
         return;
       }
 
-      if (new Date(invitationData.expires_at) < new Date()) {
+      if (new Date(invitation.expires_at) < new Date()) {
         setError('Cette invitation a expiré');
         return;
       }
 
-      setInvitation(invitationData);
-      setTeam(invitationData.teams);
+      setInvitation(invitation);
+      setTeam({ name: invitation.team_name });
     } catch (err) {
       console.error('Error loading invitation:', err);
       setError('Impossible de charger l\'invitation');
