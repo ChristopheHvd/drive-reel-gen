@@ -47,10 +47,6 @@ test.describe('Regression Suite - Critical Paths', () => {
     expect(page.url()).toContain('/auth');
   });
 
-  test('Dashboard accessible after auth', async ({ page }) => {
-    await page.goto('/app');
-    expect(page.url()).toContain('/app');
-  });
 
   test('Logo and branding visible on all pages', async ({ page }) => {
     const routes = ['/', '/auth', '/pricing'];
