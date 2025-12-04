@@ -5,10 +5,7 @@ import { test, expect } from '@playwright/test';
  * Ces tests nécessitent une authentification - skippés en CI
  * car l'auth Google OAuth ne peut pas être simulée facilement
  */
-test.describe('Dashboard Layout - 3 Panels', () => {
-  // Skip tous les tests car ils nécessitent l'authentification
-  test.skip(true, 'Ces tests nécessitent une authentification Google OAuth');
-
+test.describe.skip('Dashboard Layout - 3 Panels', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/app');
   });
