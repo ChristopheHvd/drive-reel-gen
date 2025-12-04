@@ -4,10 +4,7 @@ import { test, expect } from '@playwright/test';
  * Tests du flow d'upload d'images
  * Ces tests nécessitent une authentification - skippés en CI
  */
-test.describe('Image Upload Flow', () => {
-  // Skip tous les tests car ils nécessitent l'authentification
-  test.skip(true, 'Ces tests nécessitent une authentification Google OAuth');
-
+test.describe.skip('Image Upload Flow', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/app');
   });

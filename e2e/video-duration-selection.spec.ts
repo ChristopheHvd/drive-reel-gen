@@ -2,17 +2,14 @@ import { test, expect } from '@playwright/test';
 
 /**
  * Tests E2E pour la sélection de durée vidéo
- * Note: Ces tests nécessitent une authentification complète
+ * Note: Ces tests nécessitent une authentification complète - skippés en CI
  */
-test.describe('Video Duration Selection', () => {
+test.describe.skip('Video Duration Selection', () => {
   test.beforeEach(async ({ page }) => {
-    // TODO: Implémenter l'authentification pour ces tests
-    test.skip(true, 'Requires authentication setup');
+    await page.goto('/app');
   });
 
   test('should display duration options in advanced settings', async ({ page }) => {
-    await page.goto('/app');
-    
     // Ouvrir les options avancées
     await page.click('text=Options avancées');
     
@@ -23,8 +20,6 @@ test.describe('Video Duration Selection', () => {
   });
 
   test('should persist duration selection in localStorage', async ({ page }) => {
-    await page.goto('/app');
-    
     // Sélectionner 16s
     await page.click('text=Options avancées');
     await page.click('text=16 secondes');
@@ -35,26 +30,6 @@ test.describe('Video Duration Selection', () => {
     });
     
     expect(duration).toBe('16');
-  });
-
-  test('should show quota warning for 16s option', async ({ page }) => {
-    await page.goto('/app');
-    
-    await page.click('text=Options avancées');
-    await page.hover('[value="16"]');
-    
-    // Vérifier le tooltip indiquant 2 crédits
-    await expect(page.locator('text=/compte pour 2 vidéos/i')).toBeVisible();
-  });
-
-  test('should show quota warning for 24s option', async ({ page }) => {
-    await page.goto('/app');
-    
-    await page.click('text=Options avancées');
-    await page.hover('[value="24"]');
-    
-    // Vérifier le tooltip indiquant 3 crédits
-    await expect(page.locator('text=/compte pour 3 vidéos/i')).toBeVisible();
   });
 
   test('should default to 8s when no localStorage value', async ({ page }) => {

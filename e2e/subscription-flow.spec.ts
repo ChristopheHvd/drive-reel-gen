@@ -25,10 +25,7 @@ test.describe('Subscription Flow', () => {
   });
 });
 
-test.describe('Subscription Flow - Authenticated', () => {
-  // Skip tous les tests car ils nécessitent l'authentification
-  test.skip(true, 'Ces tests nécessitent une authentification Google OAuth');
-
+test.describe.skip('Subscription Flow - Authenticated', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/app');
   });
