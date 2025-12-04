@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { Video, Sparkles, Zap, TrendingUp } from "lucide-react";
-import logo from "@/assets/daft-funk-logo.png";
+import logo from "@/assets/quickie-video-logo.png";
 
 const Landing = () => {
   return (
@@ -10,9 +10,9 @@ const Landing = () => {
       <header className="border-b border-border bg-background/50 backdrop-blur-sm sticky top-0 z-50">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <Link to="/" className="flex items-center gap-3">
-            <img src={logo} alt="Daft Funk" className="h-10 w-10" />
+            <img src={logo} alt="Quickie Video" className="h-10 w-10" />
             <span className="text-2xl font-bold bg-gradient-gold bg-clip-text text-transparent">
-              Daft Funk
+              Quickie Video
             </span>
           </Link>
           <nav className="hidden md:flex items-center gap-6">
@@ -46,7 +46,7 @@ const Landing = () => {
           </h1>
           
           <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-            Daft Funk transforme vos photos en vidéos marketing percutantes grâce à l'intelligence artificielle.
+            Quickie Video transforme vos photos en vidéos marketing percutantes grâce à l'intelligence artificielle.
             Synchronisez votre Google Drive et laissez la magie opérer.
           </p>
 
@@ -115,7 +115,7 @@ const Landing = () => {
             {" "}vos contenus ?
           </h2>
           <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            Rejoignez les créateurs qui utilisent Daft Funk pour automatiser leur production de vidéos marketing.
+            Rejoignez les créateurs qui utilisent Quickie Video pour automatiser leur production de vidéos marketing.
           </p>
           <Link to="/auth">
             <Button variant="premium" size="lg" className="text-base">
@@ -129,13 +129,29 @@ const Landing = () => {
       {/* Footer */}
       <footer className="border-t border-border bg-background/50 backdrop-blur-sm mt-20">
         <div className="container mx-auto px-4 py-8">
-          <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-6">
             <div className="flex items-center gap-3">
-              <img src={logo} alt="Daft Funk" className="h-8 w-8" />
-              <span className="font-semibold text-foreground">Daft Funk</span>
+              <img src={logo} alt="Quickie Video" className="h-8 w-8" />
+              <span className="font-semibold text-foreground">Quickie Video</span>
+            </div>
+            <div className="flex items-center gap-6 text-sm">
+              <a 
+                href="https://files.cloudron.alpes-ia.fr/AlpesIA/quickievideo_terms_of_service.pdf"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-muted-foreground hover:text-foreground transition-colors"
+              >
+                Conditions d'utilisation
+              </a>
+              <Link 
+                to="/privacy"
+                className="text-muted-foreground hover:text-foreground transition-colors"
+              >
+                Politique de confidentialité
+              </Link>
             </div>
             <p className="text-sm text-muted-foreground">
-              © 2025 Daft Funk. Tous droits réservés.
+              © 2025 Quickie Video. Tous droits réservés.
             </p>
           </div>
         </div>

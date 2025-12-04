@@ -3,7 +3,7 @@ import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useEffect } from "react";
 import { useAuth } from "@/features/auth";
 import { toast } from "sonner";
-import logo from "@/assets/daft-funk-logo.png";
+import logo from "@/assets/quickie-video-logo.png";
 
 const Auth = () => {
   const { user, loading, signInWithGoogle } = useAuth();
@@ -39,8 +39,8 @@ const Auth = () => {
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
           <Link to="/" className="inline-flex items-center gap-3 mb-8">
-            <img src={logo} alt="Daft Funk" className="h-12 w-12" />
-            <span className="text-3xl font-bold bg-gradient-gold bg-clip-text text-transparent">Daft Funk</span>
+            <img src={logo} alt="Quickie Video" className="h-12 w-12" />
+            <span className="text-3xl font-bold bg-gradient-gold bg-clip-text text-transparent">Quickie Video</span>
           </Link>
         </div>
         <div className="bg-card border border-border rounded-2xl p-8 shadow-subtle">
