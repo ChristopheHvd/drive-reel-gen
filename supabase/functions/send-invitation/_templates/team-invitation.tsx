@@ -26,14 +26,14 @@ export const TeamInvitationEmail = ({
 }: TeamInvitationEmailProps) => (
   <Html>
     <Head />
-    <Preview>Vous avez été invité à rejoindre {teamName} sur Daft Funk</Preview>
+    <Preview>Vous avez été invité à rejoindre {teamName} sur QuickQuick</Preview>
     <Body style={main}>
       <Container style={container}>
-        <Heading style={h1}>🎵 Invitation à rejoindre une équipe</Heading>
+        <Heading style={h1}>⚡ Invitation à rejoindre une équipe</Heading>
         
         <Text style={text}>
           <strong>{inviterName}</strong> vous invite à rejoindre l'équipe{' '}
-          <strong>{teamName}</strong> sur Daft Funk.
+          <strong>{teamName}</strong> sur QuickQuick.
         </Text>
 
         <Text style={text}>

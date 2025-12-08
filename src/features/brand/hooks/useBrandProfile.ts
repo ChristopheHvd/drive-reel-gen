@@ -84,6 +84,14 @@ export const useBrandProfile = () => {
         await supabase.from('brand_profiles').insert([{ team_id: teamMember.team_id, ...profileData }]);
       }
 
+      // Synchroniser le nom d'équipe avec le nom d'entreprise
+      if (data.company_name) {
+        await supabase
+          .from('teams')
+          .update({ name: data.company_name })
+          .eq('id', teamMember.team_id);
+      }
+
       await loadProfile();
     } catch (err) {
       setError(err as Error);
