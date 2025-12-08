@@ -136,6 +136,7 @@ serve(async (req) => {
 
     // Générer le lien d'invitation
     const inviteUrl = `${req.headers.get("origin")}/invite?token=${invitation.token}`;
+    console.log("Invite URL generated:", inviteUrl);
 
     // Récupérer le nom de la team et les infos de l'inviteur
     const { data: teamData } = await supabaseClient
@@ -153,20 +154,30 @@ serve(async (req) => {
     // Préparer les données pour l'email
     const teamName = teamData?.name || 'votre équipe';
     const inviterName = inviterData?.full_name || inviterData?.email || 'Un membre';
+    console.log("Email data prepared:", { teamName, inviterName, role, targetEmail: email });
 
     // Générer le HTML de l'email avec React Email
-    const html = await renderAsync(
-      React.createElement(TeamInvitationEmail, {
-        inviteUrl,
-        teamName,
-        inviterName,
-        role,
-      })
-    );
+    console.log("Starting React Email render...");
+    let html: string;
+    try {
+      html = await renderAsync(
+        React.createElement(TeamInvitationEmail, {
+          inviteUrl,
+          teamName,
+          inviterName,
+          role,
+        })
+      );
+      console.log("React Email render successful, HTML length:", html.length);
+    } catch (renderError) {
+      console.error("React Email render failed:", renderError);
+      throw new Error(`Email render failed: ${renderError}`);
+    }
 
     // Envoyer l'email via Resend
+    console.log("Sending email via Resend...");
     try {
-      const { error: emailError } = await resend.emails.send({
+      const { data: emailData, error: emailError } = await resend.emails.send({
         from: 'QuickQuick <onboarding@resend.dev>',
         to: [email.toLowerCase().trim()],
         subject: `Invitation à rejoindre ${teamName} sur QuickQuick`,
@@ -174,13 +185,13 @@ serve(async (req) => {
       });
 
       if (emailError) {
-        console.error('Error sending email:', emailError);
+        console.error('Resend error:', JSON.stringify(emailError));
         // On ne bloque pas si l'email échoue, on log juste l'erreur
       } else {
-        console.log('Invitation email sent to:', email);
+        console.log('Invitation email sent successfully:', { to: email, id: emailData?.id });
       }
     } catch (emailError) {
-      console.error('Error sending email:', emailError);
+      console.error('Resend exception:', emailError);
       // On ne bloque pas si l'email échoue
     }
 
