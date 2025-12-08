@@ -178,7 +178,7 @@ serve(async (req) => {
     console.log("Sending email via Resend...");
     try {
       const { data: emailData, error: emailError } = await resend.emails.send({
-        from: 'QuickQuick <onboarding@resend.dev>',
+        from: 'QuickQuick <noreply@quickie-video.com>',
         to: [email.toLowerCase().trim()],
         subject: `Invitation à rejoindre ${teamName} sur QuickQuick`,
         html,
