@@ -1,12 +1,13 @@
 import { useState } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Loader2, Mail, Copy, Check } from 'lucide-react';
+import { Loader2, Mail, Copy, Check, Pencil } from 'lucide-react';
 import { useTeamInvitations } from '../hooks/useTeamInvitations';
 import { useTeamMembers } from '../hooks/useTeamMembers';
+import { useCurrentTeam } from '../hooks/useCurrentTeam';
 import { useToast } from '@/hooks/use-toast';
 
 interface InviteModalProps {
@@ -21,9 +22,13 @@ export const InviteModal = ({ open, onOpenChange, teamId }: InviteModalProps) =>
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [generatedLink, setGeneratedLink] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
+  const [isEditingName, setIsEditingName] = useState(false);
+  const [editedName, setEditedName] = useState('');
+  const [isSavingName, setIsSavingName] = useState(false);
 
   const { sendInvitation, invitations } = useTeamInvitations(teamId);
   const { currentUserRole } = useTeamMembers(teamId);
+  const { teamName, updateTeamName } = useCurrentTeam();
   const { toast } = useToast();
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -79,17 +84,110 @@ export const InviteModal = ({ open, onOpenChange, teamId }: InviteModalProps) =>
     setRole('member');
     setGeneratedLink(null);
     setCopied(false);
+    setIsEditingName(false);
+    setEditedName('');
     onOpenChange(false);
+  };
+
+  const handleEditName = () => {
+    setEditedName(teamName || '');
+    setIsEditingName(true);
+  };
+
+  const handleSaveName = async () => {
+    if (!editedName.trim()) {
+      toast({
+        title: 'Erreur',
+        description: 'Le nom de l\'équipe ne peut pas être vide',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setIsSavingName(true);
+    try {
+      await updateTeamName(editedName.trim());
+      toast({
+        title: 'Nom modifié',
+        description: 'Le nom de l\'équipe a été mis à jour',
+      });
+      setIsEditingName(false);
+    } catch (error) {
+      toast({
+        title: 'Erreur',
+        description: 'Impossible de modifier le nom',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsSavingName(false);
+    }
+  };
+
+  const handleCancelEditName = () => {
+    setIsEditingName(false);
+    setEditedName('');
   };
 
   // Si l'utilisateur est simplement "member", il ne peut inviter que des "member"
   const canSelectRole = currentUserRole === 'owner' || currentUserRole === 'admin';
+  const canEditTeamName = currentUserRole === 'owner' || currentUserRole === 'admin';
 
   return (
     <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Inviter un membre</DialogTitle>
+          {teamName && (
+            <DialogDescription className="flex items-center gap-2 pt-1">
+              {isEditingName ? (
+                <div className="flex items-center gap-2 w-full">
+                  <Input
+                    value={editedName}
+                    onChange={(e) => setEditedName(e.target.value)}
+                    className="h-8 text-sm"
+                    placeholder="Nom de l'équipe"
+                    disabled={isSavingName}
+                  />
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={handleSaveName}
+                    disabled={isSavingName}
+                    className="h-8 px-2"
+                  >
+                    {isSavingName ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <Check className="h-4 w-4" />
+                    )}
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={handleCancelEditName}
+                    disabled={isSavingName}
+                    className="h-8 px-2"
+                  >
+                    ✕
+                  </Button>
+                </div>
+              ) : (
+                <>
+                  <span>Équipe : <strong className="text-foreground">{teamName}</strong></span>
+                  {canEditTeamName && (
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={handleEditName}
+                      className="h-6 w-6 p-0"
+                    >
+                      <Pencil className="h-3 w-3" />
+                    </Button>
+                  )}
+                </>
+              )}
+            </DialogDescription>
+          )}
         </DialogHeader>
 
         {!generatedLink ? (
