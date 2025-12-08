@@ -79,17 +79,25 @@ export const useBrandProfile = () => {
       };
 
       if (existing) {
-        await supabase.from('brand_profiles').update(profileData).eq('team_id', teamMember.team_id);
+        const { error: updateError } = await supabase
+          .from('brand_profiles')
+          .update(profileData)
+          .eq('team_id', teamMember.team_id);
+        if (updateError) throw updateError;
       } else {
-        await supabase.from('brand_profiles').insert([{ team_id: teamMember.team_id, ...profileData }]);
+        const { error: insertError } = await supabase
+          .from('brand_profiles')
+          .insert([{ team_id: teamMember.team_id, ...profileData }]);
+        if (insertError) throw insertError;
       }
 
       // Synchroniser le nom d'équipe avec le nom d'entreprise
       if (data.company_name) {
-        await supabase
+        const { error: teamUpdateError } = await supabase
           .from('teams')
           .update({ name: data.company_name })
           .eq('id', teamMember.team_id);
+        if (teamUpdateError) throw teamUpdateError;
       }
 
       await loadProfile();

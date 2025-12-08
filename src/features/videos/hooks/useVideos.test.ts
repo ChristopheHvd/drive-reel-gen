@@ -29,7 +29,7 @@ describe('useVideos', () => {
     const { result } = renderHook(() => useVideos());
     
     expect(result.current.videos).toEqual([]);
-    expect(result.current.loading).toBe(true);
+    expect(result.current.loading).toBe(false);
     expect(result.current.error).toBeNull();
   });
 

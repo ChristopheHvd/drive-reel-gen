@@ -55,8 +55,8 @@ test.describe('Regression Suite - Critical Paths', () => {
       await page.goto(route);
       
       // Vérifier que le logo ou le nom "QuickQuick" est visible
-      const brandingVisible = await page.getByText(/quickquick/i).isVisible();
-      expect(brandingVisible).toBe(true);
+      const branding = page.getByRole('link', { name: /quickquick/i }).first();
+      await expect(branding).toBeVisible();
     }
   });
 });

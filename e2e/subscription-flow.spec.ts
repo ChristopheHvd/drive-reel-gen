@@ -11,9 +11,9 @@ test.describe('Subscription Flow', () => {
     await expect(page).toHaveURL('/pricing');
 
     // Should display all three plan cards
-    await expect(page.locator('text=Free')).toBeVisible();
-    await expect(page.locator('text=Pro')).toBeVisible();
-    await expect(page.locator('text=Business')).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Free' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Pro' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Business' })).toBeVisible();
   });
 
   test('should show prices on pricing page', async ({ page }) => {

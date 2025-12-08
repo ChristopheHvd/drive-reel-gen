@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render } from '@testing-library/react';
+import { render, fireEvent } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { ImageUploader } from './ImageUploader';
 import * as useImageUploadModule from '../hooks/useImageUpload';
@@ -111,17 +111,21 @@ describe('ImageUploader', () => {
     const file = new File(['test'], 'test.jpg', { type: 'image/jpeg' });
     
     if (dropZone) {
-      // Simuler un drop event avec DataTransfer
-      const dataTransfer = new DataTransfer();
+      // Simuler un drop event avec un DataTransfer mock (jsdom ne l'expose pas)
+      const files: File[] = [];
+      const dataTransfer = {
+        files,
+        items: {
+          add: (f: File) => files.push(f),
+        },
+        get types() {
+          return [];
+        },
+      } as unknown as DataTransfer;
+
       dataTransfer.items.add(file);
-      
-      const dropEvent = new DragEvent('drop', {
-        bubbles: true,
-        cancelable: true,
-        dataTransfer,
-      });
-      
-      dropZone.dispatchEvent(dropEvent);
+
+      fireEvent.drop(dropZone, { dataTransfer });
       
       // Attendre que l'upload soit traité
       await new Promise(resolve => setTimeout(resolve, 100));

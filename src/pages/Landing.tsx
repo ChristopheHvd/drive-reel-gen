@@ -29,8 +29,9 @@ const Landing = () => {
         </div>
       </header>
 
-      {/* Hero Section */}
-      <section className="container mx-auto px-4 py-20 md:py-32">
+      <main>
+        {/* Hero Section */}
+        <section className="container mx-auto px-4 py-20 md:py-32">
         <div className="max-w-4xl mx-auto text-center space-y-8">
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-primary/30 bg-primary/10 backdrop-blur-sm">
             <Sparkles className="h-4 w-4 text-primary" />
@@ -77,8 +78,8 @@ const Landing = () => {
         </div>
       </section>
 
-      {/* Features Section */}
-      <section className="container mx-auto px-4 py-20">
+        {/* Features Section */}
+        <section className="container mx-auto px-4 py-20">
         <div className="max-w-6xl mx-auto">
           <h2 className="text-3xl md:text-4xl font-bold text-center mb-16">
             Une solution{" "}
@@ -104,8 +105,8 @@ const Landing = () => {
         </div>
       </section>
 
-      {/* CTA Section */}
-      <section className="container mx-auto px-4 py-20">
+        {/* CTA Section */}
+        <section className="container mx-auto px-4 py-20">
         <div className="max-w-4xl mx-auto text-center space-y-8 p-12 rounded-2xl bg-card border border-border shadow-subtle">
           <h2 className="text-3xl md:text-5xl font-bold">
             Prêt à{" "}
@@ -124,7 +125,8 @@ const Landing = () => {
             </Button>
           </Link>
         </div>
-      </section>
+        </section>
+      </main>
 
       {/* Footer */}
       <footer className="border-t border-border bg-background/50 backdrop-blur-sm mt-20">

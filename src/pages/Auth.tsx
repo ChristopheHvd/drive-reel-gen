@@ -31,11 +31,15 @@ const Auth = () => {
   };
 
   if (loading) {
-    return <div className="min-h-screen bg-gradient-dark flex items-center justify-center"><div className="text-foreground">Chargement...</div></div>;
+    return (
+      <main className="min-h-screen bg-gradient-dark flex items-center justify-center">
+        <div className="text-foreground">Chargement...</div>
+      </main>
+    );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-dark flex items-center justify-center p-4">
+    <main className="min-h-screen bg-gradient-dark flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
           <Link to="/" className="inline-flex items-center gap-3 mb-8">
@@ -62,7 +66,7 @@ const Auth = () => {
           <Link to="/" className="text-sm text-muted-foreground hover:text-foreground">← Retour</Link>
         </div>
       </div>
-    </div>
+    </main>
   );
 };
 

@@ -80,91 +80,93 @@ const Pricing = () => {
         </div>
       </header>
 
-      {/* Pricing Section */}
-      <section className="container mx-auto px-4 py-20">
-        <div className="max-w-6xl mx-auto">
-          <div className="text-center mb-16 space-y-4">
-            <h1 className="text-4xl md:text-6xl font-bold">
-              Choisissez votre{" "}
-              <span className="bg-gradient-gold bg-clip-text text-transparent">
-                plan
-              </span>
-            </h1>
-            <p className="text-xl text-muted-foreground">
-              Des tarifs simples et transparents pour tous vos besoins
-            </p>
-          </div>
+      <main>
+        {/* Pricing Section */}
+        <section className="container mx-auto px-4 py-20">
+          <div className="max-w-6xl mx-auto">
+            <div className="text-center mb-16 space-y-4">
+              <h1 className="text-4xl md:text-6xl font-bold">
+                Choisissez votre{" "}
+                <span className="bg-gradient-gold bg-clip-text text-transparent">
+                  plan
+                </span>
+              </h1>
+              <p className="text-xl text-muted-foreground">
+                Des tarifs simples et transparents pour tous vos besoins
+              </p>
+            </div>
 
-          <div className="grid md:grid-cols-3 gap-8">
-            {plans.map((plan, index) => (
-              <div
-                key={index}
-                className={`relative p-8 rounded-2xl bg-card border ${
-                  plan.popular
-                    ? "border-primary shadow-gold"
-                    : "border-border"
-                } hover:border-primary/50 transition-all`}
-              >
-                {plan.popular && (
-                  <div className="absolute -top-4 left-1/2 -translate-x-1/2">
-                    <span className="px-4 py-1 rounded-full bg-gradient-gold text-primary-foreground text-sm font-semibold shadow-gold">
-                      Populaire
-                    </span>
-                  </div>
-                )}
-
-                <div className="space-y-6">
-                  <div>
-                    <h3 className="text-2xl font-bold mb-2">{plan.name}</h3>
-                    <div className="flex items-baseline gap-2">
-                      <span className="text-4xl font-bold">{plan.price}</span>
-                      <span className="text-muted-foreground">{plan.period}</span>
+            <div className="grid md:grid-cols-3 gap-8">
+              {plans.map((plan, index) => (
+                <div
+                  key={index}
+                  className={`relative p-8 rounded-2xl bg-card border ${
+                    plan.popular
+                      ? "border-primary shadow-gold"
+                      : "border-border"
+                  } hover:border-primary/50 transition-all`}
+                >
+                  {plan.popular && (
+                    <div className="absolute -top-4 left-1/2 -translate-x-1/2">
+                      <span className="px-4 py-1 rounded-full bg-gradient-gold text-primary-foreground text-sm font-semibold shadow-gold">
+                        Populaire
+                      </span>
                     </div>
-                    <p className="text-sm text-primary mt-2 font-semibold">
-                      {plan.videos}
-                    </p>
+                  )}
+
+                  <div className="space-y-6">
+                    <div>
+                      <h3 className="text-2xl font-bold mb-2">{plan.name}</h3>
+                      <div className="flex items-baseline gap-2">
+                        <span className="text-4xl font-bold">{plan.price}</span>
+                        <span className="text-muted-foreground">{plan.period}</span>
+                      </div>
+                      <p className="text-sm text-primary mt-2 font-semibold">
+                        {plan.videos}
+                      </p>
+                    </div>
+
+                    <ul className="space-y-3">
+                      {plan.features.map((feature, featureIndex) => (
+                        <li key={featureIndex} className="flex items-start gap-3">
+                          <Check className="h-5 w-5 text-primary shrink-0 mt-0.5" />
+                          <span className="text-sm text-foreground/90">{feature}</span>
+                        </li>
+                      ))}
+                    </ul>
+
+                    <Link to="/auth" className="block">
+                      <Button variant={plan.variant} className="w-full" size="lg">
+                        {plan.cta}
+                      </Button>
+                    </Link>
                   </div>
-
-                  <ul className="space-y-3">
-                    {plan.features.map((feature, featureIndex) => (
-                      <li key={featureIndex} className="flex items-start gap-3">
-                        <Check className="h-5 w-5 text-primary shrink-0 mt-0.5" />
-                        <span className="text-sm text-foreground/90">{feature}</span>
-                      </li>
-                    ))}
-                  </ul>
-
-                  <Link to="/auth" className="block">
-                    <Button variant={plan.variant} className="w-full" size="lg">
-                      {plan.cta}
-                    </Button>
-                  </Link>
                 </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
 
-          <div className="mt-16 text-center">
-            <p className="text-muted-foreground mb-6">
-              Tous les plans incluent l'accès à la plateforme et la synchronisation Google Drive
-            </p>
-            <div className="flex flex-wrap justify-center gap-4 text-sm">
-              <span className="flex items-center gap-2">
-                <Check className="h-4 w-4 text-accent" />
-                Pas de période d'engagement
-              </span>
-              <span className="flex items-center gap-2">
-                <Check className="h-4 w-4 text-accent" />
-                Résiliation à tout moment
-              </span>
-              <span className="flex items-center gap-2">
-                <Check className="h-4 w-4 text-accent" />
-                Support en français
-              </span>
+            <div className="mt-16 text-center">
+              <p className="text-muted-foreground mb-6">
+                Tous les plans incluent l'accès à la plateforme et la synchronisation Google Drive
+              </p>
+              <div className="flex flex-wrap justify-center gap-4 text-sm">
+                <span className="flex items-center gap-2">
+                  <Check className="h-4 w-4 text-accent" />
+                  Pas de période d'engagement
+                </span>
+                <span className="flex items-center gap-2">
+                  <Check className="h-4 w-4 text-accent" />
+                  Résiliation à tout moment
+                </span>
+                <span className="flex items-center gap-2">
+                  <Check className="h-4 w-4 text-accent" />
+                  Support en français
+                </span>
+              </div>
             </div>
           </div>
-        </div>
-      </section>
+        </section>
+      </main>
     </div>
   );
 };

@@ -134,6 +134,7 @@ describe('VideoList', () => {
   it('should render video cards when videos exist', () => {
     const { getByText, container } = render(
       <VideoList
+        imageId="img-1"
         selectedImage={{
           id: 'img-1',
           file_name: 'test.jpg',
