@@ -39,9 +39,12 @@ serve(async (req) => {
     const body = await req.text();
     const webhookSecret = Deno.env.get("STRIPE_WEBHOOK_SECRET");
     
-    const event = webhookSecret
-      ? await stripe.webhooks.constructEventAsync(body, signature, webhookSecret)
-      : JSON.parse(body);
+    if (!webhookSecret) {
+      console.error("STRIPE_WEBHOOK_SECRET is not configured");
+      return new Response("Webhook secret not configured", { status: 500 });
+    }
+    
+    const event = await stripe.webhooks.constructEventAsync(body, signature, webhookSecret);
 
     console.log(`Webhook validated: ${event.type}`);
 

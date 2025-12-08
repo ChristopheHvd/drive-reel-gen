@@ -159,9 +159,9 @@ serve(async (req) => {
     // Envoyer l'email via Resend
     try {
       const { error: emailError } = await resend.emails.send({
-        from: 'Daft Funk <onboarding@resend.dev>',
+        from: 'QuickQuick <onboarding@resend.dev>',
         to: [email.toLowerCase().trim()],
-        subject: `Invitation à rejoindre ${teamName} sur Daft Funk`,
+        subject: `Invitation à rejoindre ${teamName} sur QuickQuick`,
         html,
       });
 
