@@ -80,10 +80,14 @@ export const useTeamInvitations = (teamId: string | null) => {
 
       if (error) throw error;
 
-      if (data.error) {
+      if (data?.error) {
+        // S'assurer que l'erreur est une chaîne pour le toast
+        const errorMessage = typeof data.error === 'string' 
+          ? data.error 
+          : (data.error?.message || "Une erreur est survenue");
         toast({
           title: 'Erreur',
-          description: data.error,
+          description: errorMessage,
           variant: 'destructive',
         });
         return null;
@@ -95,11 +99,15 @@ export const useTeamInvitations = (teamId: string | null) => {
       });
 
       return data.invitation;
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Error sending invitation:', error);
+      // S'assurer que l'erreur est une chaîne pour le toast
+      const errorMessage = error instanceof Error 
+        ? error.message 
+        : "Impossible d'envoyer l'invitation";
       toast({
         title: 'Erreur',
-        description: "Impossible d'envoyer l'invitation",
+        description: errorMessage,
         variant: 'destructive',
       });
       return null;
