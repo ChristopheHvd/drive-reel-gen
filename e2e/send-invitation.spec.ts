@@ -155,9 +155,13 @@ test.describe('Invitation Acceptance Flow', () => {
     // Page should load without crashing
     await expect(page.locator('body')).toBeVisible();
     
+    // Wait for page to finish loading (either shows loading spinner, then content)
+    await page.waitForLoadState('networkidle');
+    
     // Should either show invitation details or an error for invalid token
-    const hasContent = await page.locator('main').isVisible();
-    expect(hasContent).toBe(true);
+    // The Invite component shows a Card with text content
+    // Check for heading (CardTitle) which is always present - either "Invitation invalide" or "Invitation à rejoindre une équipe"
+    await expect(page.getByRole('heading')).toBeVisible();
   });
 
   test('should show error for missing token', async ({ page }) => {
