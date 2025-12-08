@@ -76,8 +76,8 @@ describe('Dashboard', () => {
   it('should render header with logo and title', () => {
     const { getByText, getByAltText } = renderDashboard();
     
-    expect(getByText('Quickie Video')).toBeInTheDocument();
-    expect(getByAltText('Quickie Video')).toBeInTheDocument();
+    expect(getByText('QuickQuick')).toBeInTheDocument();
+    expect(getByAltText('QuickQuick')).toBeInTheDocument();
   });
 
   it('should render three main panels', () => {

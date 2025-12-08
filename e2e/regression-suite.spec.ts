@@ -54,8 +54,8 @@ test.describe('Regression Suite - Critical Paths', () => {
     for (const route of routes) {
       await page.goto(route);
       
-      // Vérifier que le logo ou le nom "Quickie Video" est visible
-      const brandingVisible = await page.getByText(/quickie video/i).isVisible();
+      // Vérifier que le logo ou le nom "QuickQuick" est visible
+      const brandingVisible = await page.getByText(/quickquick/i).isVisible();
       expect(brandingVisible).toBe(true);
     }
   });
