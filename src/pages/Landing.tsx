@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
-import { Video, Sparkles, Zap, TrendingUp } from "lucide-react";
+import { Video, Sparkles, Zap, TrendingUp, Upload } from "lucide-react";
 import logo from "@/assets/quickquick-logo.png";
 
 const Landing = () => {
@@ -48,7 +48,7 @@ const Landing = () => {
           
           <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
             QuickQuick transforme vos photos en vidéos marketing percutantes grâce à l'intelligence artificielle.
-            Synchronisez votre Google Drive et laissez la magie opérer.
+            Uploadez vos images et laissez la magie opérer.
           </p>
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center pt-4">
@@ -169,9 +169,9 @@ const features = [
     description: "Créez des vidéos professionnelles à partir de vos images en quelques secondes grâce à l'IA.",
   },
   {
-    icon: Sparkles,
-    title: "Synchronisation Drive",
-    description: "Connectez votre Google Drive et synchronisez automatiquement vos nouvelles images.",
+    icon: Upload,
+    title: "Upload simplifié",
+    description: "Glissez-déposez vos images ou sélectionnez-les depuis votre ordinateur en un clic.",
   },
   {
     icon: TrendingUp,

@@ -13,7 +13,7 @@ const Pricing = () => {
       features: [
         "6 vidéos par mois",
         "Format 9:16 et 16:9",
-        "Synchronisation Google Drive",
+        "Upload d'images",
         "Génération IA de prompts",
         "Support communautaire",
       ],
@@ -29,7 +29,7 @@ const Pricing = () => {
       features: [
         "50 vidéos par mois",
         "Tous les formats",
-        "Synchronisation automatique",
+        "Upload illimité",
         "Analyse de marque",
         "Génération avancée",
         "Support prioritaire",
@@ -46,7 +46,7 @@ const Pricing = () => {
       features: [
         "Vidéos illimitées",
         "Tous les formats",
-        "Synchronisation temps réel",
+        "Équipe illimitée",
         "Analyse de marque avancée",
         "API dédiée",
         "Support dédié 24/7",
@@ -147,7 +147,7 @@ const Pricing = () => {
 
             <div className="mt-16 text-center">
               <p className="text-muted-foreground mb-6">
-                Tous les plans incluent l'accès à la plateforme et la synchronisation Google Drive
+                Tous les plans incluent l'accès complet à la plateforme
               </p>
               <div className="flex flex-wrap justify-center gap-4 text-sm">
                 <span className="flex items-center gap-2">

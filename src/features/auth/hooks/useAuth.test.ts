@@ -10,6 +10,8 @@ vi.mock('@/integrations/supabase/client', () => ({
       getSession: vi.fn(),
       onAuthStateChange: vi.fn(),
       signInWithOAuth: vi.fn(),
+      signInWithPassword: vi.fn(),
+      signUp: vi.fn(),
       signOut: vi.fn(),
     },
   },
@@ -89,10 +91,57 @@ describe('useAuth - Regression Tests', () => {
       expect.objectContaining({
         provider: 'google',
         options: expect.objectContaining({
-          scopes: expect.stringContaining('drive.readonly'),
+          scopes: 'email profile',
         }),
       })
     );
+  });
+
+  it('should call signInWithPassword when signInWithEmail is called', async () => {
+    const mockSubscription = { unsubscribe: vi.fn() };
+    (supabase.auth.onAuthStateChange as any).mockReturnValue({
+      data: { subscription: mockSubscription },
+    });
+    (supabase.auth.getSession as any).mockResolvedValue({
+      data: { session: null },
+    });
+    (supabase.auth.signInWithPassword as any).mockResolvedValue({ error: null });
+
+    const { result } = renderHook(() => useAuth());
+
+    await act(async () => {
+      await result.current.signInWithEmail('test@example.com', 'password123');
+    });
+
+    expect(supabase.auth.signInWithPassword).toHaveBeenCalledWith({
+      email: 'test@example.com',
+      password: 'password123',
+    });
+  });
+
+  it('should call signUp when signUp is called', async () => {
+    const mockSubscription = { unsubscribe: vi.fn() };
+    (supabase.auth.onAuthStateChange as any).mockReturnValue({
+      data: { subscription: mockSubscription },
+    });
+    (supabase.auth.getSession as any).mockResolvedValue({
+      data: { session: null },
+    });
+    (supabase.auth.signUp as any).mockResolvedValue({ error: null });
+
+    const { result } = renderHook(() => useAuth());
+
+    await act(async () => {
+      await result.current.signUp('test@example.com', 'password123', 'John Doe');
+    });
+
+    expect(supabase.auth.signUp).toHaveBeenCalledWith({
+      email: 'test@example.com',
+      password: 'password123',
+      options: expect.objectContaining({
+        data: { full_name: 'John Doe' },
+      }),
+    });
   });
 
   it('should handle sign out correctly', async () => {

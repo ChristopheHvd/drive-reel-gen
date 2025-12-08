@@ -4,23 +4,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 
 /**
- * Hook pour gérer l'authentification des utilisateurs via Google OAuth
+ * Hook pour gérer l'authentification des utilisateurs
+ * Supporte Google OAuth et email/password
  * 
  * @returns {Object} État et méthodes d'authentification
- * @returns {User | null} user - L'utilisateur actuellement connecté
- * @returns {Session | null} session - La session active
- * @returns {boolean} loading - Indique si l'authentification est en cours de chargement
- * @returns {Function} signInWithGoogle - Fonction pour se connecter avec Google
- * @returns {Function} signOut - Fonction pour se déconnecter
- * 
- * @example
- * ```tsx
- * const { user, loading, signInWithGoogle, signOut } = useAuth();
- * 
- * if (loading) return <Spinner />;
- * if (!user) return <button onClick={signInWithGoogle}>Se connecter</button>;
- * return <button onClick={signOut}>Se déconnecter</button>;
- * ```
  */
 export const useAuth = () => {
   const [user, setUser] = useState<User | null>(null);
@@ -49,16 +36,20 @@ export const useAuth = () => {
     return () => subscription.unsubscribe();
   }, []);
 
-  const signInWithGoogle = async () => {
+  /**
+   * Connexion avec Google OAuth
+   * @param redirectPath - Chemin de redirection après authentification (optionnel)
+   */
+  const signInWithGoogle = async (redirectPath?: string) => {
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
       options: {
-        redirectTo: `${window.location.origin}/app`,
+        redirectTo: `${window.location.origin}${redirectPath || '/app'}`,
         queryParams: {
           access_type: 'offline',
           prompt: 'consent',
         },
-        scopes: 'email profile https://www.googleapis.com/auth/drive.readonly https://www.googleapis.com/auth/drive.metadata.readonly'
+        scopes: 'email profile'
       }
     });
 
@@ -68,6 +59,51 @@ export const useAuth = () => {
     }
   };
 
+  /**
+   * Connexion avec email/password
+   */
+  const signInWithEmail = async (email: string, password: string) => {
+    const { error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+
+    if (error) {
+      console.error("Error signing in with email:", error);
+      return { error };
+    }
+
+    return { error: null };
+  };
+
+  /**
+   * Inscription avec email/password
+   */
+  const signUp = async (email: string, password: string, fullName: string) => {
+    const redirectUrl = `${window.location.origin}/app`;
+    
+    const { error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        emailRedirectTo: redirectUrl,
+        data: {
+          full_name: fullName,
+        }
+      }
+    });
+
+    if (error) {
+      console.error("Error signing up:", error);
+      return { error };
+    }
+
+    return { error: null };
+  };
+
+  /**
+   * Déconnexion
+   */
   const signOut = async () => {
     const { error } = await supabase.auth.signOut();
     if (error) {
@@ -82,6 +118,8 @@ export const useAuth = () => {
     session,
     loading,
     signInWithGoogle,
+    signInWithEmail,
+    signUp,
     signOut
   };
 };

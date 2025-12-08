@@ -31,6 +31,13 @@ export const Invite = () => {
     loadInvitation();
   }, [token]);
 
+  // Vérifier automatiquement si l'utilisateur a été auto-join après connexion
+  useEffect(() => {
+    if (user && invitation && !authLoading) {
+      checkAutoJoin();
+    }
+  }, [user, invitation, authLoading]);
+
   const loadInvitation = async () => {
     if (!token) return;
 
@@ -48,25 +55,58 @@ export const Invite = () => {
         return;
       }
 
-      const invitation = invitationData[0];
+      const invitationResult = invitationData[0];
 
-      if (invitation.status !== 'pending') {
-        setError(`Cette invitation a déjà été ${invitation.status === 'accepted' ? 'acceptée' : 'annulée'}`);
+      // Vérifier si l'invitation est déjà acceptée
+      if (invitationResult.status === 'accepted') {
+        // Si acceptée, rediriger vers le dashboard
+        toast({
+          title: 'Invitation déjà acceptée',
+          description: `Vous êtes déjà membre de l'équipe ${invitationResult.team_name}`,
+        });
+        navigate('/app');
         return;
       }
 
-      if (new Date(invitation.expires_at) < new Date()) {
+      if (invitationResult.status !== 'pending') {
+        setError(`Cette invitation a déjà été annulée`);
+        return;
+      }
+
+      if (new Date(invitationResult.expires_at) < new Date()) {
         setError('Cette invitation a expiré');
         return;
       }
 
-      setInvitation(invitation);
-      setTeam({ name: invitation.team_name });
+      setInvitation(invitationResult);
+      setTeam({ name: invitationResult.team_name });
     } catch (err) {
       console.error('Error loading invitation:', err);
       setError('Impossible de charger l\'invitation');
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Vérifier si le trigger handle_new_user() a auto-join l'utilisateur
+  const checkAutoJoin = async () => {
+    if (!user || !invitation) return;
+
+    // Vérifier si l'utilisateur a déjà été ajouté à cette équipe par le trigger
+    const { data: membership } = await supabase
+      .from('team_members')
+      .select('id')
+      .eq('user_id', user.id)
+      .eq('team_id', invitation.team_id)
+      .maybeSingle();
+
+    if (membership) {
+      // L'utilisateur a été auto-join par le trigger
+      toast({
+        title: 'Bienvenue dans l\'équipe !',
+        description: `Vous avez rejoint l'équipe ${team?.name}`,
+      });
+      navigate('/app');
     }
   };
 
@@ -77,19 +117,40 @@ export const Invite = () => {
       return;
     }
 
+    // Vérifier que l'email de l'utilisateur correspond à l'invitation
+    if (user.email?.toLowerCase() !== invitation.email.toLowerCase()) {
+      toast({
+        title: 'Email incorrect',
+        description: `Cette invitation est destinée à ${invitation.email}. Veuillez vous connecter avec ce compte.`,
+        variant: 'destructive',
+      });
+      return;
+    }
+
     setAccepting(true);
     try {
       // Vérifier si l'utilisateur est déjà membre d'une team
       const { data: existingMembership } = await supabase
         .from('team_members')
-        .select('id')
+        .select('id, team_id')
         .eq('user_id', user.id)
         .maybeSingle();
 
+      // Si déjà membre de cette équipe spécifique, c'est OK
+      if (existingMembership?.team_id === invitation.team_id) {
+        toast({
+          title: 'Vous êtes déjà membre',
+          description: `Vous êtes déjà membre de l'équipe ${team.name}`,
+        });
+        navigate('/app');
+        return;
+      }
+
+      // Si membre d'une autre équipe, erreur
       if (existingMembership) {
         toast({
           title: 'Erreur',
-          description: 'Vous êtes déjà membre d\'une équipe',
+          description: 'Vous êtes déjà membre d\'une autre équipe',
           variant: 'destructive',
         });
         return;
@@ -165,6 +226,9 @@ export const Invite = () => {
     );
   }
 
+  // Vérifier si l'utilisateur est connecté avec le mauvais email
+  const isWrongEmail = user && invitation && user.email?.toLowerCase() !== invitation.email.toLowerCase();
+
   return (
     <div className="min-h-screen bg-gradient-dark flex items-center justify-center p-4">
       <Card className="w-full max-w-md">
@@ -191,8 +255,16 @@ export const Invite = () => {
 
           {!user && (
             <p className="text-sm text-muted-foreground">
-              Vous devez vous connecter pour accepter cette invitation
+              Vous devez vous connecter ou créer un compte pour accepter cette invitation
             </p>
+          )}
+
+          {isWrongEmail && (
+            <div className="p-3 rounded-lg bg-destructive/10 border border-destructive/20">
+              <p className="text-sm text-destructive">
+                Vous êtes connecté avec {user.email}, mais cette invitation est destinée à {invitation.email}.
+              </p>
+            </div>
           )}
 
           <div className="flex gap-2">
@@ -207,7 +279,7 @@ export const Invite = () => {
             <Button
               onClick={handleAccept}
               className="flex-1"
-              disabled={accepting}
+              disabled={accepting || isWrongEmail}
             >
               {accepting ? (
                 <>
@@ -217,7 +289,7 @@ export const Invite = () => {
               ) : user ? (
                 'Accepter'
               ) : (
-                'Se connecter et accepter'
+                'Se connecter'
               )}
             </Button>
           </div>
