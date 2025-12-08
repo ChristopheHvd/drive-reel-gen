@@ -102,41 +102,44 @@ serve(async (req) => {
     // Vérifier s'il existe déjà une invitation pending pour cet email
     const { data: existingInvitation } = await supabaseClient
       .from('team_invitations')
-      .select('id, status')
+      .select('id, token, role')
       .eq('team_id', teamId)
-      .eq('email', email)
+      .eq('email', email.toLowerCase().trim())
       .eq('status', 'pending')
       .maybeSingle();
 
+    let invitation = existingInvitation;
+    let isResend = false;
+
     if (existingInvitation) {
-      return new Response(
-        JSON.stringify({ error: "Une invitation est déjà en attente pour cet email" }),
-        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 400 }
-      );
+      // Une invitation existe déjà : on va juste renvoyer l'email
+      console.log("Existing pending invitation found, will resend email:", existingInvitation.id);
+      isResend = true;
+    } else {
+      // Créer une nouvelle invitation
+      const { data: newInvitation, error: invitationError } = await supabaseClient
+        .from('team_invitations')
+        .insert({
+          team_id: teamId,
+          email: email.toLowerCase().trim(),
+          role,
+          invited_by: user.id,
+        })
+        .select()
+        .single();
+
+      if (invitationError) {
+        console.error("Error creating invitation:", invitationError);
+        throw invitationError;
+      }
+
+      invitation = newInvitation;
+      console.log("New invitation created:", newInvitation.id);
     }
-
-    // Créer l'invitation
-    const { data: invitation, error: invitationError } = await supabaseClient
-      .from('team_invitations')
-      .insert({
-        team_id: teamId,
-        email: email.toLowerCase().trim(),
-        role,
-        invited_by: user.id,
-      })
-      .select()
-      .single();
-
-    if (invitationError) {
-      console.error("Error creating invitation:", invitationError);
-      throw invitationError;
-    }
-
-    console.log("Invitation created:", invitation.id);
 
     // Générer le lien d'invitation
-    const inviteUrl = `${req.headers.get("origin")}/invite?token=${invitation.token}`;
-    console.log("Invite URL generated:", inviteUrl);
+    const inviteUrl = `${req.headers.get("origin")}/invite?token=${invitation!.token}`;
+    console.log("Invite URL generated:", inviteUrl, isResend ? "(resend)" : "(new)");
 
     // Récupérer le nom de la team et les infos de l'inviteur
     const { data: teamData } = await supabaseClient
