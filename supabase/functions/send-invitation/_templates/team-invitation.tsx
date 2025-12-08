@@ -40,21 +40,19 @@ export const TeamInvitationEmail = ({
           En tant que <strong style={roleStyle}>{getRoleLabel(role)}</strong>, vous pourrez :
         </Text>
 
-        <ul style={list}>
-          {role === 'admin' ? (
-            <>
-              <li style={listItem}>Générer des vidéos avec l'IA</li>
-              <li style={listItem}>Inviter d'autres membres</li>
-              <li style={listItem}>Gérer les paramètres de l'équipe</li>
-            </>
-          ) : (
-            <>
-              <li style={listItem}>Générer des vidéos avec l'IA</li>
-              <li style={listItem}>Accéder aux images de l'équipe</li>
-              <li style={listItem}>Collaborer avec votre équipe</li>
-            </>
-          )}
-        </ul>
+        {role === 'admin' ? (
+          <ul style={list}>
+            <li style={listItem}>Générer des vidéos avec l'IA</li>
+            <li style={listItem}>Inviter d'autres membres</li>
+            <li style={listItem}>Gérer les paramètres de l'équipe</li>
+          </ul>
+        ) : (
+          <ul style={list}>
+            <li style={listItem}>Générer des vidéos avec l'IA</li>
+            <li style={listItem}>Accéder aux images de l'équipe</li>
+            <li style={listItem}>Collaborer avec votre équipe</li>
+          </ul>
+        )}
 
         <Section style={buttonContainer}>
           <Button style={button} href={inviteUrl}>
