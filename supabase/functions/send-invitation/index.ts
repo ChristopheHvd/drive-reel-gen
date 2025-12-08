@@ -19,7 +19,7 @@ serve(async (req) => {
 
   const supabaseClient = createClient(
     Deno.env.get("SUPABASE_URL") ?? "",
-    Deno.env.get("SUPABASE_ANON_KEY") ?? ""
+    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
   );
 
   try {
@@ -50,12 +50,20 @@ serve(async (req) => {
       );
     }
 
-    // Vérifier que l'utilisateur est admin de cette team
-    const { data: adminCheck, error: adminError } = await supabaseClient
-      .rpc('is_team_admin', { _team_id: teamId });
+    // Vérifier que l'utilisateur est admin ou owner de cette team
+    const { data: memberData, error: memberError } = await supabaseClient
+      .from('team_members')
+      .select('role')
+      .eq('team_id', teamId)
+      .eq('user_id', user.id)
+      .single();
 
-    if (adminError || !adminCheck) {
-      console.error("Admin check failed:", adminError);
+    console.log("User role check:", { userId: user.id, teamId, role: memberData?.role, error: memberError });
+
+    const isAdmin = memberData?.role === 'owner' || memberData?.role === 'admin';
+
+    if (memberError || !isAdmin) {
+      console.error("Admin check failed:", memberError, "User role:", memberData?.role);
       return new Response(
         JSON.stringify({ error: "Vous devez être admin pour inviter des membres" }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 403 }
