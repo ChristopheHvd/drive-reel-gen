@@ -116,11 +116,8 @@ describe('useBrandProfile - Regression Tests', () => {
 
   it('should update profile successfully', async () => {
     const mockTeamId = 'team-123';
-    let callCount = 0;
 
     (supabase.from as any).mockImplementation((table: string) => {
-      callCount++;
-      
       if (table === 'team_members') {
         return {
           select: vi.fn().mockReturnValue({
@@ -135,52 +132,31 @@ describe('useBrandProfile - Regression Tests', () => {
       }
       
       if (table === 'brand_profiles') {
-        if (callCount === 2) {
-          // Initial load
-          return {
-            select: vi.fn().mockReturnValue({
-              eq: vi.fn().mockReturnValue({
-                maybeSingle: vi.fn().mockResolvedValue({
-                  data: mockProfile,
-                  error: null,
-                }),
-              }),
-            }),
-          };
-        } else if (callCount === 4) {
-          // Check existing
-          return {
-            select: vi.fn().mockReturnValue({
-              eq: vi.fn().mockReturnValue({
-                maybeSingle: vi.fn().mockResolvedValue({
-                  data: { id: 'profile-123' },
-                  error: null,
-                }),
-              }),
-            }),
-          };
-        } else if (callCount === 5) {
-          // Update
-          return {
-            update: vi.fn().mockReturnValue({
-              eq: vi.fn().mockResolvedValue({
+        return {
+          select: vi.fn().mockReturnValue({
+            eq: vi.fn().mockReturnValue({
+              maybeSingle: vi.fn().mockResolvedValue({
+                data: { id: 'profile-123' },
                 error: null,
               }),
             }),
-          };
-        } else {
-          // Reload after update
-          return {
-            select: vi.fn().mockReturnValue({
-              eq: vi.fn().mockReturnValue({
-                maybeSingle: vi.fn().mockResolvedValue({
-                  data: mockProfile,
-                  error: null,
-                }),
-              }),
+          }),
+          update: vi.fn().mockReturnValue({
+            eq: vi.fn().mockResolvedValue({
+              error: null,
             }),
-          };
-        }
+          }),
+        };
+      }
+
+      if (table === 'teams') {
+        return {
+          update: vi.fn().mockReturnValue({
+            eq: vi.fn().mockResolvedValue({
+              error: null,
+            }),
+          }),
+        };
       }
     });
 
@@ -201,11 +177,8 @@ describe('useBrandProfile - Regression Tests', () => {
 
   it('should handle update errors', async () => {
     const mockTeamId = 'team-123';
-    let callCount = 0;
 
     (supabase.from as any).mockImplementation((table: string) => {
-      callCount++;
-      
       if (table === 'team_members') {
         return {
           select: vi.fn().mockReturnValue({
@@ -220,40 +193,31 @@ describe('useBrandProfile - Regression Tests', () => {
       }
       
       if (table === 'brand_profiles') {
-        if (callCount === 2) {
-          // Initial load
-          return {
-            select: vi.fn().mockReturnValue({
-              eq: vi.fn().mockReturnValue({
-                maybeSingle: vi.fn().mockResolvedValue({
-                  data: null,
-                  error: null,
-                }),
+        return {
+          select: vi.fn().mockReturnValue({
+            eq: vi.fn().mockReturnValue({
+              maybeSingle: vi.fn().mockResolvedValue({
+                data: { id: 'profile-123' },
+                error: null,
               }),
             }),
-          };
-        } else if (callCount === 4) {
-          // Check existing
-          return {
-            select: vi.fn().mockReturnValue({
-              eq: vi.fn().mockReturnValue({
-                maybeSingle: vi.fn().mockResolvedValue({
-                  data: { id: 'profile-123' },
-                  error: null,
-                }),
-              }),
+          }),
+          update: vi.fn().mockReturnValue({
+            eq: vi.fn().mockResolvedValue({
+              error: { message: 'Update failed' },
             }),
-          };
-        } else {
-          // Update with error
-          return {
-            update: vi.fn().mockReturnValue({
-              eq: vi.fn().mockResolvedValue({
-                error: { message: 'Update failed' },
-              }),
+          }),
+        };
+      }
+
+      if (table === 'teams') {
+        return {
+          update: vi.fn().mockReturnValue({
+            eq: vi.fn().mockResolvedValue({
+              error: null,
             }),
-          };
-        }
+          }),
+        };
       }
     });
 
