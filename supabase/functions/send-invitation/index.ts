@@ -1,8 +1,8 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
 import * as React from 'https://esm.sh/react@18.3.1';
+import { renderToStaticMarkup } from 'https://esm.sh/react-dom@18.3.1/server';
 import { Resend } from 'https://esm.sh/resend@4.0.0';
-import { renderAsync } from 'https://esm.sh/@react-email/components@0.0.22';
 import { TeamInvitationEmail } from './_templates/team-invitation.tsx';
 
 const resend = new Resend(Deno.env.get('RESEND_API_KEY') as string);
@@ -159,11 +159,11 @@ serve(async (req) => {
     const inviterName = inviterData?.full_name || inviterData?.email || 'Un membre';
     console.log("Email data prepared:", { teamName, inviterName, role, targetEmail: email });
 
-    // Générer le HTML de l'email avec React Email
-    console.log("Starting React Email render...");
+    // Générer le HTML de l'email avec React
+    console.log("Starting React render...");
     let html: string;
     try {
-      html = await renderAsync(
+      html = renderToStaticMarkup(
         React.createElement(TeamInvitationEmail, {
           inviteUrl,
           teamName,
@@ -171,7 +171,7 @@ serve(async (req) => {
           role,
         })
       );
-      console.log("React Email render successful, HTML length:", html.length);
+      console.log("React render successful, HTML length:", html.length);
     } catch (renderError) {
       console.error("React Email render failed:", renderError);
       throw new Error(`Email render failed: ${renderError}`);
