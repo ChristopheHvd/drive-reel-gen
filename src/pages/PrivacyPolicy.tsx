@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
-import logo from "@/assets/quickie-video-logo.png";
+import logo from "@/assets/quickquick-logo.png";
 
 const PrivacyPolicy = () => {
   return (
@@ -9,9 +9,9 @@ const PrivacyPolicy = () => {
       <header className="border-b border-border bg-background/50 backdrop-blur-sm sticky top-0 z-50">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <Link to="/" className="flex items-center gap-3">
-            <img src={logo} alt="Quickie Video" className="h-10 w-10" />
+            <img src={logo} alt="QuickQuick" className="h-10 w-10" />
             <span className="text-2xl font-bold bg-gradient-gold bg-clip-text text-transparent">
-              Quickie Video
+              QuickQuick
             </span>
           </Link>
           <nav className="flex items-center gap-4">
@@ -30,7 +30,7 @@ const PrivacyPolicy = () => {
           <section>
             <h2 className="text-2xl font-semibold mb-4 text-foreground">1. Introduction</h2>
             <p className="text-muted-foreground leading-relaxed">
-              QuickieVideo est un service fourni par la micro-entreprise Alpes IA – Christophe Havard 
+              QuickQuick est un service fourni par la micro-entreprise Alpes IA – Christophe Havard 
               (SIRET 80123605000036). Le service permet aux utilisateurs d'uploader des photos et de 
               générer des vidéos promotionnelles. Cette politique décrit quelles données sont collectées, 
               comment elles sont utilisées et vos droits.
@@ -130,12 +130,12 @@ const PrivacyPolicy = () => {
         <div className="container mx-auto px-4 py-8">
           <div className="flex flex-col md:flex-row items-center justify-between gap-6">
             <div className="flex items-center gap-3">
-              <img src={logo} alt="Quickie Video" className="h-8 w-8" />
-              <span className="font-semibold text-foreground">Quickie Video</span>
+              <img src={logo} alt="QuickQuick" className="h-8 w-8" />
+              <span className="font-semibold text-foreground">QuickQuick</span>
             </div>
             <div className="flex items-center gap-6 text-sm">
               <a 
-                href="https://files.cloudron.alpes-ia.fr/AlpesIA/quickievideo_terms_of_service.pdf"
+                href="https://files.cloudron.alpes-ia.fr/AlpesIA/quickquick_terms_of_service.pdf"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-muted-foreground hover:text-foreground transition-colors"
@@ -150,7 +150,7 @@ const PrivacyPolicy = () => {
               </Link>
             </div>
             <p className="text-sm text-muted-foreground">
-              © 2025 Quickie Video. Tous droits réservés.
+              © 2025 QuickQuick. Tous droits réservés.
             </p>
           </div>
         </div>
