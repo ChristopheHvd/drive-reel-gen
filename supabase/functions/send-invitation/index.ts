@@ -137,9 +137,10 @@ serve(async (req) => {
       console.log("New invitation created:", newInvitation.id);
     }
 
-    // Générer le lien d'invitation
-    const inviteUrl = `${req.headers.get("origin")}/invite?token=${invitation!.token}`;
-    console.log("Invite URL generated:", inviteUrl, isResend ? "(resend)" : "(new)");
+    // Générer le lien d'invitation (utiliser APP_URL en prod, sinon origin)
+    const appUrl = Deno.env.get('APP_URL') || req.headers.get("origin");
+    const inviteUrl = `${appUrl}/invite?token=${invitation!.token}`;
+    console.log("Invite URL generated:", inviteUrl, "using appUrl:", appUrl, isResend ? "(resend)" : "(new)");
 
     // Récupérer le nom de la team et les infos de l'inviteur
     const { data: teamData } = await supabaseClient
