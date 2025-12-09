@@ -6,6 +6,8 @@ export const useSubscription = () => {
   const [subscription, setSubscription] = useState<Subscription | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
+  const [isOwner, setIsOwner] = useState(false);
+  const [teamId, setTeamId] = useState<string | null>(null);
 
   const loadSubscription = async () => {
     try {
@@ -16,10 +18,24 @@ export const useSubscription = () => {
         throw new Error('User not authenticated');
       }
 
+      // 1. Récupérer le team_id de l'utilisateur via team_members
+      const { data: teamMember, error: teamError } = await supabase
+        .from('team_members')
+        .select('team_id, role')
+        .eq('user_id', user.id)
+        .single();
+
+      if (teamError) throw teamError;
+      if (!teamMember) throw new Error('User is not part of any team');
+
+      setTeamId(teamMember.team_id);
+      setIsOwner(teamMember.role === 'owner');
+
+      // 2. Récupérer la subscription de l'équipe
       const { data, error: fetchError } = await supabase
         .from('user_subscriptions')
         .select('*')
-        .eq('user_id', user.id)
+        .eq('team_id', teamMember.team_id)
         .single();
 
       if (fetchError) throw fetchError;
@@ -48,8 +64,8 @@ export const useSubscription = () => {
           table: 'user_subscriptions',
         },
         (payload) => {
-          // Mettre à jour le state si c'est bien la mise à jour de l'abonnement
-          if (payload.new) {
+          // Mettre à jour le state si c'est la subscription de notre équipe
+          if (payload.new && teamId && (payload.new as Subscription).team_id === teamId) {
             setSubscription(payload.new as Subscription);
             setError(null);
           }
@@ -60,7 +76,7 @@ export const useSubscription = () => {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, []);
+  }, [teamId]);
 
   const getNextResetDate = (): string => {
     const now = new Date();
@@ -89,6 +105,7 @@ export const useSubscription = () => {
     videosRemaining,
     isQuotaExceeded,
     nextResetDate,
+    isOwner,
     refresh: loadSubscription,
   };
 };
