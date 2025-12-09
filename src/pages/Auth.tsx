@@ -12,7 +12,9 @@ const Auth = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const inviteToken = searchParams.get('invite');
-  const [activeTab, setActiveTab] = useState<string>("login");
+  const invitedEmail = searchParams.get('email');
+  // Si un email d'invitation est présent, ouvrir l'onglet inscription par défaut
+  const [activeTab, setActiveTab] = useState<string>(invitedEmail ? "signup" : "login");
 
   useEffect(() => {
     if (user && !loading) {
@@ -80,6 +82,14 @@ const Auth = () => {
             }
           </p>
 
+          {invitedEmail && (
+            <div className="mb-6 p-3 rounded-lg bg-primary/10 border border-primary/20">
+              <p className="text-sm text-center text-primary">
+                Invitation envoyée à <span className="font-semibold">{invitedEmail}</span>
+              </p>
+            </div>
+          )}
+
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
             <TabsList className="grid w-full grid-cols-2 mb-6">
               <TabsTrigger value="login">Connexion</TabsTrigger>
@@ -89,12 +99,14 @@ const Auth = () => {
               <LoginForm
                 onSubmit={handleEmailLogin}
                 onGoogleLogin={handleGoogleLogin}
+                defaultEmail={invitedEmail || undefined}
               />
             </TabsContent>
             <TabsContent value="signup">
               <SignupForm
                 onSubmit={handleSignUp}
                 onGoogleLogin={handleGoogleLogin}
+                defaultEmail={invitedEmail || undefined}
               />
             </TabsContent>
           </Tabs>
