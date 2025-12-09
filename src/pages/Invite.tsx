@@ -112,8 +112,8 @@ export const Invite = () => {
 
   const handleAccept = async () => {
     if (!user) {
-      // Rediriger vers l'authentification avec le token dans l'URL
-      navigate(`/auth?invite=${token}`);
+      // Rediriger vers l'authentification avec le token et l'email dans l'URL
+      navigate(`/auth?invite=${token}&email=${encodeURIComponent(invitation.email)}`);
       return;
     }
 

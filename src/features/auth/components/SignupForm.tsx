@@ -5,7 +5,7 @@ import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Loader2 } from "lucide-react";
+import { Loader2, Lock } from "lucide-react";
 
 const signupSchema = z.object({
   fullName: z.string().min(2, "Nom trop court").max(100, "Nom trop long"),
@@ -23,11 +23,13 @@ interface SignupFormProps {
   onSubmit: (email: string, password: string, fullName: string) => Promise<{ error: Error | null }>;
   onGoogleLogin: () => Promise<void>;
   isLoading?: boolean;
+  defaultEmail?: string;
 }
 
-export const SignupForm = ({ onSubmit, onGoogleLogin, isLoading }: SignupFormProps) => {
+export const SignupForm = ({ onSubmit, onGoogleLogin, isLoading, defaultEmail }: SignupFormProps) => {
   const [error, setError] = useState<string | null>(null);
   const [googleLoading, setGoogleLoading] = useState(false);
+  const isEmailLocked = Boolean(defaultEmail);
 
   const {
     register,
@@ -35,6 +37,12 @@ export const SignupForm = ({ onSubmit, onGoogleLogin, isLoading }: SignupFormPro
     formState: { errors, isSubmitting },
   } = useForm<SignupFormData>({
     resolver: zodResolver(signupSchema),
+    defaultValues: {
+      email: defaultEmail || "",
+      fullName: "",
+      password: "",
+      confirmPassword: "",
+    },
   });
 
   const handleFormSubmit = async (data: SignupFormData) => {
@@ -78,13 +86,25 @@ export const SignupForm = ({ onSubmit, onGoogleLogin, isLoading }: SignupFormPro
 
       <div className="space-y-2">
         <Label htmlFor="signup-email">Email</Label>
-        <Input
-          id="signup-email"
-          type="email"
-          placeholder="votre@email.com"
-          {...register("email")}
-          disabled={loading}
-        />
+        <div className="relative">
+          <Input
+            id="signup-email"
+            type="email"
+            placeholder="votre@email.com"
+            {...register("email")}
+            disabled={loading || isEmailLocked}
+            readOnly={isEmailLocked}
+            className={isEmailLocked ? "pr-10 bg-muted text-muted-foreground" : ""}
+          />
+          {isEmailLocked && (
+            <Lock className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          )}
+        </div>
+        {isEmailLocked && (
+          <p className="text-xs text-muted-foreground">
+            L'invitation est liée à cet email
+          </p>
+        )}
         {errors.email && (
           <p className="text-sm text-destructive">{errors.email.message}</p>
         )}
