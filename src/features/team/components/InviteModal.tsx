@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Loader2, Mail, Copy, Check, Pencil } from 'lucide-react';
@@ -31,13 +32,35 @@ export const InviteModal = ({ open, onOpenChange, teamId }: InviteModalProps) =>
   const { teamName, updateTeamName } = useCurrentTeam();
   const { toast } = useToast();
 
+  // Parser et valider les emails
+  const parseEmails = (input: string): string[] => {
+    return input
+      .split(/[,;\n]/)
+      .map(e => e.trim().toLowerCase())
+      .filter(e => e.length > 0);
+  };
+
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  const parsedEmails = parseEmails(email);
+  const validEmails = parsedEmails.filter(e => emailRegex.test(e));
+  const invalidEmails = parsedEmails.filter(e => !emailRegex.test(e));
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!email.trim()) {
+    if (parsedEmails.length === 0) {
       toast({
         title: 'Erreur',
-        description: "Veuillez entrer une adresse email",
+        description: "Veuillez entrer au moins une adresse email",
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    if (invalidEmails.length > 0) {
+      toast({
+        title: 'Emails invalides',
+        description: `Les adresses suivantes sont invalides : ${invalidEmails.join(', ')}`,
         variant: 'destructive',
       });
       return;
@@ -45,13 +68,36 @@ export const InviteModal = ({ open, onOpenChange, teamId }: InviteModalProps) =>
 
     setIsSubmitting(true);
     try {
-      const result = await sendInvitation(email.trim(), role);
-      
-      if (result) {
-        // Générer le lien d'invitation
-        const inviteUrl = `${window.location.origin}/invite?token=${result.token}`;
-        setGeneratedLink(inviteUrl);
+      const results = await Promise.allSettled(
+        validEmails.map(e => sendInvitation(e, role))
+      );
+
+      const successResults = results.filter(
+        (r): r is PromiseFulfilledResult<{ token: string } | null> => 
+          r.status === 'fulfilled' && r.value !== null
+      );
+      const successCount = successResults.length;
+      const failCount = results.length - successCount;
+
+      if (successCount > 0) {
+        toast({
+          title: 'Invitations envoyées',
+          description: `${successCount} invitation(s) envoyée(s)${failCount > 0 ? `, ${failCount} échec(s)` : ''}`,
+        });
+
+        // Afficher le lien uniquement si une seule invitation envoyée avec succès
+        if (validEmails.length === 1 && successResults.length === 1 && successResults[0].value) {
+          const inviteUrl = `${window.location.origin}/invite?token=${successResults[0].value.token}`;
+          setGeneratedLink(inviteUrl);
+        }
+
         setEmail('');
+      } else {
+        toast({
+          title: 'Erreur',
+          description: 'Aucune invitation n\'a pu être envoyée',
+          variant: 'destructive',
+        });
       }
     } finally {
       setIsSubmitting(false);
@@ -193,20 +239,26 @@ export const InviteModal = ({ open, onOpenChange, teamId }: InviteModalProps) =>
         {!generatedLink ? (
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="email">Adresse email</Label>
+              <Label htmlFor="email">Adresses email</Label>
               <div className="relative">
                 <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                <Input
+                <Textarea
                   id="email"
-                  type="email"
-                  placeholder="membre@exemple.com"
+                  placeholder="user1@exemple.com, user2@exemple.com&#10;ou une adresse par ligne"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="pl-9"
+                  className="pl-9 min-h-[80px] resize-none"
                   disabled={isSubmitting}
-                  required
                 />
               </div>
+              {parsedEmails.length > 0 && (
+                <p className="text-xs text-muted-foreground">
+                  {validEmails.length} adresse(s) valide(s)
+                  {invalidEmails.length > 0 && (
+                    <span className="text-destructive"> • {invalidEmails.length} invalide(s)</span>
+                  )}
+                </p>
+              )}
             </div>
 
             <div className="space-y-2">
@@ -241,7 +293,7 @@ export const InviteModal = ({ open, onOpenChange, teamId }: InviteModalProps) =>
               >
                 Annuler
               </Button>
-              <Button type="submit" disabled={isSubmitting} className="flex-1">
+              <Button type="submit" disabled={isSubmitting || validEmails.length === 0} className="flex-1">
                 {isSubmitting ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
