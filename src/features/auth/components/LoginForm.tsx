@@ -32,6 +32,7 @@ export const LoginForm = ({ onSubmit, onGoogleLogin, isLoading, defaultEmail }: 
     formState: { errors, isSubmitting },
   } = useForm<LoginFormData>({
     resolver: zodResolver(loginSchema),
+    mode: 'onBlur', // Validate on blur for better UX
     defaultValues: {
       email: defaultEmail || "",
       password: "",

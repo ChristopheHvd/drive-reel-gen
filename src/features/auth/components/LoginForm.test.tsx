@@ -134,14 +134,26 @@ describe('LoginForm', () => {
     const emailInput = screen.getByLabelText(/email/i);
     const passwordInput = screen.getByLabelText(/mot de passe/i);
 
+    // Enter invalid email and password
     fireEvent.change(emailInput, { target: { value: 'invalid-email' } });
     fireEvent.change(passwordInput, { target: { value: 'password123' } });
 
+    // Blur the email field to trigger validation
+    fireEvent.blur(emailInput);
+
+    // Wait for validation error to appear
+    await waitFor(() => {
+      expect(screen.getByText(/Email invalide/i)).toBeInTheDocument();
+    }, { timeout: 3000 });
+    
+    // Try to submit - should not call onSubmit due to validation failure
     const submitButton = screen.getByRole('button', { name: /se connecter/i });
     fireEvent.click(submitButton);
-
-    await waitFor(() => {
-      expect(screen.getByText(/email invalide/i)).toBeInTheDocument();
-    });
+    
+    // Give it a moment to ensure onSubmit is not called
+    await new Promise(resolve => setTimeout(resolve, 100));
+    
+    // Verify that onSubmit was not called due to validation failure
+    expect(mockOnSubmit).not.toHaveBeenCalled();
   });
 });
