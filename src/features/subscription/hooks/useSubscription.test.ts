@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { renderHook } from '@testing-library/react';
+import { renderHook, waitFor } from '@testing-library/react';
 import { useSubscription } from './useSubscription';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -16,9 +16,13 @@ vi.mock('@/integrations/supabase/client', () => ({
 
 describe('useSubscription', () => {
   const mockUser = { id: 'test-user-id', email: 'test@example.com' };
+  const mockTeamMember = {
+    team_id: 'team-1',
+    role: 'owner',
+  };
   const mockSubscription = {
     id: 'sub-1',
-    user_id: 'test-user-id',
+    user_id: 'owner-user-id',
     team_id: 'team-1',
     plan_type: 'pro',
     video_limit: 50,
@@ -32,6 +36,36 @@ describe('useSubscription', () => {
   const mockChannel = {
     on: vi.fn().mockReturnThis(),
     subscribe: vi.fn().mockReturnThis(),
+  };
+
+  const setupMocks = (teamMemberData: any, subscriptionData: any) => {
+    vi.mocked(supabase.from).mockImplementation((table: string) => {
+      if (table === 'team_members') {
+        return {
+          select: vi.fn().mockReturnValue({
+            eq: vi.fn().mockReturnValue({
+              single: vi.fn().mockResolvedValue({
+                data: teamMemberData,
+                error: null,
+              }),
+            }),
+          }),
+        } as any;
+      }
+      if (table === 'user_subscriptions') {
+        return {
+          select: vi.fn().mockReturnValue({
+            eq: vi.fn().mockReturnValue({
+              single: vi.fn().mockResolvedValue({
+                data: subscriptionData,
+                error: null,
+              }),
+            }),
+          }),
+        } as any;
+      }
+      return {} as any;
+    });
   };
 
   beforeEach(() => {
@@ -56,71 +90,72 @@ describe('useSubscription', () => {
 
     expect(result.current.subscription).toBeNull();
     expect(result.current.loading).toBe(true);
+    expect(result.current.isOwner).toBe(false);
   });
 
-  it('should load subscription data successfully', async () => {
-    vi.mocked(supabase.from).mockReturnValue({
-      select: vi.fn().mockReturnValue({
-        eq: vi.fn().mockReturnValue({
-          single: vi.fn().mockResolvedValue({
-            data: mockSubscription,
-            error: null,
-          }),
-        }),
-      }),
-    } as any);
+  it('should load team subscription data successfully', async () => {
+    setupMocks(mockTeamMember, mockSubscription);
 
     const { result } = renderHook(() => useSubscription());
 
-    await vi.waitFor(() => {
+    await waitFor(() => {
       expect(result.current.loading).toBe(false);
     });
 
     expect(result.current.subscription).toEqual(mockSubscription);
     expect(result.current.error).toBeNull();
+    expect(result.current.isOwner).toBe(true);
   });
 
-  it('should calculate videosRemaining correctly', async () => {
-    vi.mocked(supabase.from).mockReturnValue({
-      select: vi.fn().mockReturnValue({
-        eq: vi.fn().mockReturnValue({
-          single: vi.fn().mockResolvedValue({
-            data: mockSubscription,
-            error: null,
-          }),
-        }),
-      }),
-    } as any);
+  it('should set isOwner to false for team members', async () => {
+    const memberTeamMember = { ...mockTeamMember, role: 'member' };
+    setupMocks(memberTeamMember, mockSubscription);
 
     const { result } = renderHook(() => useSubscription());
 
-    await vi.waitFor(() => {
+    await waitFor(() => {
+      expect(result.current.loading).toBe(false);
+    });
+
+    expect(result.current.isOwner).toBe(false);
+    expect(result.current.subscription).toEqual(mockSubscription);
+  });
+
+  it('should set isOwner to false for team admins', async () => {
+    const adminTeamMember = { ...mockTeamMember, role: 'admin' };
+    setupMocks(adminTeamMember, mockSubscription);
+
+    const { result } = renderHook(() => useSubscription());
+
+    await waitFor(() => {
+      expect(result.current.loading).toBe(false);
+    });
+
+    expect(result.current.isOwner).toBe(false);
+  });
+
+  it('should calculate videosRemaining correctly from team subscription', async () => {
+    setupMocks(mockTeamMember, mockSubscription);
+
+    const { result } = renderHook(() => useSubscription());
+
+    await waitFor(() => {
       expect(result.current.loading).toBe(false);
     });
 
     expect(result.current.videosRemaining).toBe(25); // 50 - 25
   });
 
-  it('should set isQuotaExceeded to true when limit reached', async () => {
+  it('should set isQuotaExceeded to true when team limit reached', async () => {
     const exhaustedSubscription = {
       ...mockSubscription,
       videos_generated_this_month: 50,
     };
-
-    vi.mocked(supabase.from).mockReturnValue({
-      select: vi.fn().mockReturnValue({
-        eq: vi.fn().mockReturnValue({
-          single: vi.fn().mockResolvedValue({
-            data: exhaustedSubscription,
-            error: null,
-          }),
-        }),
-      }),
-    } as any);
+    setupMocks(mockTeamMember, exhaustedSubscription);
 
     const { result } = renderHook(() => useSubscription());
 
-    await vi.waitFor(() => {
+    await waitFor(() => {
       expect(result.current.loading).toBe(false);
     });
 
@@ -128,20 +163,11 @@ describe('useSubscription', () => {
   });
 
   it('should calculate nextResetDate correctly', async () => {
-    vi.mocked(supabase.from).mockReturnValue({
-      select: vi.fn().mockReturnValue({
-        eq: vi.fn().mockReturnValue({
-          single: vi.fn().mockResolvedValue({
-            data: mockSubscription,
-            error: null,
-          }),
-        }),
-      }),
-    } as any);
+    setupMocks(mockTeamMember, mockSubscription);
 
     const { result } = renderHook(() => useSubscription());
 
-    await vi.waitFor(() => {
+    await waitFor(() => {
       expect(result.current.loading).toBe(false);
     });
 
@@ -156,8 +182,8 @@ describe('useSubscription', () => {
     expect(result.current.nextResetDate).toBe(expectedDate);
   });
 
-  it('should handle subscription fetch error', async () => {
-    const mockError = new Error('Failed to fetch');
+  it('should handle team member fetch error', async () => {
+    const mockError = new Error('Failed to fetch team');
     
     vi.mocked(supabase.from).mockReturnValue({
       select: vi.fn().mockReturnValue({
@@ -172,7 +198,7 @@ describe('useSubscription', () => {
 
     const { result } = renderHook(() => useSubscription());
 
-    await vi.waitFor(() => {
+    await waitFor(() => {
       expect(result.current.loading).toBe(false);
     });
 
@@ -181,20 +207,11 @@ describe('useSubscription', () => {
   });
 
   it('should setup realtime subscription channel', async () => {
-    vi.mocked(supabase.from).mockReturnValue({
-      select: vi.fn().mockReturnValue({
-        eq: vi.fn().mockReturnValue({
-          single: vi.fn().mockResolvedValue({
-            data: mockSubscription,
-            error: null,
-          }),
-        }),
-      }),
-    } as any);
+    setupMocks(mockTeamMember, mockSubscription);
 
     renderHook(() => useSubscription());
 
-    await vi.waitFor(() => {
+    await waitFor(() => {
       expect(supabase.channel).toHaveBeenCalledWith('subscription-changes');
     });
 
@@ -211,25 +228,52 @@ describe('useSubscription', () => {
   });
 
   it('should cleanup channel on unmount', async () => {
-    vi.mocked(supabase.from).mockReturnValue({
-      select: vi.fn().mockReturnValue({
-        eq: vi.fn().mockReturnValue({
-          single: vi.fn().mockResolvedValue({
-            data: mockSubscription,
-            error: null,
-          }),
-        }),
-      }),
-    } as any);
+    setupMocks(mockTeamMember, mockSubscription);
 
     const { unmount } = renderHook(() => useSubscription());
 
-    await vi.waitFor(() => {
+    await waitFor(() => {
       expect(supabase.channel).toHaveBeenCalled();
     });
 
     unmount();
 
     expect(supabase.removeChannel).toHaveBeenCalledWith(mockChannel);
+  });
+
+  it('should fetch subscription by team_id not user_id', async () => {
+    setupMocks(mockTeamMember, mockSubscription);
+
+    renderHook(() => useSubscription());
+
+    await waitFor(() => {
+      expect(supabase.from).toHaveBeenCalledWith('team_members');
+      expect(supabase.from).toHaveBeenCalledWith('user_subscriptions');
+    });
+  });
+
+  describe('Team members sharing subscription', () => {
+    it('should show same subscription for owner and invited member', async () => {
+      // Owner fetches subscription
+      setupMocks({ team_id: 'team-1', role: 'owner' }, mockSubscription);
+      const { result: ownerResult } = renderHook(() => useSubscription());
+
+      await waitFor(() => {
+        expect(ownerResult.current.loading).toBe(false);
+      });
+
+      // Member fetches same team subscription
+      setupMocks({ team_id: 'team-1', role: 'member' }, mockSubscription);
+      const { result: memberResult } = renderHook(() => useSubscription());
+
+      await waitFor(() => {
+        expect(memberResult.current.loading).toBe(false);
+      });
+
+      // Both should see the same subscription
+      expect(ownerResult.current.subscription?.plan_type).toBe('pro');
+      expect(memberResult.current.subscription?.plan_type).toBe('pro');
+      expect(ownerResult.current.videosRemaining).toBe(memberResult.current.videosRemaining);
+    });
   });
 });
