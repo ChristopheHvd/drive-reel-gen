@@ -260,11 +260,15 @@ const Dashboard = () => {
           
           <div className="ml-auto flex items-center gap-4">
             {!subscriptionLoading && subscription && (
-              <span className="text-sm text-muted-foreground">
+              <Link 
+                to="/pricing" 
+                className="flex items-center gap-1 text-sm text-muted-foreground hover:text-primary transition-colors group"
+              >
                 <span className="font-medium capitalize">{subscription.plan_type}</span>
                 {' • '}
                 <span>{subscription.videos_generated_this_month}/{subscription.video_limit} vidéos</span>
-              </span>
+                <ChevronRight className="w-4 h-4 opacity-0 group-hover:opacity-100 transition-opacity" />
+              </Link>
             )}
             {subscription?.plan_type === 'free' && (
               <Button 
