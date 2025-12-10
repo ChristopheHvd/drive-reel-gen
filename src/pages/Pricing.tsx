@@ -2,8 +2,11 @@ import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { Check } from "lucide-react";
 import logo from "@/assets/quickquick-logo.png";
+import { useAuth } from "@/features/auth";
 
 const Pricing = () => {
+  const { user } = useAuth();
+  
   const plans = [
     {
       name: "Free",
@@ -70,7 +73,7 @@ const Pricing = () => {
             </span>
           </Link>
           <nav className="flex items-center gap-4">
-            <Link to="/">
+            <Link to={user ? "/app" : "/"}>
               <Button variant="ghost">Retour</Button>
             </Link>
             <Link to="/auth">
