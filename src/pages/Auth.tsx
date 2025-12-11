@@ -67,7 +67,7 @@ const Auth = () => {
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
           <Link to="/" className="inline-flex items-center gap-3 mb-8">
-            <img src={logo} alt="QuickQuick" className="h-12 w-12" />
+            <img src={logo} alt="QuickQuick" className="h-12 w-12 mix-blend-screen" />
             <span className="text-3xl font-bold bg-gradient-gold bg-clip-text text-transparent">QuickQuick</span>
           </Link>
         </div>
