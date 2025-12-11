@@ -75,3 +75,24 @@ All colors MUST be HSL.
     @apply bg-background text-foreground;
   }
 }
+
+/* Logo glow animation */
+@keyframes logo-glow {
+  0%, 100% {
+    filter: drop-shadow(0 0 8px hsla(45, 80%, 55%, 0.6)) 
+            drop-shadow(0 0 16px hsla(188, 100%, 50%, 0.4));
+  }
+  50% {
+    filter: drop-shadow(0 0 12px hsla(45, 80%, 55%, 0.8)) 
+            drop-shadow(0 0 24px hsla(188, 100%, 50%, 0.6))
+            drop-shadow(0 0 32px hsla(45, 80%, 55%, 0.3));
+  }
+}
+
+.logo-glow {
+  animation: logo-glow 3s ease-in-out infinite;
+}
+
+.logo-glow:hover {
+  animation: logo-glow 1.5s ease-in-out infinite;
+}
