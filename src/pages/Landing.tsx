@@ -10,7 +10,7 @@ const Landing = () => {
       <header className="border-b border-border bg-background/50 backdrop-blur-sm sticky top-0 z-50">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <Link to="/" className="flex items-center gap-3">
-            <img src={logo} alt="QuickQuick" className="h-10 w-10 mix-blend-screen" />
+            <img src={logo} alt="QuickQuick" className="h-10 w-10" />
             <span className="text-2xl font-bold bg-gradient-gold bg-clip-text text-transparent">
               QuickQuick
             </span>
@@ -133,7 +133,7 @@ const Landing = () => {
         <div className="container mx-auto px-4 py-8">
           <div className="flex flex-col md:flex-row items-center justify-between gap-6">
             <div className="flex items-center gap-3">
-              <img src={logo} alt="QuickQuick" className="h-8 w-8 mix-blend-screen" />
+              <img src={logo} alt="QuickQuick" className="h-8 w-8" />
               <span className="font-semibold text-foreground">QuickQuick</span>
             </div>
             <div className="flex items-center gap-6 text-sm">
