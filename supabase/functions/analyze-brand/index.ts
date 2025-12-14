@@ -14,6 +14,66 @@ const RequestSchema = z.object({
   userId: z.string().uuid().optional(),
 });
 
+/**
+ * Scrape un site web avec Firecrawl pour extraire le branding (logo, couleurs, etc.)
+ */
+async function scrapeWebsiteWithFirecrawl(url: string): Promise<{
+  logo?: string;
+  colors?: string[];
+  markdown?: string;
+}> {
+  const FIRECRAWL_API_KEY = Deno.env.get('FIRECRAWL_API_KEY');
+  
+  if (!FIRECRAWL_API_KEY) {
+    console.log('FIRECRAWL_API_KEY not configured, skipping branding scrape');
+    return {};
+  }
+
+  try {
+    console.log('Scraping website with Firecrawl:', url);
+    
+    const response = await fetch('https://api.firecrawl.dev/v1/scrape', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${FIRECRAWL_API_KEY}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        url,
+        formats: ['branding', 'markdown'],
+        onlyMainContent: true,
+      }),
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('Firecrawl API error:', response.status, errorText);
+      return {};
+    }
+
+    const data = await response.json();
+    console.log('Firecrawl response:', JSON.stringify(data, null, 2));
+
+    // Extract branding info
+    const branding = data.data?.branding || data.branding;
+    const markdown = data.data?.markdown || data.markdown;
+    
+    return {
+      logo: branding?.images?.logo || branding?.logo,
+      colors: branding?.colors ? [
+        branding.colors.primary,
+        branding.colors.secondary,
+        branding.colors.accent,
+        branding.colors.background,
+      ].filter(Boolean) : [],
+      markdown,
+    };
+  } catch (error) {
+    console.error('Error scraping with Firecrawl:', error);
+    return {};
+  }
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -79,21 +139,40 @@ serve(async (req) => {
 
     console.log('User authenticated:', user.id);
 
+    // Scrape website with Firecrawl for branding info (logo, colors)
+    let firecrawlData: { logo?: string; colors?: string[]; markdown?: string } = {};
+    if (validWebsiteUrl) {
+      firecrawlData = await scrapeWebsiteWithFirecrawl(validWebsiteUrl);
+      console.log('Firecrawl extracted:', { 
+        hasLogo: !!firecrawlData.logo, 
+        colorsCount: firecrawlData.colors?.length || 0 
+      });
+    }
+
     // Call Lovable AI to analyze the brand
     const sources = [];
     if (validWebsiteUrl) sources.push(`Site web: ${validWebsiteUrl}`);
     if (validInstagramUrl) sources.push(`Instagram: ${validInstagramUrl}`);
     
+    // Include scraped content in the prompt for better analysis
+    const scrapedContext = firecrawlData.markdown 
+      ? `\n\nContenu du site web (extrait):\n${firecrawlData.markdown.substring(0, 3000)}...`
+      : '';
+    
+    const colorsContext = firecrawlData.colors && firecrawlData.colors.length > 0
+      ? `\n\nCouleurs détectées sur le site: ${firecrawlData.colors.join(', ')}`
+      : '';
+    
     const prompt = `Tu es un expert en analyse de marque et en marketing. Analyse cette entreprise à partir des sources suivantes:
 
-${sources.join('\n')}
+${sources.join('\n')}${scrapedContext}${colorsContext}
 
 Fournis une analyse détaillée au format JSON avec les champs suivants:
 - business_description: Une description détaillée de l'activité de l'entreprise (2-3 phrases)
 - target_audience: Description précise de l'audience cible
 - brand_values: Un tableau de 3-5 valeurs clés de la marque (ex: ["innovation", "qualité", "durabilité"])
 - visual_identity: Un objet décrivant l'identité visuelle avec:
-  - colors: tableau des couleurs principales (hex codes si possible)
+  - colors: tableau des couleurs principales (hex codes, utilise les couleurs détectées si disponibles)
   - style: description du style visuel (ex: "moderne et minimaliste")
   - imagery: type d'images utilisées (ex: "photos authentiques de produits")
 - tone_of_voice: Description du ton de communication (ex: "professionnel et accessible")
@@ -161,17 +240,39 @@ Réponds UNIQUEMENT avec le JSON, sans texte additionnel.`;
       throw new Error('Invalid JSON response from AI');
     }
 
+    // Merge Firecrawl logo into visual_identity
+    if (firecrawlData.logo && brandData.visual_identity) {
+      brandData.visual_identity.logo = firecrawlData.logo;
+    } else if (firecrawlData.logo) {
+      brandData.visual_identity = { 
+        ...brandData.visual_identity,
+        logo: firecrawlData.logo 
+      };
+    }
+
+    // Get user's team_id
+    const { data: teamMember } = await supabase
+      .from('team_members')
+      .select('team_id')
+      .eq('user_id', user.id)
+      .single();
+
+    if (!teamMember) {
+      throw new Error('User has no team');
+    }
+
     // Get or create brand profile
     const { data: existingProfile } = await supabase
       .from('brand_profiles')
       .select('id')
-      .eq('user_id', user.id)
+      .eq('team_id', teamMember.team_id)
       .single();
 
     const brandProfileData = {
-      user_id: user.id,
-      company_name: brandData.company_name || 'Company', // fallback
-      website_url: websiteUrl,
+      team_id: teamMember.team_id,
+      company_name: brandData.company_name || 'Company',
+      website_url: validWebsiteUrl || null,
+      instagram_url: validInstagramUrl || null,
       business_description: brandData.business_description,
       target_audience: brandData.target_audience || null,
       brand_values: brandData.brand_values,
@@ -200,30 +301,6 @@ Réponds UNIQUEMENT avec le JSON, sans texte additionnel.`;
       if (insertError) {
         console.error('Error creating brand profile:', insertError);
         throw insertError;
-      }
-    }
-
-    // Auto-save if userId is provided
-    if (userId) {
-      const brandProfileData = {
-        user_id: userId,
-        business_description: brandData.business_description,
-        target_audience: brandData.target_audience || null,
-        brand_values: brandData.brand_values,
-        visual_identity: brandData.visual_identity,
-        tone_of_voice: brandData.tone_of_voice,
-        analyzed_at: new Date().toISOString(),
-      };
-
-      const { error: updateError } = await supabase
-        .from('brand_profiles')
-        .update(brandProfileData)
-        .eq('user_id', userId);
-
-      if (updateError) {
-        console.error('Error auto-saving brand profile:', updateError);
-      } else {
-        console.log('Brand profile auto-saved successfully');
       }
     }
 

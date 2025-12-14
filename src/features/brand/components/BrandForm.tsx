@@ -16,6 +16,7 @@ import { BrandFormData } from "../types";
 const formSchema = z.object({
   companyName: z.string().min(2, "Le nom de l'entreprise doit contenir au moins 2 caractères"),
   websiteUrl: z.string().url("URL invalide").optional().or(z.literal("")),
+  instagramUrl: z.string().url("URL Instagram invalide").optional().or(z.literal("")),
   businessDescription: z.string().optional(),
   targetAudience: z.string().optional(),
 });
@@ -38,6 +39,7 @@ export const BrandForm = ({ defaultValues, onSubmit, children }: BrandFormProps)
     defaultValues: {
       companyName: defaultValues?.companyName || "",
       websiteUrl: defaultValues?.websiteUrl || "",
+      instagramUrl: defaultValues?.instagramUrl || "",
       businessDescription: defaultValues?.businessDescription || "",
       targetAudience: defaultValues?.targetAudience || "",
     },
@@ -74,6 +76,25 @@ export const BrandForm = ({ defaultValues, onSubmit, children }: BrandFormProps)
                 <Input
                   type="url"
                   placeholder="https://monentreprise.com"
+                  {...field}
+                  className="bg-background"
+                />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="instagramUrl"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Instagram</FormLabel>
+              <FormControl>
+                <Input
+                  type="url"
+                  placeholder="https://instagram.com/mamarque"
                   {...field}
                   className="bg-background"
                 />

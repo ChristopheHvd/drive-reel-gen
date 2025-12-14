@@ -26,15 +26,15 @@ import { toast } from "sonner";
 export const useBrandAnalysis = () => {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
 
-  const analyzeBrand = useCallback(async (websiteUrl: string) => {
-    if (!websiteUrl) {
-      throw new Error("URL du site web requise");
+  const analyzeBrand = useCallback(async (websiteUrl?: string, instagramUrl?: string) => {
+    if (!websiteUrl && !instagramUrl) {
+      throw new Error("Au moins une URL (site web ou Instagram) est requise");
     }
 
     setIsAnalyzing(true);
     try {
       const { data, error } = await supabase.functions.invoke('analyze-brand', {
-        body: { websiteUrl }
+        body: { websiteUrl, instagramUrl }
       });
 
       if (error) {

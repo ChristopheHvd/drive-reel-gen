@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { ImageUploader, ImageGrid, useImages, Image } from "@/features/images";
+import { EmptyStateOnboarding } from "@/features/images/components/EmptyStateOnboarding";
 import { VideoList, VideoConfigForm, useVideos, Video } from "@/features/videos";
 import { Button } from "@/components/ui/button";
 import { Upload, ChevronRight, Settings, UserPlus } from "lucide-react";
@@ -9,6 +10,7 @@ import { supabase } from "@/integrations/supabase/client";
 import logo from "@/assets/quickquick-logo.png";
 import { useSubscription, QuotaExceededDialog } from "@/features/subscription";
 import { InviteModal, useCurrentTeam } from "@/features/team";
+import { BrandSettingsDialog } from "@/features/brand/components/BrandSettingsDialog";
 
 const Dashboard = () => {
   const { images, loading, deleteImage, fetchImages } = useImages();
@@ -248,15 +250,18 @@ const Dashboard = () => {
             </span>
           </Link>
           
-          <Button
-            variant="ghost"
-            size="sm"
-            className="ml-4 gap-2"
-            disabled
-          >
-            <Settings className="w-4 h-4" />
-            Paramètres de marque
-          </Button>
+          <BrandSettingsDialog
+            trigger={
+              <Button
+                variant="ghost"
+                size="sm"
+                className="ml-4 gap-2"
+              >
+                <Settings className="w-4 h-4" />
+                Paramètres de marque
+              </Button>
+            }
+          />
           
           <div className="ml-auto flex items-center gap-4">
             {!subscriptionLoading && subscription && (
@@ -294,112 +299,119 @@ const Dashboard = () => {
         </div>
       </header>
 
-      {/* Layout 3 colonnes full-height */}
-      <div className="flex-1 grid grid-cols-1 lg:grid-cols-12 overflow-hidden">
-        {/* LEFT: Galerie d'images */}
-        <div className="lg:col-span-3 border-r border-border/40 flex flex-col overflow-hidden">
-          <div className="flex items-center justify-between px-6 py-4 border-b border-border/40">
-            <h2 className="text-lg font-semibold">Mes Images</h2>
-            <Button
-              onClick={() => setShowUploader(!showUploader)}
-              size="sm"
-              variant="ghost"
-              className="gap-2"
-            >
-              <Upload className="w-4 h-4" />
-              Upload
-            </Button>
-          </div>
-          
-          <div className="flex-1 overflow-y-auto px-4 py-4">
-            {showUploader && (
-              <div className="mb-4">
-                <ImageUploader
-                  onUploadComplete={() => {
-                    fetchImages();
-                    setShowUploader(false);
-                  }}
-                />
-              </div>
-            )}
-            <ImageGrid
-              images={images}
-              loading={loading}
-              onDeleteImage={deleteImage}
-              onSelectImage={(image) => {
-                setSelectedImage(image);
-                if (window.innerWidth < 1024) {
-                  setTimeout(() => {
-                    document.getElementById("video-section")?.scrollIntoView({ 
-                      behavior: "smooth" 
-                    });
-                  }, 100);
-                }
-              }}
-              selectedImageId={selectedImage?.id}
-            />
-          </div>
-        </div>
-
-        {/* CENTER: Galerie de vidéos */}
-        <div className="lg:col-span-6 border-r border-border/40 flex flex-col overflow-hidden" id="video-section">
-          <div className="flex items-center justify-between px-6 py-4 border-b border-border/40">
-            <h2 className="text-lg font-semibold">Vidéos générées</h2>
-            {selectedImage && videos.length > 0 && (
+      {/* Afficher l'onboarding si pas d'images */}
+      {!loading && images.length === 0 ? (
+        <EmptyStateOnboarding 
+          onUploadClick={() => setShowUploader(true)} 
+        />
+      ) : (
+        /* Layout 3 colonnes full-height */
+        <div className="flex-1 grid grid-cols-1 lg:grid-cols-12 overflow-hidden">
+          {/* LEFT: Galerie d'images */}
+          <div className="lg:col-span-3 border-r border-border/40 flex flex-col overflow-hidden">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-border/40">
+              <h2 className="text-lg font-semibold">Mes Images</h2>
               <Button
-                onClick={scrollToGeneration}
+                onClick={() => setShowUploader(!showUploader)}
                 size="sm"
                 variant="ghost"
-                className="lg:hidden gap-1"
+                className="gap-2"
               >
-                Générer
-                <ChevronRight className="w-4 h-4" />
+                <Upload className="w-4 h-4" />
+                Upload
               </Button>
-            )}
-          </div>
-          
-          <div className="flex-1 overflow-y-auto px-6 py-4">
-            <VideoList
-              imageId={selectedImage?.id}
-              selectedImage={selectedImage || undefined}
-              videos={videos}
-              loading={videosLoading}
-              onGenerateVideo={scrollToGeneration}
-              onDeleteVideo={handleDeleteVideo}
-              onSelectVideo={setSelectedVideo}
-              onRegenerateVideo={handleRegenerateVideo}
-            />
-          </div>
-        </div>
-
-        {/* RIGHT: Configuration */}
-        <div className="lg:col-span-3 flex flex-col overflow-hidden" id="video-config">
-          <div className="px-6 py-4 border-b border-border/40">
-            <h2 className="text-lg font-semibold">Génération Vidéo IA</h2>
-            <p className="text-xs text-muted-foreground mt-1">
-              Configurez les paramètres pour générer une nouvelle variation de vidéo
-            </p>
-          </div>
-          
-          <div className="flex-1 overflow-y-auto px-6 py-4">
-            {selectedImage ? (
-              <VideoConfigForm
-                selectedImageId={selectedImage.id}
-                initialPrompt={selectedVideo?.prompt}
-                onGenerate={handleGenerateVideo}
-                disabled={!selectedImage}
-                loading={generatingVideo}
+            </div>
+            
+            <div className="flex-1 overflow-y-auto px-4 py-4">
+              {showUploader && (
+                <div className="mb-4">
+                  <ImageUploader
+                    onUploadComplete={() => {
+                      fetchImages();
+                      setShowUploader(false);
+                    }}
+                  />
+                </div>
+              )}
+              <ImageGrid
+                images={images}
+                loading={loading}
+                onDeleteImage={deleteImage}
+                onSelectImage={(image) => {
+                  setSelectedImage(image);
+                  if (window.innerWidth < 1024) {
+                    setTimeout(() => {
+                      document.getElementById("video-section")?.scrollIntoView({ 
+                        behavior: "smooth" 
+                      });
+                    }, 100);
+                  }
+                }}
+                selectedImageId={selectedImage?.id}
               />
-            ) : (
-              <div className="flex items-center justify-center h-full text-center">
-                <p className="text-sm text-muted-foreground">
-                  Sélectionnez une image pour configurer la génération
-                </p>
-              </div>
-            )}
+            </div>
+          </div>
+
+          {/* CENTER: Galerie de vidéos */}
+          <div className="lg:col-span-6 border-r border-border/40 flex flex-col overflow-hidden" id="video-section">
+            <div className="flex items-center justify-between px-6 py-4 border-b border-border/40">
+              <h2 className="text-lg font-semibold">Vidéos générées</h2>
+              {selectedImage && videos.length > 0 && (
+                <Button
+                  onClick={scrollToGeneration}
+                  size="sm"
+                  variant="ghost"
+                  className="lg:hidden gap-1"
+                >
+                  Générer
+                  <ChevronRight className="w-4 h-4" />
+                </Button>
+              )}
+            </div>
+            
+            <div className="flex-1 overflow-y-auto px-6 py-4">
+              <VideoList
+                imageId={selectedImage?.id}
+                selectedImage={selectedImage || undefined}
+                videos={videos}
+                loading={videosLoading}
+                onGenerateVideo={scrollToGeneration}
+                onDeleteVideo={handleDeleteVideo}
+                onSelectVideo={setSelectedVideo}
+                onRegenerateVideo={handleRegenerateVideo}
+              />
+            </div>
+          </div>
+
+          {/* RIGHT: Configuration */}
+          <div className="lg:col-span-3 flex flex-col overflow-hidden" id="video-config">
+            <div className="px-6 py-4 border-b border-border/40">
+              <h2 className="text-lg font-semibold">Génération Vidéo IA</h2>
+              <p className="text-xs text-muted-foreground mt-1">
+                Configurez les paramètres pour générer une nouvelle variation de vidéo
+              </p>
+            </div>
+            
+            <div className="flex-1 overflow-y-auto px-6 py-4">
+              {selectedImage ? (
+                <VideoConfigForm
+                  selectedImageId={selectedImage.id}
+                  initialPrompt={selectedVideo?.prompt}
+                  onGenerate={handleGenerateVideo}
+                  disabled={!selectedImage}
+                  loading={generatingVideo}
+                />
+              ) : (
+                <div className="flex items-center justify-center h-full text-center">
+                  <p className="text-sm text-muted-foreground">
+                    Sélectionnez une image pour configurer la génération
+                  </p>
+                </div>
+              )}
+            </div>
           </div>
         </div>
-      </div>
+      )}
 
       <QuotaExceededDialog
         open={showQuotaDialog}
