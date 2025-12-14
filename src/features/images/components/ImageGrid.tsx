@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { ImageCard } from "./ImageCard";
 import { Image } from "../types";
 import { Skeleton } from "@/components/ui/skeleton";

@@ -18,6 +18,7 @@ export interface VisualIdentity {
   colors: string[];
   style: string;
   imagery: string;
+  logo?: string;
 }
 
 export interface CreateBrandDto {
