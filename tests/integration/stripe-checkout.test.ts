@@ -37,7 +37,7 @@ describe('Stripe Checkout Integration', () => {
       } as any);
 
       const { data, error } = await supabase.functions.invoke('create-checkout', {
-        body: { priceId: 'price_1SSfSJBlI68zgCmzWM3uPZIu' },
+        body: { priceId: 'price_1SSexRBlI68zgCmz0DNoBAha' },
       });
 
       expect(error).toBeNull();
@@ -66,7 +66,7 @@ describe('Stripe Checkout Integration', () => {
       } as any);
 
       const { data, error } = await supabase.functions.invoke('create-checkout', {
-        body: { priceId: 'price_1SSfSJBlI68zgCmzWM3uPZIu' },
+        body: { priceId: 'price_1SSexRBlI68zgCmz0DNoBAha' },
       });
 
       expect(error).not.toBeNull();
@@ -81,7 +81,7 @@ describe('Stripe Checkout Integration', () => {
 
       // Second checkout should reuse customer
       const { data, error } = await supabase.functions.invoke('create-checkout', {
-        body: { priceId: 'price_1SSfSxBlI68zgCmzD8NPr8Aq' },
+        body: { priceId: 'price_1SSey5BlI68zgCmz8gi0Dijy' },
       });
 
       expect(error).toBeNull();

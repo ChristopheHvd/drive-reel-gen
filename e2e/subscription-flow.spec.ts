@@ -19,9 +19,9 @@ test.describe('Subscription Flow', () => {
   test('should show prices on pricing page', async ({ page }) => {
     await page.goto('/pricing');
     
-    // Should show prices
-    await expect(page.locator('text=100€')).toBeVisible(); // Pro price
-    await expect(page.locator('text=350€')).toBeVisible(); // Business price
+    // Should show prices (Pro: 100€, Business: 350€)
+    await expect(page.getByText('100€')).toBeVisible();
+    await expect(page.getByText('350€')).toBeVisible();
   });
 });
 
