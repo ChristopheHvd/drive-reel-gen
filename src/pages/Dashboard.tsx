@@ -3,7 +3,8 @@ import { ImageUploader, ImageGrid, useImages, Image } from "@/features/images";
 import { EmptyStateOnboarding } from "@/features/images/components/EmptyStateOnboarding";
 import { VideoList, VideoConfigForm, useVideos, Video } from "@/features/videos";
 import { Button } from "@/components/ui/button";
-import { Upload, ChevronRight, Settings, UserPlus } from "lucide-react";
+import { Upload, ChevronRight, Settings, UserPlus, LogOut } from "lucide-react";
+import { useAuth } from "@/features/auth";
 import { Link } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -24,6 +25,7 @@ const Dashboard = () => {
   const { toast } = useToast();
   const { subscription, videosRemaining, isQuotaExceeded, nextResetDate, loading: subscriptionLoading } = useSubscription();
   const { teamId } = useCurrentTeam();
+  const { signOut } = useAuth();
 
   // Sélectionner automatiquement la première image au chargement
   useEffect(() => {
@@ -294,6 +296,15 @@ const Dashboard = () => {
             >
               <UserPlus className="w-4 h-4" />
               Inviter
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="gap-2 text-muted-foreground hover:text-destructive"
+              onClick={signOut}
+            >
+              <LogOut className="w-4 h-4" />
+              Déconnexion
             </Button>
           </div>
         </div>
