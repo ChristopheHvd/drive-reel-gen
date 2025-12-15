@@ -49,7 +49,7 @@ describe('Stripe Webhook Integration', () => {
         video_limit: 50,
         stripe_customer_id: 'cus_test_123',
         stripe_subscription_id: 'sub_test_123',
-        stripe_price_id: 'price_1SSfSJBlI68zgCmzWM3uPZIu',
+        stripe_price_id: 'price_1SSexRBlI68zgCmz0DNoBAha',
       };
 
       // Mock the update chain
@@ -251,7 +251,7 @@ describe('Stripe Webhook Integration', () => {
         video_limit: 50,
         stripe_customer_id: 'cus_test_123',
         stripe_subscription_id: 'sub_test_123',
-        stripe_price_id: 'price_1SSfSJBlI68zgCmzWM3uPZIu',
+        stripe_price_id: 'price_1SSexRBlI68zgCmz0DNoBAha',
         current_period_start: new Date(1764163467 * 1000).toISOString(),
         current_period_end: new Date(1766755467 * 1000).toISOString(),
         updated_at: expect.any(String),

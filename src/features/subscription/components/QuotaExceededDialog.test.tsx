@@ -108,7 +108,7 @@ describe('QuotaExceededDialog', () => {
 
     await vi.waitFor(() => {
       expect(supabase.functions.invoke).toHaveBeenCalledWith('create-checkout', {
-        body: { priceId: 'price_1SSfSJBlI68zgCmzWM3uPZIu' },
+        body: { priceId: 'price_1SSexRBlI68zgCmz0DNoBAha' },
       });
     });
 
