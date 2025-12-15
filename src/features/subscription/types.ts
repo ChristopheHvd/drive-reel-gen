@@ -33,7 +33,7 @@ export const PLAN_CONFIGS: Record<"free" | "pro" | "business", PlanConfig> = {
     price: 100,
     videoLimit: 50,
     features: ["50 vidéos par mois", "Génération IA de prompts", "Formats 9:16 et 16:9", "Support prioritaire"],
-    stripePriceId: "price_1SSfSJBlI68zgCmzWM3uPZIu", // À remplir par l'utilisateur
+    stripePriceId: "price_1SSexRBlI68zgCmz0DNoBAha",
     isPopular: true,
   },
   business: {
@@ -47,6 +47,6 @@ export const PLAN_CONFIGS: Record<"free" | "pro" | "business", PlanConfig> = {
       "Logo et images additionnelles",
       "Support dédié 24/7",
     ],
-    stripePriceId: "price_1SSfSxBlI68zgCmzD8NPr8Aq", // À remplir par l'utilisateur
+    stripePriceId: "price_1SSey5BlI68zgCmz8gi0Dijy",
   },
 };
