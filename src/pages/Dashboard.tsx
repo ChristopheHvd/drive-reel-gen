@@ -299,12 +299,14 @@ const Dashboard = () => {
             </Button>
             <Button
               variant="ghost"
-              size="sm"
-              className="gap-2 text-muted-foreground hover:text-destructive"
+              size="icon"
+              className="group text-muted-foreground hover:text-destructive hover:w-auto hover:px-3 transition-all duration-200"
               onClick={signOut}
             >
-              <LogOut className="w-4 h-4" />
-              Déconnexion
+              <LogOut className="w-4 h-4 shrink-0" />
+              <span className="max-w-0 overflow-hidden group-hover:max-w-24 group-hover:ml-2 transition-all duration-200 whitespace-nowrap">
+                Déconnexion
+              </span>
             </Button>
           </div>
         </div>
