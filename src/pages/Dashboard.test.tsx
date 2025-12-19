@@ -32,13 +32,40 @@ vi.mock('@/features/subscription', () => ({
   QuotaExceededDialog: () => null,
 }));
 
+vi.mock('@/features/team', () => ({
+  useCurrentTeam: () => ({ teamId: 'test-team-id' }),
+  InviteModal: () => null,
+}));
+
+vi.mock('@/features/auth', () => ({
+  useAuth: () => ({
+    signOut: vi.fn(),
+  }),
+}));
+
+vi.mock('@/features/brand/components/BrandSettingsDialog', () => ({
+  BrandSettingsDialog: ({ trigger }: any) => trigger,
+}));
+
 describe('Dashboard', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     
-    // Configuration par défaut (images et vidéos vides)
+    // Configuration par défaut (au moins 1 image pour que le layout 3 colonnes soit rendu)
     mockUseImages.mockReturnValue({
-      images: [],
+      images: [{ 
+        id: 'img-1', 
+        file_name: 'test1.jpg', 
+        team_id: 'team-1', 
+        uploaded_by: 'user-1', 
+        storage_path: 'path1', 
+        file_size: 1000, 
+        mime_type: 'image/jpeg',
+        width: 800,
+        height: 600,
+        created_at: '2024-01-01', 
+        updated_at: '2024-01-01' 
+      }],
       loading: false,
       deleteImage: vi.fn(),
       fetchImages: vi.fn(),
@@ -101,26 +128,6 @@ describe('Dashboard', () => {
   });
 
   it('should render VideoConfigForm in right panel', () => {
-    // Fournir au moins 1 image pour que selectedImage soit défini
-    mockUseImages.mockReturnValue({
-      images: [{ 
-        id: 'img-1', 
-        file_name: 'test1.jpg', 
-        team_id: 'team-1', 
-        uploaded_by: 'user-1', 
-        storage_path: 'path1', 
-        file_size: 1000, 
-        mime_type: 'image/jpeg',
-        width: 800,
-        height: 600,
-        created_at: '2024-01-01', 
-        updated_at: '2024-01-01' 
-      }],
-      loading: false,
-      deleteImage: vi.fn(),
-      fetchImages: vi.fn(),
-    });
-    
     const { getByTestId } = renderDashboard();
     
     expect(getByTestId('video-config')).toBeInTheDocument();
@@ -166,6 +173,7 @@ describe('Dashboard', () => {
   it('should have upload button in images panel', () => {
     const { getByRole } = renderDashboard();
     
+    // Le bouton Upload est dans le panneau des images
     const uploadButton = getByRole('button', { name: /upload/i });
     expect(uploadButton).toBeInTheDocument();
   });
@@ -179,16 +187,16 @@ describe('Dashboard', () => {
   it('should have 3-column layout (3-6-3 on large screens)', () => {
     const { container } = renderDashboard();
     
-    // Check left panel (images)
-    const leftPanel = container.querySelector('.lg\\:col-span-3');
+    // Check left panel (images) - use attribute selector for Tailwind classes
+    const leftPanel = container.querySelector('[class*="lg:col-span-3"]');
     expect(leftPanel).toBeInTheDocument();
     
     // Check center panel (videos)
-    const centerPanel = container.querySelector('.lg\\:col-span-6');
+    const centerPanel = container.querySelector('[class*="lg:col-span-6"]');
     expect(centerPanel).toBeInTheDocument();
     
     // Check right panel (config) - should be last col-span-3
-    const allColSpan3 = container.querySelectorAll('.lg\\:col-span-3');
+    const allColSpan3 = container.querySelectorAll('[class*="lg:col-span-3"]');
     expect(allColSpan3.length).toBeGreaterThanOrEqual(2);
   });
 
@@ -271,11 +279,12 @@ describe('Dashboard - Auto-select first image', () => {
       </BrowserRouter>
     );
 
+    // Quand il n'y a pas d'images, EmptyStateOnboarding est affiché
     // VideoConfigForm ne devrait pas être rendu
     expect(queryByTestId('video-config')).not.toBeInTheDocument();
     
-    // Le message placeholder devrait apparaître
-    expect(getByText(/sélectionnez une image/i)).toBeInTheDocument();
+    // Le message d'onboarding devrait apparaître
+    expect(getByText(/bienvenue sur quickquick/i)).toBeInTheDocument();
   });
 
   it('should NOT auto-select while images are loading', () => {
@@ -293,16 +302,14 @@ describe('Dashboard - Auto-select first image', () => {
       refetchVideos: vi.fn(),
     });
 
-    const { getByText, queryByTestId } = render(
+    const { queryByTestId } = render(
       <BrowserRouter>
         <Dashboard />
       </BrowserRouter>
     );
 
+    // Pendant le chargement, rien n'est affiché (loading=true et images.length === 0)
     // VideoConfigForm ne devrait pas être rendu pendant le chargement
     expect(queryByTestId('video-config')).not.toBeInTheDocument();
-    
-    // Le message placeholder devrait apparaître
-    expect(getByText(/sélectionnez une image/i)).toBeInTheDocument();
   });
 });
