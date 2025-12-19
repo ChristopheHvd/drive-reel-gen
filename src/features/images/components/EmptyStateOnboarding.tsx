@@ -35,7 +35,7 @@ export const EmptyStateOnboarding = ({ onUploadClick }: EmptyStateOnboardingProp
         </CardHeader>
         <CardContent>
           <CardDescription className="text-center">
-            Formats acceptés : JPG, PNG, WebP
+            Formats acceptés : JPG, PNG
           </CardDescription>
         </CardContent>
       </Card>

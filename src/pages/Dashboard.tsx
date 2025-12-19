@@ -12,6 +12,7 @@ import logo from "@/assets/quickquick-logo.png";
 import { useSubscription, QuotaExceededDialog } from "@/features/subscription";
 import { InviteModal, useCurrentTeam } from "@/features/team";
 import { BrandSettingsDialog, BrandAnalysisIndicator, OnboardingModal, useBrandProfile } from "@/features/brand";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 const Dashboard = () => {
   const { images, loading, deleteImage, fetchImages } = useImages();
@@ -465,6 +466,21 @@ const Dashboard = () => {
         onOpenChange={setShowOnboardingModal}
         onComplete={() => setOnboardingCompleted(true)}
       />
+
+      {/* Dialog uploader pour l'état vide (EmptyStateOnboarding) */}
+      <Dialog open={showUploader && images.length === 0} onOpenChange={setShowUploader}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Importer des images</DialogTitle>
+          </DialogHeader>
+          <ImageUploader
+            onUploadComplete={() => {
+              fetchImages();
+              setShowUploader(false);
+            }}
+          />
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
