@@ -25,8 +25,7 @@ const TermsOfService = () => {
       </header>
 
       <main className="container mx-auto px-4 py-12 max-w-3xl">
-        <h1 className="text-4xl font-bold mb-2">Conditions Générales d'Utilisation</h1>
-        <p className="text-muted-foreground mb-8">QuickQuick (anciennement Daft Funk Reels)</p>
+        <h1 className="text-4xl font-bold mb-8">Conditions Générales d'Utilisation</h1>
 
         <div className="space-y-8 text-foreground/90">
           <section>
@@ -65,7 +64,7 @@ const TermsOfService = () => {
               Les vidéos générées lui sont entièrement cédées.
             </p>
             <p>
-              Le code, UI et éléments du service restent la propriété de Alpes IA.
+              Le code, UI et éléments du service restent la propriété de QuickQuick.
             </p>
           </section>
 
