@@ -106,20 +106,21 @@ export const BrandSettingsDialog = ({ trigger, open: controlledOpen, onOpenChang
           <Loader2 className="h-6 w-6 animate-spin text-primary" />
         </div>
       ) : (
-        <BrandForm defaultValues={formData} onSubmit={handleSubmit}>
-          <div className="space-y-4">
-            {/* Section Logo */}
-            <BrandLogoSection
-              logoUrl={profile?.visual_identity?.logo}
-              onLogoChange={handleLogoChange}
-            />
-
-            <BrandAnalysisButton
-              websiteUrl={formData.websiteUrl}
-              instagramUrl={formData.instagramUrl}
-              onAnalyze={handleAnalyze}
-              isAnalyzing={isAnalyzing}
-            />
+        <>
+          <BrandAnalysisButton
+            websiteUrl={formData.websiteUrl}
+            instagramUrl={formData.instagramUrl}
+            onAnalyze={handleAnalyze}
+            isAnalyzing={isAnalyzing}
+          />
+          
+          <BrandForm defaultValues={formData} onSubmit={handleSubmit}>
+            <div className="space-y-4">
+              {/* Section Logo */}
+              <BrandLogoSection
+                logoUrl={profile?.visual_identity?.logo}
+                onLogoChange={handleLogoChange}
+              />
 
             <DialogFooter>
               <Button
@@ -137,6 +138,7 @@ export const BrandSettingsDialog = ({ trigger, open: controlledOpen, onOpenChang
             </DialogFooter>
           </div>
         </BrandForm>
+        </>
       )}
     </DialogContent>
   );
