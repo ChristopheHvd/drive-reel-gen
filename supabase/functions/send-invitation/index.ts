@@ -23,13 +23,33 @@ serve(async (req) => {
   );
 
   try {
-    const authHeader = req.headers.get("Authorization")!;
+    // Vérification de l'en-tête d'authentification
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader) {
+      return new Response(
+        JSON.stringify({ error: "Non authentifié" }),
+        {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 401,
+        },
+      );
+    }
+
     const token = authHeader.replace("Bearer ", "");
-    const { data } = await supabaseClient.auth.getUser(token);
+
+    // Récupération de l'utilisateur à partir du token
+    const { data, error: authError } = await supabaseClient.auth.getUser(token);
     const user = data.user;
 
-    if (!user?.email) {
-      throw new Error("User not authenticated");
+    if (authError || !user?.email) {
+      console.error("Auth error:", authError);
+      return new Response(
+        JSON.stringify({ error: "Non authentifié" }),
+        {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 401,
+        },
+      );
     }
 
     const { teamId, email, role } = await req.json();

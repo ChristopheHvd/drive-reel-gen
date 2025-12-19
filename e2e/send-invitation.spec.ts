@@ -79,7 +79,10 @@ test.describe('Team Invitation E2E', () => {
   test('should successfully send invitation email', async ({ request }) => {
     test.skip(!process.env.TEST_USER_TOKEN, 'Requires TEST_USER_TOKEN');
     test.skip(!process.env.TEST_TEAM_ID, 'Requires TEST_TEAM_ID');
-    test.skip(!process.env.TEST_INVITE_EMAIL, 'Requires TEST_INVITE_EMAIL');
+
+    // Use a different email than the authenticated user to avoid self-invitation
+    // Generate a unique email for this test run
+    const testEmail = process.env.TEST_INVITE_EMAIL || `test-invite-${Date.now()}@example.com`;
 
     const response = await request.post(FUNCTION_URL, {
       headers: {
@@ -88,7 +91,7 @@ test.describe('Team Invitation E2E', () => {
       },
       data: {
         teamId: process.env.TEST_TEAM_ID,
-        email: process.env.TEST_INVITE_EMAIL,
+        email: testEmail,
         role: 'member',
       },
     });
@@ -98,7 +101,7 @@ test.describe('Team Invitation E2E', () => {
     const data = await response.json();
     expect(data.success).toBe(true);
     expect(data.invitation).toBeDefined();
-    expect(data.invitation.email).toBe(process.env.TEST_INVITE_EMAIL?.toLowerCase());
+    expect(data.invitation.email).toBe(testEmail.toLowerCase());
     expect(data.inviteUrl).toContain('/invite?token=');
     expect(data.message).toContain('succès');
   });
@@ -106,7 +109,10 @@ test.describe('Team Invitation E2E', () => {
   test('should resend invitation for existing pending invitation', async ({ request }) => {
     test.skip(!process.env.TEST_USER_TOKEN, 'Requires TEST_USER_TOKEN');
     test.skip(!process.env.TEST_TEAM_ID, 'Requires TEST_TEAM_ID');
-    test.skip(!process.env.TEST_INVITE_EMAIL, 'Requires TEST_INVITE_EMAIL');
+
+    // Use a different email than the authenticated user to avoid self-invitation
+    // Generate a unique email for this test run
+    const testEmail = process.env.TEST_INVITE_EMAIL || `test-resend-${Date.now()}@example.com`;
 
     // First invitation
     const firstResponse = await request.post(FUNCTION_URL, {
@@ -116,7 +122,7 @@ test.describe('Team Invitation E2E', () => {
       },
       data: {
         teamId: process.env.TEST_TEAM_ID,
-        email: process.env.TEST_INVITE_EMAIL,
+        email: testEmail,
         role: 'member',
       },
     });
@@ -132,7 +138,7 @@ test.describe('Team Invitation E2E', () => {
       },
       data: {
         teamId: process.env.TEST_TEAM_ID,
-        email: process.env.TEST_INVITE_EMAIL,
+        email: testEmail,
         role: 'member',
       },
     });
