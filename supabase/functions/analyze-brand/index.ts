@@ -272,13 +272,13 @@ Réponds UNIQUEMENT avec le JSON, sans texte additionnel.`;
     // Get or create brand profile (teamMember already fetched at the start)
     const { data: existingProfile } = await supabase
       .from('brand_profiles')
-      .select('id')
+      .select('id, company_name')
       .eq('team_id', teamMember.team_id)
       .single();
 
     const brandProfileData = {
       team_id: teamMember.team_id,
-      company_name: brandData.company_name || 'Company',
+      company_name: existingProfile?.company_name || brandData.company_name || 'Company',
       website_url: validWebsiteUrl || null,
       instagram_url: validInstagramUrl || null,
       business_description: brandData.business_description,
