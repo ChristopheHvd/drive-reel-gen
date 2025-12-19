@@ -2,14 +2,15 @@ export interface BrandProfile {
   id: string;
   team_id: string;
   company_name: string;
-  website_url?: string;
-  instagram_url?: string;
-  business_description?: string;
-  target_audience?: string;
-  tone_of_voice?: string;
-  brand_values?: string[];
-  visual_identity?: VisualIdentity;
-  analyzed_at?: string;
+  website_url?: string | null;
+  instagram_url?: string | null;
+  business_description?: string | null;
+  target_audience?: string | null;
+  tone_of_voice?: string | null;
+  brand_values?: string[] | null;
+  visual_identity?: VisualIdentity | null;
+  analyzed_at?: string | null;
+  analysis_status?: 'pending' | 'completed' | 'failed' | null;
   created_at: string;
   updated_at: string;
 }

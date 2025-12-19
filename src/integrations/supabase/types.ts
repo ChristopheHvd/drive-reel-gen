@@ -16,6 +16,7 @@ export type Database = {
     Tables: {
       brand_profiles: {
         Row: {
+          analysis_status: string | null
           analyzed_at: string | null
           brand_values: Json | null
           business_description: string | null
@@ -31,6 +32,7 @@ export type Database = {
           website_url: string | null
         }
         Insert: {
+          analysis_status?: string | null
           analyzed_at?: string | null
           brand_values?: Json | null
           business_description?: string | null
@@ -46,6 +48,7 @@ export type Database = {
           website_url?: string | null
         }
         Update: {
+          analysis_status?: string | null
           analyzed_at?: string | null
           brand_values?: Json | null
           business_description?: string | null

@@ -11,7 +11,7 @@ import { supabase } from "@/integrations/supabase/client";
 import logo from "@/assets/quickquick-logo.png";
 import { useSubscription, QuotaExceededDialog } from "@/features/subscription";
 import { InviteModal, useCurrentTeam } from "@/features/team";
-import { BrandSettingsDialog } from "@/features/brand/components/BrandSettingsDialog";
+import { BrandSettingsDialog, BrandAnalysisIndicator } from "@/features/brand";
 
 const Dashboard = () => {
   const { images, loading, deleteImage, fetchImages } = useImages();
@@ -264,6 +264,8 @@ const Dashboard = () => {
               </Button>
             }
           />
+          
+          <BrandAnalysisIndicator />
           
           <div className="ml-auto flex items-center gap-4">
             {!subscriptionLoading && subscription && (
