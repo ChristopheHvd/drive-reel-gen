@@ -26,19 +26,20 @@ export const BrandAnalysisButton = ({
   return (
     <Button
       type="button"
-      variant="outline"
+      variant="ghost"
+      size="sm"
       onClick={onAnalyze}
       disabled={!hasUrl || isAnalyzing}
-      className="w-full"
+      className="text-muted-foreground hover:text-foreground text-xs"
     >
       {isAnalyzing ? (
         <>
-          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+          <Loader2 className="mr-1.5 h-3 w-3 animate-spin" />
           Analyse en cours...
         </>
       ) : (
         <>
-          <Sparkles className="mr-2 h-4 w-4" />
+          <Sparkles className="mr-1.5 h-3 w-3" />
           Recommencer l'analyse
         </>
       )}
