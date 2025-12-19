@@ -50,45 +50,45 @@ vi.mock('@/features/brand/components/BrandSettingsDialog', () => ({
 describe('Dashboard', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    
+
     // Configuration par défaut (au moins 1 image pour que le layout 3 colonnes soit rendu)
     mockUseImages.mockReturnValue({
-      images: [{ 
-        id: 'img-1', 
-        file_name: 'test1.jpg', 
-        team_id: 'team-1', 
-        uploaded_by: 'user-1', 
-        storage_path: 'path1', 
-        file_size: 1000, 
+      images: [{
+        id: 'img-1',
+        file_name: 'test1.jpg',
+        team_id: 'team-1',
+        uploaded_by: 'user-1',
+        storage_path: 'path1',
+        file_size: 1000,
         mime_type: 'image/jpeg',
         width: 800,
         height: 600,
-        created_at: '2024-01-01', 
-        updated_at: '2024-01-01' 
+        created_at: '2024-01-01',
+        updated_at: '2024-01-01'
       }],
       loading: false,
       deleteImage: vi.fn(),
       fetchImages: vi.fn(),
     });
-    
+
     mockUseVideos.mockReturnValue({
       videos: [],
       loading: false,
       refetchVideos: vi.fn(),
     });
-    
+
     mockUseSubscription.mockReturnValue({
-      subscription: { 
-        plan_type: 'free', 
-        video_limit: 6, 
-        videos_generated_this_month: 0 
+      subscription: {
+        plan_type: 'free',
+        video_limit: 6,
+        videos_generated_this_month: 0
       },
       videosRemaining: 6,
       isQuotaExceeded: false,
       nextResetDate: '1 janvier 2025',
       loading: false,
     });
-    
+
     mockVideoConfigFormProps.mockClear();
   });
 
@@ -102,14 +102,14 @@ describe('Dashboard', () => {
 
   it('should render header with logo and title', () => {
     const { getByText, getByAltText } = renderDashboard();
-    
+
     expect(getByText('QuickQuick')).toBeInTheDocument();
     expect(getByAltText('QuickQuick')).toBeInTheDocument();
   });
 
   it('should render three main panels', () => {
     const { getByText } = renderDashboard();
-    
+
     expect(getByText('Mes Images')).toBeInTheDocument();
     expect(getByText('Vidéos générées')).toBeInTheDocument();
     expect(getByText('Génération Vidéo IA')).toBeInTheDocument();
@@ -117,44 +117,44 @@ describe('Dashboard', () => {
 
   it('should render ImageGrid in left panel', () => {
     const { getByTestId } = renderDashboard();
-    
+
     expect(getByTestId('image-grid')).toBeInTheDocument();
   });
 
   it('should render VideoList in center panel', () => {
     const { getByTestId } = renderDashboard();
-    
+
     expect(getByTestId('video-list')).toBeInTheDocument();
   });
 
   it('should render VideoConfigForm in right panel', () => {
     const { getByTestId } = renderDashboard();
-    
+
     expect(getByTestId('video-config')).toBeInTheDocument();
   });
 
   it('should pass loading=false to VideoConfigForm by default', () => {
     mockUseImages.mockReturnValue({
-      images: [{ 
-        id: 'img-1', 
-        file_name: 'test1.jpg', 
-        team_id: 'team-1', 
-        uploaded_by: 'user-1', 
-        storage_path: 'path1', 
-        file_size: 1000, 
+      images: [{
+        id: 'img-1',
+        file_name: 'test1.jpg',
+        team_id: 'team-1',
+        uploaded_by: 'user-1',
+        storage_path: 'path1',
+        file_size: 1000,
         mime_type: 'image/jpeg',
         width: 800,
         height: 600,
-        created_at: '2024-01-01', 
-        updated_at: '2024-01-01' 
+        created_at: '2024-01-01',
+        updated_at: '2024-01-01'
       }],
       loading: false,
       deleteImage: vi.fn(),
       fetchImages: vi.fn(),
     });
-    
+
     renderDashboard();
-    
+
     // Vérifier que loading=false est passé par défaut
     expect(mockVideoConfigFormProps).toHaveBeenCalledWith(
       expect.objectContaining({ loading: false })
@@ -163,7 +163,7 @@ describe('Dashboard', () => {
 
   it('should show subscription info in header', () => {
     const { getByText, getByRole } = renderDashboard();
-    
+
     // Le texte est réparti entre plusieurs <span>, donc chercher chaque partie
     expect(getByText('free', { exact: false })).toBeInTheDocument();
     expect(getByText('0/6 vidéos')).toBeInTheDocument();
@@ -172,7 +172,7 @@ describe('Dashboard', () => {
 
   it('should have upload button in images panel', () => {
     const { getByRole } = renderDashboard();
-    
+
     // Le bouton Upload est dans le panneau des images
     const uploadButton = getByRole('button', { name: /upload/i });
     expect(uploadButton).toBeInTheDocument();
@@ -186,15 +186,15 @@ describe('Dashboard', () => {
 
   it('should have 3-column layout (3-6-3 on large screens)', () => {
     const { container } = renderDashboard();
-    
+
     // Check left panel (images) - use attribute selector for Tailwind classes
     const leftPanel = container.querySelector('[class*="lg:col-span-3"]');
     expect(leftPanel).toBeInTheDocument();
-    
+
     // Check center panel (videos)
     const centerPanel = container.querySelector('[class*="lg:col-span-6"]');
     expect(centerPanel).toBeInTheDocument();
-    
+
     // Check right panel (config) - should be last col-span-3
     const allColSpan3 = container.querySelectorAll('[class*="lg:col-span-3"]');
     expect(allColSpan3.length).toBeGreaterThanOrEqual(2);
@@ -215,18 +215,18 @@ describe('Dashboard - Auto-select first image', () => {
 
   it('should automatically select first image on load when images are available', () => {
     const mockImages = [
-      { 
-        id: 'img-1', 
-        file_name: 'test1.jpg', 
-        team_id: 'team-1', 
-        uploaded_by: 'user-1', 
-        storage_path: 'path1', 
-        file_size: 1000, 
+      {
+        id: 'img-1',
+        file_name: 'test1.jpg',
+        team_id: 'team-1',
+        uploaded_by: 'user-1',
+        storage_path: 'path1',
+        file_size: 1000,
         mime_type: 'image/jpeg',
         width: 800,
         height: 600,
-        created_at: '2024-01-01', 
-        updated_at: '2024-01-01' 
+        created_at: '2024-01-01',
+        updated_at: '2024-01-01'
       },
     ];
 
@@ -282,9 +282,9 @@ describe('Dashboard - Auto-select first image', () => {
     // Quand il n'y a pas d'images, EmptyStateOnboarding est affiché
     // VideoConfigForm ne devrait pas être rendu
     expect(queryByTestId('video-config')).not.toBeInTheDocument();
-    
+
     // Le message d'onboarding devrait apparaître
-    expect(getByText(/bienvenue sur quickquick/i)).toBeInTheDocument();
+    expect(getByText(/uploadez vos premières images/i)).toBeInTheDocument();
   });
 
   it('should NOT auto-select while images are loading', () => {
