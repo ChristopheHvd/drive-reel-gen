@@ -15,7 +15,7 @@ import { useBrandProfile } from "../hooks/useBrandProfile";
 import { useBrandAnalysis } from "../hooks/useBrandAnalysis";
 import { BrandForm } from "./BrandForm";
 import { BrandAnalysisButton } from "./BrandAnalysisButton";
-import { BrandAnalysisResults } from "./BrandAnalysisResults";
+import { BrandLogoSection } from "./BrandLogoSection";
 import { BrandFormData } from "../types";
 
 interface BrandSettingsDialogProps {
@@ -38,7 +38,7 @@ export const BrandSettingsDialog = ({ trigger, open: controlledOpen, onOpenChang
   const open = isControlled ? controlledOpen : internalOpen;
   const setOpen = isControlled ? (onOpenChange || (() => {})) : setInternalOpen;
 
-  const { profile, loading, loadProfile, updateProfile } = useBrandProfile();
+  const { profile, loading, loadProfile, updateProfile, updateLogo } = useBrandProfile();
   const { analyzeBrand, isAnalyzing } = useBrandAnalysis();
 
   useEffect(() => {
@@ -88,6 +88,10 @@ export const BrandSettingsDialog = ({ trigger, open: controlledOpen, onOpenChang
     }
   };
 
+  const handleLogoChange = async (newLogoUrl: string | null) => {
+    await updateLogo(newLogoUrl);
+  };
+
   const dialogContent = (
     <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
       <DialogHeader>
@@ -104,22 +108,18 @@ export const BrandSettingsDialog = ({ trigger, open: controlledOpen, onOpenChang
       ) : (
         <BrandForm defaultValues={formData} onSubmit={handleSubmit}>
           <div className="space-y-4">
+            {/* Section Logo */}
+            <BrandLogoSection
+              logoUrl={profile?.visual_identity?.logo}
+              onLogoChange={handleLogoChange}
+            />
+
             <BrandAnalysisButton
               websiteUrl={formData.websiteUrl}
               instagramUrl={formData.instagramUrl}
               onAnalyze={handleAnalyze}
               isAnalyzing={isAnalyzing}
             />
-
-            {/* Afficher les résultats de l'analyse si disponibles */}
-            {profile && (profile.tone_of_voice || profile.brand_values?.length || profile.visual_identity) && (
-              <BrandAnalysisResults
-                toneOfVoice={profile.tone_of_voice}
-                brandValues={profile.brand_values}
-                visualIdentity={profile.visual_identity}
-                logoUrl={profile.visual_identity?.logo}
-              />
-            )}
 
             <DialogFooter>
               <Button

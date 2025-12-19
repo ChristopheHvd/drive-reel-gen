@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { BrandProfile, UpdateBrandDto } from "../types";
+import { BrandProfile, UpdateBrandDto, VisualIdentity } from "../types";
 
 export const useBrandProfile = () => {
   const [profile, setProfile] = useState<BrandProfile | null>(null);
@@ -109,9 +109,52 @@ export const useBrandProfile = () => {
     }
   }, [loadProfile]);
 
+  /**
+   * Met à jour uniquement le logo dans visual_identity
+   */
+  const updateLogo = useCallback(async (logoUrl: string | null) => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Non authentifié");
+
+      const { data: teamMember } = await supabase
+        .from('team_members')
+        .select('team_id')
+        .eq('user_id', user.id)
+        .single();
+
+      if (!teamMember) throw new Error("Équipe non trouvée");
+
+      // Récupérer le visual_identity actuel
+      const currentVisualIdentity: VisualIdentity = profile?.visual_identity || {
+        colors: [],
+        style: "",
+        imagery: "",
+      };
+
+      // Mettre à jour avec le nouveau logo
+      const updatedVisualIdentity: VisualIdentity = {
+        ...currentVisualIdentity,
+        logo: logoUrl || undefined,
+      };
+
+      const { error: updateError } = await supabase
+        .from('brand_profiles')
+        .update({ visual_identity: updatedVisualIdentity as any })
+        .eq('team_id', teamMember.team_id);
+
+      if (updateError) throw updateError;
+
+      await loadProfile();
+    } catch (err) {
+      setError(err as Error);
+      throw err;
+    }
+  }, [loadProfile, profile?.visual_identity]);
+
   useEffect(() => {
     loadProfile();
   }, [loadProfile]);
 
-  return { profile, loading, error, loadProfile, updateProfile };
+  return { profile, loading, error, loadProfile, updateProfile, updateLogo };
 };
