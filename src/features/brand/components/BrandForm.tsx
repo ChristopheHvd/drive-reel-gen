@@ -1,4 +1,5 @@
 import { useForm } from "react-hook-form";
+import { useEffect } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import {
@@ -44,6 +45,19 @@ export const BrandForm = ({ defaultValues, onSubmit, children }: BrandFormProps)
       targetAudience: defaultValues?.targetAudience || "",
     },
   });
+
+  // Synchroniser le formulaire quand les defaultValues changent (chargement async)
+  useEffect(() => {
+    if (defaultValues) {
+      form.reset({
+        companyName: defaultValues.companyName || "",
+        websiteUrl: defaultValues.websiteUrl || "",
+        instagramUrl: defaultValues.instagramUrl || "",
+        businessDescription: defaultValues.businessDescription || "",
+        targetAudience: defaultValues.targetAudience || "",
+      });
+    }
+  }, [defaultValues, form]);
 
   return (
     <Form {...form}>
