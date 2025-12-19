@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Loader2, CheckCircle2, AlertCircle } from "lucide-react";
+import { Loader2, CheckCircle2, AlertCircle, Clock } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useBrandAnalysisStatus } from "../hooks/useBrandAnalysisStatus";
 
@@ -29,7 +29,7 @@ export const BrandAnalysisIndicator = () => {
       }, 5000);
 
       return () => clearTimeout(timer);
-    } else if (status === 'pending') {
+    } else if (status === 'pending' || status === 'todo') {
       setIsVisible(true);
       setShowCompleted(false);
     } else if (status === 'failed') {
@@ -47,11 +47,19 @@ export const BrandAnalysisIndicator = () => {
       className={cn(
         "flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium transition-all duration-300",
         isVisible ? "opacity-100 translate-x-0" : "opacity-0 -translate-x-2",
+        status === 'todo' && "bg-muted text-muted-foreground border border-border",
         status === 'pending' && "bg-primary/10 text-primary border border-primary/20",
         (status === 'completed' || showCompleted) && "bg-green-500/10 text-green-600 border border-green-500/20",
         status === 'failed' && "bg-destructive/10 text-destructive border border-destructive/20"
       )}
     >
+      {status === 'todo' && (
+        <>
+          <Clock className="w-3 h-3" />
+          <span>Analyse programmée...</span>
+        </>
+      )}
+      
       {status === 'pending' && (
         <>
           <Loader2 className="w-3 h-3 animate-spin" />

@@ -10,7 +10,7 @@ export interface BrandProfile {
   brand_values?: string[] | null;
   visual_identity?: VisualIdentity | null;
   analyzed_at?: string | null;
-  analysis_status?: 'pending' | 'completed' | 'failed' | null;
+  analysis_status?: 'todo' | 'pending' | 'completed' | 'failed' | null;
   created_at: string;
   updated_at: string;
 }

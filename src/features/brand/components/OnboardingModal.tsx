@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -32,6 +32,26 @@ export const OnboardingModal = ({ open, onOpenChange, onComplete }: OnboardingMo
   const [websiteUrl, setWebsiteUrl] = useState("");
   const [instagramUrl, setInstagramUrl] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [teamName, setTeamName] = useState<string | null>(null);
+
+  // Récupérer le nom de l'équipe pour le profil minimal
+  useEffect(() => {
+    const fetchTeamName = async () => {
+      if (!teamId) return;
+      
+      const { data } = await supabase
+        .from('teams')
+        .select('name')
+        .eq('id', teamId)
+        .single();
+      
+      if (data) {
+        setTeamName(data.name);
+      }
+    };
+    
+    fetchTeamName();
+  }, [teamId]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -49,7 +69,9 @@ export const OnboardingModal = ({ open, onOpenChange, onComplete }: OnboardingMo
     setIsSubmitting(true);
 
     try {
-      // Créer le profil de marque avec analysis_status = 'pending'
+      const hasUrls = websiteUrl.trim() || instagramUrl.trim();
+      
+      // Créer le profil de marque avec analysis_status = 'todo' si URLs fournies
       const { error: insertError } = await supabase
         .from('brand_profiles')
         .insert({
@@ -57,7 +79,7 @@ export const OnboardingModal = ({ open, onOpenChange, onComplete }: OnboardingMo
           company_name: companyName.trim(),
           website_url: websiteUrl.trim() || null,
           instagram_url: instagramUrl.trim() || null,
-          analysis_status: websiteUrl.trim() ? 'pending' : null,
+          analysis_status: hasUrls ? 'todo' : null,
         });
 
       if (insertError) {
@@ -69,7 +91,7 @@ export const OnboardingModal = ({ open, onOpenChange, onComplete }: OnboardingMo
               company_name: companyName.trim(),
               website_url: websiteUrl.trim() || null,
               instagram_url: instagramUrl.trim() || null,
-              analysis_status: websiteUrl.trim() ? 'pending' : null,
+              analysis_status: hasUrls ? 'todo' : null,
             })
             .eq('team_id', teamId);
 
@@ -79,8 +101,12 @@ export const OnboardingModal = ({ open, onOpenChange, onComplete }: OnboardingMo
         }
       }
 
-      // Lancer l'analyse en background si une URL est fournie
-      if (websiteUrl.trim() || instagramUrl.trim()) {
+      // Fermer la modal immédiatement AVANT de lancer l'analyse
+      onComplete();
+      onOpenChange(false);
+
+      // Lancer l'analyse en background si une URL est fournie (fire-and-forget)
+      if (hasUrls) {
         supabase.functions.invoke('analyze-brand', {
           body: {
             websiteUrl: websiteUrl.trim() || undefined,
@@ -92,8 +118,6 @@ export const OnboardingModal = ({ open, onOpenChange, onComplete }: OnboardingMo
       }
 
       toast.success("Marque configurée avec succès !");
-      onComplete();
-      onOpenChange(false);
       
     } catch (error) {
       console.error('Onboarding error:', error);
@@ -103,9 +127,43 @@ export const OnboardingModal = ({ open, onOpenChange, onComplete }: OnboardingMo
     }
   };
 
-  const handleSkip = () => {
-    onComplete();
-    onOpenChange(false);
+  const handleSkip = async () => {
+    if (!teamId) {
+      onComplete();
+      onOpenChange(false);
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    try {
+      // Créer un profil minimal avec le nom de l'équipe
+      const defaultCompanyName = teamName || "Mon entreprise";
+      
+      const { error: insertError } = await supabase
+        .from('brand_profiles')
+        .insert({
+          team_id: teamId,
+          company_name: defaultCompanyName,
+          analysis_status: null, // Pas d'analyse à faire
+        });
+
+      // Ignorer l'erreur si le profil existe déjà (23505 = unique violation)
+      if (insertError && insertError.code !== '23505') {
+        console.error('Error creating minimal profile:', insertError);
+      }
+
+      onComplete();
+      onOpenChange(false);
+      
+    } catch (error) {
+      console.error('Skip onboarding error:', error);
+      // On ferme quand même la modal
+      onComplete();
+      onOpenChange(false);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (

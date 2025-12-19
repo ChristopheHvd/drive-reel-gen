@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useCurrentTeam } from "@/features/team";
 import type { BrandProfile } from "../types";
 
-type AnalysisStatus = 'pending' | 'completed' | 'failed' | null;
+type AnalysisStatus = 'todo' | 'pending' | 'completed' | 'failed' | null;
 
 /**
  * Hook pour surveiller le statut de l'analyse de marque en temps réel
