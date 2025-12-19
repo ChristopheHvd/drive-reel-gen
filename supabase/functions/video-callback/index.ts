@@ -6,23 +6,32 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+// Message d'erreur pour les rejets de politique de contenu Google
+const GOOGLE_POLICY_ERROR = `Désolé, votre image a été rejetée par les filtres de sécurité. Nous utilisons les services de Google (Vertex AI) pour générer les vidéos, qui appliquent une politique stricte concernant les images pouvant contenir de la nudité, du contenu potentiellement violent, ou d'autres éléments sensibles. Veuillez essayer avec une autre image. En savoir plus : https://docs.cloud.google.com/vertex-ai/generative-ai/docs/video/responsible-ai-and-usage-guidelines`;
+
 /**
  * Traduit les erreurs Kie.ai en messages utilisateur explicites
  * Priorité : code HTTP > détection par mot-clé
  */
 function translateKieError(code: number, msg: string): string {
+  const lowerMsg = (msg || '').toLowerCase();
+  
   // Priorité 1: Codes d'erreur HTTP spécifiques
   if (code === 422) {
     // Validation Error - souvent lié au rejet par le modèle Google
-    return "Désolé, votre image a été rejetée par les filtres de sécurité de Google. Google applique une politique stricte concernant les images pouvant contenir de la nudité, du contenu potentiellement violent, ou d'autres éléments sensibles. Veuillez essayer avec une autre image.";
+    return GOOGLE_POLICY_ERROR;
   }
 
   // Priorité 2: Code 400 - détection par mot-clé
   if (code === 400) {
-    const lowerMsg = (msg || '').toLowerCase();
-    
-    if (lowerMsg.includes('unsafe image') || lowerMsg.includes('safety') || lowerMsg.includes('moderation')) {
-      return "Désolé, votre image a été rejetée par les filtres de sécurité de Google. Google applique une politique stricte concernant les images pouvant contenir de la nudité, du contenu potentiellement violent, ou d'autres éléments sensibles. Veuillez essayer avec une autre image.";
+    if (
+      lowerMsg.includes('unsafe image') || 
+      lowerMsg.includes('safety') || 
+      lowerMsg.includes('moderation') ||
+      lowerMsg.includes('content policy') ||
+      lowerMsg.includes('violating content')
+    ) {
+      return GOOGLE_POLICY_ERROR;
     }
     
     if (lowerMsg.includes('failed to fetch') || lowerMsg.includes('download') || lowerMsg.includes('access')) {
@@ -30,8 +39,16 @@ function translateKieError(code: number, msg: string): string {
     }
   }
 
-  // Priorité 3: Autres codes d'erreur avec détection par mot-clé
-  const lowerMsg = (msg || '').toLowerCase();
+  // Priorité 3: Autres codes d'erreur avec détection par mot-clé générale
+  if (
+    lowerMsg.includes('content policy') ||
+    lowerMsg.includes('violating content') ||
+    lowerMsg.includes('unsafe image') ||
+    lowerMsg.includes('safety') ||
+    lowerMsg.includes('moderation')
+  ) {
+    return GOOGLE_POLICY_ERROR;
+  }
   
   if (lowerMsg.includes('timeout') || lowerMsg.includes('timed out')) {
     return "La génération a pris trop de temps et a été interrompue. Veuillez réessayer.";
