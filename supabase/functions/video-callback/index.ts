@@ -7,6 +7,45 @@ const corsHeaders = {
 };
 
 /**
+ * Traduit les erreurs Kie.ai en messages utilisateur explicites
+ * Priorité : code HTTP > détection par mot-clé
+ */
+function translateKieError(code: number, msg: string): string {
+  // Priorité 1: Codes d'erreur HTTP spécifiques
+  if (code === 422) {
+    // Validation Error - souvent lié au rejet par le modèle Google
+    return "Désolé, votre image a été rejetée par les filtres de sécurité de Google. Google applique une politique stricte concernant les images pouvant contenir de la nudité, du contenu potentiellement violent, ou d'autres éléments sensibles. Veuillez essayer avec une autre image.";
+  }
+
+  // Priorité 2: Code 400 - détection par mot-clé
+  if (code === 400) {
+    const lowerMsg = (msg || '').toLowerCase();
+    
+    if (lowerMsg.includes('unsafe image') || lowerMsg.includes('safety') || lowerMsg.includes('moderation')) {
+      return "Désolé, votre image a été rejetée par les filtres de sécurité de Google. Google applique une politique stricte concernant les images pouvant contenir de la nudité, du contenu potentiellement violent, ou d'autres éléments sensibles. Veuillez essayer avec une autre image.";
+    }
+    
+    if (lowerMsg.includes('failed to fetch') || lowerMsg.includes('download') || lowerMsg.includes('access')) {
+      return "Erreur technique : impossible d'accéder à votre image. Veuillez réessayer ou uploader une nouvelle image.";
+    }
+  }
+
+  // Priorité 3: Autres codes d'erreur avec détection par mot-clé
+  const lowerMsg = (msg || '').toLowerCase();
+  
+  if (lowerMsg.includes('timeout') || lowerMsg.includes('timed out')) {
+    return "La génération a pris trop de temps et a été interrompue. Veuillez réessayer.";
+  }
+  
+  if (lowerMsg.includes('quota') || lowerMsg.includes('limit')) {
+    return "Limite de génération atteinte. Veuillez réessayer plus tard.";
+  }
+
+  // Message générique avec le message original pour debug
+  return `Erreur lors de la génération (code ${code}). ${msg ? `Détails : ${msg}` : 'Veuillez réessayer.'}`;
+}
+
+/**
  * Déclenche la fusion des segments via fal.ai avec webhook callback
  * Retourne immédiatement - le résultat sera reçu par fal-merge-callback
  */
@@ -356,13 +395,15 @@ serve(async (req) => {
       console.log('Video processing completed for:', video.id);
 
     } else {
-      // Échec
-      console.error('Kie.ai generation failed:', code, msg);
+      // Échec - utiliser la traduction d'erreur
+      const userMessage = translateKieError(code, msg);
+      console.error('Kie.ai generation failed:', code, msg, '-> User message:', userMessage);
+      
       await supabase
         .from('videos')
         .update({
           status: 'failed',
-          error_message: msg || `Erreur code ${code}`,
+          error_message: userMessage,
         })
         .eq('kie_task_id', taskId);
     }
