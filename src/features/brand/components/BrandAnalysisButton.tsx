@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button";
-import { Loader2, Sparkles } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { Loader2, RotateCcw } from "lucide-react";
 
 interface BrandAnalysisButtonProps {
   websiteUrl?: string;
@@ -9,11 +10,7 @@ interface BrandAnalysisButtonProps {
 }
 
 /**
- * Bouton pour déclencher l'analyse de marque via IA
- * @param websiteUrl - URL du site web à analyser
- * @param instagramUrl - URL Instagram à analyser
- * @param onAnalyze - Callback appelé lors du clic
- * @param isAnalyzing - Indique si l'analyse est en cours
+ * Bouton icône pour déclencher l'analyse de marque via IA
  */
 export const BrandAnalysisButton = ({ 
   websiteUrl, 
@@ -24,25 +21,26 @@ export const BrandAnalysisButton = ({
   const hasUrl = !!websiteUrl || !!instagramUrl;
   
   return (
-    <Button
-      type="button"
-      variant="ghost"
-      size="sm"
-      onClick={onAnalyze}
-      disabled={!hasUrl || isAnalyzing}
-      className="text-muted-foreground hover:text-foreground text-xs"
-    >
-      {isAnalyzing ? (
-        <>
-          <Loader2 className="mr-1.5 h-3 w-3 animate-spin" />
-          Analyse en cours...
-        </>
-      ) : (
-        <>
-          <Sparkles className="mr-1.5 h-3 w-3" />
-          Recommencer l'analyse
-        </>
-      )}
-    </Button>
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          onClick={onAnalyze}
+          disabled={!hasUrl || isAnalyzing}
+          className="h-6 w-6 text-muted-foreground hover:text-foreground"
+        >
+          {isAnalyzing ? (
+            <Loader2 className="h-3.5 w-3.5 animate-spin" />
+          ) : (
+            <RotateCcw className="h-3.5 w-3.5" />
+          )}
+        </Button>
+      </TooltipTrigger>
+      <TooltipContent>
+        <p>{isAnalyzing ? "Analyse en cours..." : "Recommencer l'analyse"}</p>
+      </TooltipContent>
+    </Tooltip>
   );
 };

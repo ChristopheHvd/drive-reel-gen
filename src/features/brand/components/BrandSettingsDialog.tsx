@@ -95,7 +95,15 @@ export const BrandSettingsDialog = ({ trigger, open: controlledOpen, onOpenChang
   const dialogContent = (
     <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
       <DialogHeader>
-        <DialogTitle>Paramètres de la marque</DialogTitle>
+        <div className="flex items-center gap-2">
+          <DialogTitle>Paramètres de la marque</DialogTitle>
+          <BrandAnalysisButton
+            websiteUrl={formData.websiteUrl}
+            instagramUrl={formData.instagramUrl}
+            onAnalyze={handleAnalyze}
+            isAnalyzing={isAnalyzing}
+          />
+        </div>
         <DialogDescription>
           Configurez les informations de votre marque pour personnaliser vos vidéos
         </DialogDescription>
@@ -106,21 +114,13 @@ export const BrandSettingsDialog = ({ trigger, open: controlledOpen, onOpenChang
           <Loader2 className="h-6 w-6 animate-spin text-primary" />
         </div>
       ) : (
-        <>
-          <BrandAnalysisButton
-            websiteUrl={formData.websiteUrl}
-            instagramUrl={formData.instagramUrl}
-            onAnalyze={handleAnalyze}
-            isAnalyzing={isAnalyzing}
-          />
-          
-          <BrandForm defaultValues={formData} onSubmit={handleSubmit}>
-            <div className="space-y-4">
-              {/* Section Logo */}
-              <BrandLogoSection
-                logoUrl={profile?.visual_identity?.logo}
-                onLogoChange={handleLogoChange}
-              />
+        <BrandForm defaultValues={formData} onSubmit={handleSubmit}>
+          <div className="space-y-4">
+            {/* Section Logo */}
+            <BrandLogoSection
+              logoUrl={profile?.visual_identity?.logo}
+              onLogoChange={handleLogoChange}
+            />
 
             <DialogFooter>
               <Button
@@ -138,7 +138,6 @@ export const BrandSettingsDialog = ({ trigger, open: controlledOpen, onOpenChang
             </DialogFooter>
           </div>
         </BrandForm>
-        </>
       )}
     </DialogContent>
   );
