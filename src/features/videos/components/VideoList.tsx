@@ -5,6 +5,7 @@ import { Image } from "@/features/images/types";
 import { VideoPlaceholder } from "./VideoPlaceholder";
 import { VideoLoadingPlaceholder } from "./VideoLoadingPlaceholder";
 import { VideoPlayer } from "./VideoPlayer";
+import { VideoErrorCard } from "./VideoErrorCard";
 
 interface VideoListProps {
   imageId?: string;
@@ -49,39 +50,16 @@ export const VideoList = ({
     );
   }
 
-  // Vérifier si une vidéo est en cours de génération
+  // Filtrer les vidéos par statut
   const pendingVideo = videos.find(v => v.status === 'pending' || v.status === 'processing' || v.status === 'merging');
   const completedVideos = videos
     .filter(v => v.status === 'completed')
     .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+  const failedVideos = videos
+    .filter(v => v.status === 'failed')
+    .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
   
-  // Si vidéo en cours de génération → Afficher le placeholder dans la grille avec les autres
-  if (pendingVideo) {
-    return (
-      <div className="grid grid-cols-2 gap-3">
-        <VideoLoadingPlaceholder 
-          image={selectedImage}
-          video={pendingVideo}
-        />
-        {/* Afficher les vidéos déjà terminées dans la même grille */}
-        {completedVideos.map(video => (
-          <div 
-            key={video.id}
-            onClick={() => onSelectVideo?.(video)}
-            className="cursor-pointer"
-          >
-            <VideoPlayer 
-              video={video}
-              onDelete={onDeleteVideo}
-              onRegenerate={onRegenerateVideo}
-            />
-          </div>
-        ))}
-      </div>
-    );
-  }
-  
-  // Cas aucune vidéo → Placeholder
+  // Cas aucune vidéo → Placeholder avec bouton de génération
   if (videos.length === 0) {
     return (
       <VideoPlaceholder 
@@ -91,9 +69,18 @@ export const VideoList = ({
     );
   }
 
-  // Afficher les vidéos en grille (plus récente en premier)
+  // Afficher les vidéos en grille (pending + completed + failed)
   return (
     <div className="grid grid-cols-2 gap-3">
+      {/* Vidéo en cours de génération */}
+      {pendingVideo && (
+        <VideoLoadingPlaceholder 
+          image={selectedImage}
+          video={pendingVideo}
+        />
+      )}
+      
+      {/* Vidéos terminées */}
       {completedVideos.map(video => (
         <div 
           key={video.id}
@@ -106,6 +93,17 @@ export const VideoList = ({
             onRegenerate={onRegenerateVideo}
           />
         </div>
+      ))}
+      
+      {/* Vidéos en erreur */}
+      {failedVideos.map(video => (
+        <VideoErrorCard 
+          key={video.id}
+          video={video}
+          image={selectedImage}
+          onDelete={onDeleteVideo}
+          onRegenerate={onRegenerateVideo}
+        />
       ))}
     </div>
   );
