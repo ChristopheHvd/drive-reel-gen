@@ -11,7 +11,7 @@ import { supabase } from "@/integrations/supabase/client";
 import logo from "@/assets/quickquick-logo.png";
 import { useSubscription, QuotaExceededDialog } from "@/features/subscription";
 import { InviteModal, useCurrentTeam } from "@/features/team";
-import { BrandSettingsDialog, BrandAnalysisIndicator } from "@/features/brand";
+import { BrandSettingsDialog, BrandAnalysisIndicator, OnboardingModal, useBrandProfile } from "@/features/brand";
 
 const Dashboard = () => {
   const { images, loading, deleteImage, fetchImages } = useImages();
@@ -20,12 +20,22 @@ const Dashboard = () => {
   const [showUploader, setShowUploader] = useState(false);
   const [showQuotaDialog, setShowQuotaDialog] = useState(false);
   const [showInviteModal, setShowInviteModal] = useState(false);
+  const [showOnboardingModal, setShowOnboardingModal] = useState(false);
+  const [onboardingCompleted, setOnboardingCompleted] = useState(false);
   const [generatingVideo, setGeneratingVideo] = useState(false);
   const { videos, loading: videosLoading, refetchVideos } = useVideos(selectedImage?.id);
   const { toast } = useToast();
   const { subscription, videosRemaining, isQuotaExceeded, nextResetDate, loading: subscriptionLoading } = useSubscription();
   const { teamId } = useCurrentTeam();
   const { signOut } = useAuth();
+  const { profile, loading: profileLoading } = useBrandProfile();
+
+  // Afficher la modale d'onboarding si pas de profil de marque
+  useEffect(() => {
+    if (!profileLoading && !profile && !onboardingCompleted) {
+      setShowOnboardingModal(true);
+    }
+  }, [profileLoading, profile, onboardingCompleted]);
 
   // Sélectionner automatiquement la première image au chargement
   useEffect(() => {
@@ -442,6 +452,12 @@ const Dashboard = () => {
           teamId={teamId}
         />
       )}
+
+      <OnboardingModal
+        open={showOnboardingModal}
+        onOpenChange={setShowOnboardingModal}
+        onComplete={() => setOnboardingCompleted(true)}
+      />
     </div>
   );
 };

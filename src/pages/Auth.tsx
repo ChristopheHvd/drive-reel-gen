@@ -24,12 +24,9 @@ const Auth = () => {
       // Si l'utilisateur vient d'un lien d'invitation, le rediriger vers la page d'invitation
       if (inviteToken) {
         navigate(`/invite?token=${inviteToken}`);
-      } else if (isNewSignup.current) {
-        // Nouvel utilisateur après signup → onboarding
-        isNewSignup.current = false;
-        navigate("/onboarding");
       } else {
-        // Utilisateur existant (login) → dashboard
+        // Tous les utilisateurs vont au dashboard
+        // La modale d'onboarding s'affiche automatiquement pour les nouveaux
         navigate("/app");
       }
     }
