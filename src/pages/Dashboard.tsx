@@ -37,6 +37,13 @@ const Dashboard = () => {
     }
   }, [profileLoading, profile, onboardingCompleted]);
 
+  // Fermer la modale automatiquement quand le profil existe
+  useEffect(() => {
+    if (!profileLoading && profile && showOnboardingModal) {
+      setShowOnboardingModal(false);
+    }
+  }, [profileLoading, profile, showOnboardingModal]);
+
   // Sélectionner automatiquement la première image au chargement
   useEffect(() => {
     if (images.length > 0 && !selectedImage) {

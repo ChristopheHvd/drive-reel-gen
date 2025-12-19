@@ -139,6 +139,25 @@ serve(async (req) => {
 
     console.log('User authenticated:', user.id);
 
+    // Get user's team_id first to update status
+    const { data: teamMember } = await supabase
+      .from('team_members')
+      .select('team_id')
+      .eq('user_id', user.id)
+      .single();
+
+    if (!teamMember) {
+      throw new Error('User has no team');
+    }
+
+    // Update analysis_status to 'pending' at the start (transition from 'todo')
+    await supabase
+      .from('brand_profiles')
+      .update({ analysis_status: 'pending' })
+      .eq('team_id', teamMember.team_id);
+    
+    console.log('Updated analysis_status to pending');
+
     // Scrape website with Firecrawl for branding info (logo, colors)
     let firecrawlData: { logo?: string; colors?: string[]; markdown?: string } = {};
     if (validWebsiteUrl) {
@@ -250,18 +269,7 @@ Réponds UNIQUEMENT avec le JSON, sans texte additionnel.`;
       };
     }
 
-    // Get user's team_id
-    const { data: teamMember } = await supabase
-      .from('team_members')
-      .select('team_id')
-      .eq('user_id', user.id)
-      .single();
-
-    if (!teamMember) {
-      throw new Error('User has no team');
-    }
-
-    // Get or create brand profile
+    // Get or create brand profile (teamMember already fetched at the start)
     const { data: existingProfile } = await supabase
       .from('brand_profiles')
       .select('id')
