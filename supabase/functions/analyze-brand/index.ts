@@ -279,6 +279,7 @@ Réponds UNIQUEMENT avec le JSON, sans texte additionnel.`;
       visual_identity: brandData.visual_identity,
       tone_of_voice: brandData.tone_of_voice,
       analyzed_at: new Date().toISOString(),
+      analysis_status: 'completed',
     };
 
     if (existingProfile) {
@@ -304,7 +305,7 @@ Réponds UNIQUEMENT avec le JSON, sans texte additionnel.`;
       }
     }
 
-    console.log('Brand profile saved successfully');
+    console.log('Brand profile saved successfully with status: completed');
 
     return new Response(
       JSON.stringify({ 
@@ -318,6 +319,39 @@ Réponds UNIQUEMENT avec le JSON, sans texte additionnel.`;
 
   } catch (error) {
     console.error('Error in analyze-brand function:', error);
+    
+    // Try to update the analysis_status to 'failed' if possible
+    try {
+      const authHeader = req.headers.get('authorization');
+      if (authHeader) {
+        const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+        const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+        const supabaseClient = createClient(supabaseUrl, supabaseKey);
+        
+        const token = authHeader.replace('Bearer ', '');
+        const { data: { user } } = await supabaseClient.auth.getUser(token);
+        
+        if (user) {
+          const { data: teamMember } = await supabaseClient
+            .from('team_members')
+            .select('team_id')
+            .eq('user_id', user.id)
+            .single();
+          
+          if (teamMember) {
+            await supabaseClient
+              .from('brand_profiles')
+              .update({ analysis_status: 'failed' })
+              .eq('team_id', teamMember.team_id);
+            
+            console.log('Updated analysis_status to failed');
+          }
+        }
+      }
+    } catch (updateError) {
+      console.error('Failed to update analysis_status to failed:', updateError);
+    }
+    
     return new Response(
       JSON.stringify({ 
         error: error instanceof Error ? error.message : 'Unknown error' 

@@ -1,5 +1,5 @@
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useAuth } from "@/features/auth";
 import { toast } from "sonner";
 import logo from "@/assets/quickquick-logo.png";
@@ -15,13 +15,21 @@ const Auth = () => {
   const invitedEmail = searchParams.get('email');
   // Si un email d'invitation est présent, ouvrir l'onglet inscription par défaut
   const [activeTab, setActiveTab] = useState<string>(invitedEmail ? "signup" : "login");
+  
+  // Track if current session is from a fresh signup (not login)
+  const isNewSignup = useRef(false);
 
   useEffect(() => {
     if (user && !loading) {
       // Si l'utilisateur vient d'un lien d'invitation, le rediriger vers la page d'invitation
       if (inviteToken) {
         navigate(`/invite?token=${inviteToken}`);
+      } else if (isNewSignup.current) {
+        // Nouvel utilisateur après signup → onboarding
+        isNewSignup.current = false;
+        navigate("/onboarding");
       } else {
+        // Utilisateur existant (login) → dashboard
         navigate("/app");
       }
     }
@@ -38,6 +46,7 @@ const Auth = () => {
   };
 
   const handleEmailLogin = async (email: string, password: string) => {
+    isNewSignup.current = false;
     const result = await signInWithEmail(email, password);
     if (!result.error) {
       // La redirection est gérée par le useEffect
@@ -46,10 +55,11 @@ const Auth = () => {
   };
 
   const handleSignUp = async (email: string, password: string, fullName: string) => {
+    isNewSignup.current = true;
     const result = await signUp(email, password, fullName);
     if (!result.error) {
       toast.success("Compte créé avec succès !");
-      // La redirection est gérée par le useEffect
+      // La redirection est gérée par le useEffect → /onboarding
     }
     return result;
   };
