@@ -230,7 +230,7 @@ export const OnboardingModal = ({ open, onOpenChange, onComplete }: OnboardingMo
               onClick={handleSkip}
               disabled={isSubmitting}
             >
-              Passer cette étape
+              Le faire plus tard
             </Button>
             <Button 
               type="submit" 
