@@ -137,14 +137,12 @@ const Landing = () => {
               <span className="font-semibold text-foreground">QuickQuick</span>
             </div>
             <div className="flex items-center gap-6 text-sm">
-              <a 
-                href="https://files.cloudron.alpes-ia.fr/AlpesIA/quickquick_terms_of_service.pdf"
-                target="_blank"
-                rel="noopener noreferrer"
+              <Link 
+                to="/terms"
                 className="text-muted-foreground hover:text-foreground transition-colors"
               >
                 Conditions d'utilisation
-              </a>
+              </Link>
               <Link 
                 to="/privacy"
                 className="text-muted-foreground hover:text-foreground transition-colors"
