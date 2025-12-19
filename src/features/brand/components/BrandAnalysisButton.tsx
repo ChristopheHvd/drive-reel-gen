@@ -39,7 +39,7 @@ export const BrandAnalysisButton = ({
       ) : (
         <>
           <Sparkles className="mr-2 h-4 w-4" />
-          Analyser avec IA
+          Recommencer l'analyse
         </>
       )}
     </Button>
