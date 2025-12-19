@@ -408,7 +408,7 @@ const Dashboard = () => {
                 selectedImage={selectedImage || undefined}
                 videos={videos}
                 loading={videosLoading}
-                onGenerateVideo={scrollToGeneration}
+                onGenerateVideo={() => selectedImage && handleGenerateVideoFromImage(selectedImage.id)}
                 onDeleteVideo={handleDeleteVideo}
                 onSelectVideo={setSelectedVideo}
                 onRegenerateVideo={handleRegenerateVideo}
