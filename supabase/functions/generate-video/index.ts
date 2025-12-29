@@ -77,11 +77,11 @@ serve(async (req) => {
 
     const teamId = teamMember.team_id;
 
-    // Vérifier le quota
+    // Vérifier le quota de l'équipe (pas de l'utilisateur individuel)
     const { data: subscription, error: subError } = await supabase
       .from("user_subscriptions")
       .select("plan_type, video_limit, videos_generated_this_month")
-      .eq("user_id", user.id)
+      .eq("team_id", teamId)
       .single();
 
     if (subError || !subscription) {
@@ -254,11 +254,11 @@ serve(async (req) => {
       });
     }
 
-    // Incrémenter quota selon le nombre de segments
+    // Incrémenter quota de l'équipe selon le nombre de segments
     const { error: quotaError } = await supabase
       .from("user_subscriptions")
       .update({ videos_generated_this_month: subscription.videos_generated_this_month + videoCredits })
-      .eq("user_id", user.id);
+      .eq("team_id", teamId);
 
     if (quotaError) {
       console.error("Quota update error:", quotaError);
