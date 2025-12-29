@@ -8,6 +8,15 @@ describe('Video credits calculation', () => {
   const calculateVideoCredits = (targetDurationSeconds: number) => 
     Math.ceil(targetDurationSeconds / 8);
 
+  const canGenerateWithQuota = (
+    targetDurationSeconds: number,
+    videosGeneratedThisMonth: number,
+    videoLimit: number
+  ) => {
+    const creditsNeeded = calculateVideoCredits(targetDurationSeconds);
+    return videosGeneratedThisMonth + creditsNeeded <= videoLimit;
+  };
+
   it('should cost 1 credit for 8s video', () => {
     expect(calculateVideoCredits(8)).toBe(1);
   });
@@ -30,5 +39,13 @@ describe('Video credits calculation', () => {
 
   it('should cost 3 credits for 17s video (rounding up)', () => {
     expect(calculateVideoCredits(17)).toBe(3);
+  });
+
+  it('should allow 24s video (3 credits) when 3 credits remain', () => {
+    expect(canGenerateWithQuota(24, 3, 6)).toBe(true);
+  });
+
+  it('should block 24s video (3 credits) when only 2 credits remain', () => {
+    expect(canGenerateWithQuota(24, 4, 6)).toBe(false);
   });
 });

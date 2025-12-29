@@ -62,12 +62,49 @@ describe('Team Subscription Sharing - Integration Tests', () => {
     it('should share video quota across all team members', () => {
       // Tous les membres partagent le même compteur videos_generated_this_month
       // via la subscription de l'équipe
-      expect(true).toBe(true);
+      const teamSubscription = {
+        video_limit: 6,
+        videos_generated_this_month: 0,
+      };
+
+      const calculateCredits = (duration: number) => Math.ceil(duration / 8);
+
+      // Owner génère une vidéo 8s (1 crédit)
+      const ownerCredits = calculateCredits(8);
+      const afterOwner = {
+        ...teamSubscription,
+        videos_generated_this_month: teamSubscription.videos_generated_this_month + ownerCredits,
+      };
+
+      // Membre invité génère ensuite une vidéo 16s (2 crédits)
+      const memberCredits = calculateCredits(16);
+      const afterMember = {
+        ...afterOwner,
+        videos_generated_this_month: afterOwner.videos_generated_this_month + memberCredits,
+      };
+
+      expect(afterOwner.videos_generated_this_month).toBe(1);
+      expect(afterMember.videos_generated_this_month).toBe(3);
+      expect(afterMember.videos_generated_this_month).toBeLessThanOrEqual(teamSubscription.video_limit);
     });
 
     it('should decrement team quota when any member generates video', () => {
       // Quand un membre génère une vidéo, c'est le quota de l'équipe qui diminue
-      expect(true).toBe(true);
+      const calculateCredits = (duration: number) => Math.ceil(duration / 8);
+
+      const teamSubscription = {
+        video_limit: 6,
+        videos_generated_this_month: 2,
+      };
+
+      // Membre invité génère une vidéo 8s (1 crédit)
+      const newCredits = calculateCredits(8);
+      const updatedSubscription = {
+        ...teamSubscription,
+        videos_generated_this_month: teamSubscription.videos_generated_this_month + newCredits,
+      };
+
+      expect(updatedSubscription.videos_generated_this_month).toBe(3);
     });
   });
 

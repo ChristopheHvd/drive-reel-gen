@@ -72,9 +72,26 @@ const Dashboard = () => {
     }
 
     // Vérification instantanée du quota
-    if (isQuotaExceeded) {
-      setShowQuotaDialog(true);
-      return;
+    if (subscription) {
+      const requiredCredits = Math.ceil(config.durationSeconds / 8);
+
+      // Si la vidéo demandée consomme plus de crédits que le quota restant,
+      // on bloque AVANT d'appeler l'Edge Function pour éviter une erreur tardive.
+      if (requiredCredits > videosRemaining) {
+        setShowQuotaDialog(true);
+        toast({
+          title: "Quota dépassé",
+          description: `Cette vidéo consommerait ${requiredCredits} crédits alors qu'il ne vous en reste que ${videosRemaining}.`,
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Garde-fou global si le quota est déjà dépassé
+      if (isQuotaExceeded) {
+        setShowQuotaDialog(true);
+        return;
+      }
     }
 
     setGeneratingVideo(true);
