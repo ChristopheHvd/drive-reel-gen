@@ -105,66 +105,120 @@ serve(async (req) => {
 
     switch (promptType) {
       case 'situation':
-        systemPrompt = `Tu es un expert en génération vidéo IA. Analyse l'image et génère un prompt de 200-250 caractères en FRANÇAIS pour créer une vidéo promotionnelle.
+        systemPrompt = `Tu es un expert en génération vidéo IA pour Instagram Reels. 
 
-Le prompt doit UNIQUEMENT contenir des instructions techniques visuelles :
-- Mouvements de caméra (zoom lent, travelling, rotation, plan rapproché)
-- Actions dans la scène (main qui prend le produit, utilisation naturelle, interaction)
-- Éclairage (lumière naturelle, douce, chaude, dramatique)
-- Ambiance et rythme (mouvement fluide, transition douce, dynamique)
+PROCESSUS OBLIGATOIRE :
+1. DÉCRIS d'abord ce que tu vois : personnage (genre, posture, tenue, expression), objets, décor, ambiance, couleurs
+2. INTÈGRE ces éléments dans un prompt vidéo ULTRA-DYNAMIQUE
 
-IMPORTANT : 
+STYLE INSTAGRAM REELS :
+- Mouvements de caméra RAPIDES (zoom punch, travelling rapide, rotation dynamique, dolly in brutal)
+- Transitions BRUTALES et énergiques (cuts secs, jump cuts)
+- Enchaînements de plans courts (2-3 secondes max par angle)
+- Rythme soutenu et captivant dès la première seconde
+
+Le prompt doit faire 200-250 caractères en FRANÇAIS et contenir :
+- Description du sujet principal visible dans l'image
+- Mouvements de caméra dynamiques et rapides
+- Actions énergiques et engageantes
+- Ambiance punchy
+
+RÈGLES STRICTES :
+- TOUJOURS terminer par "Sans son."
 - PAS de hashtags ni de mots marketing
-- UNIQUEMENT des instructions de mouvement et visuelles
+- Le prompt DOIT mentionner les éléments clés visibles dans l'image (personnage, objet, contexte)
 - Répondre en FRANÇAIS
 
-Exemple : "Travelling avant lent vers le produit sur une table en bois. Une main le saisit délicatement et le fait tourner. Lumière naturelle chaude venant de la gauche. Mouvement fluide et élégant."`;
-        userPrompt = `Analyse cette image et génère un prompt technique pour une vidéo en situation d'utilisation. ${brandContext}`;
+Exemple avec une image d'une femme tenant un sac :
+"Femme stylée avec sac à main, zoom rapide sur son sourire puis travelling arrière dynamique. Cut brutal vers gros plan du sac, rotation 180°. Transitions punch énergiques, lumière chaude. Sans son."`;
+        userPrompt = `DÉCRIS ce que tu vois dans cette image (personnage, objets, contexte, couleurs), puis génère un prompt ULTRA-DYNAMIQUE style Instagram Reels pour une vidéo en situation d'utilisation.
+
+Contexte de marque : ${brandContext || 'Non spécifié'}`;
         break;
       case 'product':
-        systemPrompt = `Tu es un expert en génération vidéo IA. Analyse l'image et génère un prompt de 200-250 caractères en FRANÇAIS pour une vidéo de mise en avant produit premium.
+        systemPrompt = `Tu es un expert en génération vidéo IA pour Instagram Reels.
 
-Le prompt doit UNIQUEMENT contenir des instructions techniques visuelles :
-- Mouvements de caméra (rotation 360°, zoom sur détails, plan orbital)
-- Mise en valeur (reflets, textures, matériaux, finitions)
-- Éclairage studio (éclairage trois points, contre-jour, softbox)
-- Style cinématographique (élégant, professionnel, premium)
+PROCESSUS OBLIGATOIRE :
+1. DÉCRIS d'abord le produit visible : forme, couleur, matériaux, détails, textures, contexte
+2. INTÈGRE ces éléments dans un prompt vidéo ULTRA-DYNAMIQUE
 
-IMPORTANT : 
+STYLE INSTAGRAM REELS - PRODUIT :
+- Mouvements RAPIDES (zoom burst sur les détails, rotation accélérée 360°, dolly punch)
+- Transitions BRUTALES entre les angles (cuts secs, whip pan)
+- Gros plans percutants sur textures et finitions
+- Rythme soutenu avec cuts rapides toutes les 2 secondes
+
+Le prompt doit faire 200-250 caractères en FRANÇAIS et contenir :
+- Description précise du produit visible dans l'image
+- Mouvements de caméra dynamiques premium
+- Mise en valeur énergique des détails
+- Ambiance haut de gamme mais punchy
+
+RÈGLES STRICTES :
+- TOUJOURS terminer par "Sans son."
 - PAS de hashtags ni de mots marketing
-- UNIQUEMENT des instructions de mouvement et visuelles
+- Le prompt DOIT décrire le produit réel visible (couleur, forme, matière)
 - Répondre en FRANÇAIS
 
-Exemple : "Rotation 360° lente du produit sur surface noire réfléchissante. Éclairage studio avec contre-jour doux sur les contours. Mouvement cinématique fluide, ambiance premium."`;
-        userPrompt = `Analyse cette image et génère un prompt technique pour une mise en avant produit professionnelle. ${brandContext}`;
+Exemple avec une image de montre :
+"Montre argentée sur surface noire, rotation 360° rapide. Cut brutal zoom sur le cadran, reflets dynamiques. Transition punch vers bracelet, travelling accéléré. Style premium énergique. Sans son."`;
+        userPrompt = `DÉCRIS ce produit visible dans l'image (forme, couleurs, matériaux, détails), puis génère un prompt ULTRA-DYNAMIQUE style Instagram pour une mise en avant premium.
+
+Contexte de marque : ${brandContext || 'Non spécifié'}`;
         break;
       case 'testimonial':
-        systemPrompt = `Tu es un expert en génération vidéo IA. Analyse l'image et génère un prompt de 200-250 caractères en FRANÇAIS pour une vidéo dynamique style témoignage/unboxing.
+        systemPrompt = `Tu es un expert en génération vidéo IA pour Instagram Reels.
 
-Le prompt doit UNIQUEMENT contenir des instructions techniques visuelles :
-- Mouvements de caméra (caméra portée, zoom rapide, transitions)
-- Actions humaines (mains qui déballent, réaction, présentation)
-- Éclairage naturel (lumière du jour, ambiance authentique, lifestyle)
-- Dynamisme (rythme rapide, énergie, transitions fluides)
+PROCESSUS OBLIGATOIRE :
+1. DÉCRIS d'abord ce que tu vois : personnage (genre, expression, posture), objet tenu, contexte, ambiance
+2. INTÈGRE ces éléments dans un prompt vidéo ULTRA-DYNAMIQUE
 
-IMPORTANT : 
+STYLE INSTAGRAM REELS - UNBOXING/TÉMOIGNAGE :
+- Mouvements RAPIDES et spontanés (caméra portée énergique, shake effect)
+- Transitions BRUTALES entre réaction et produit (jump cuts, whip pan)
+- Zooms punch sur les émotions et le produit
+- Rythme ultra-dynamique façon créateur de contenu TikTok/Reels
+
+Le prompt doit faire 200-250 caractères en FRANÇAIS et contenir :
+- Description du personnage et de l'objet visible
+- Actions rapides et authentiques
+- Transitions énergiques
+- Ambiance lifestyle dynamique
+
+RÈGLES STRICTES :
+- TOUJOURS terminer par "Sans son."
 - PAS de hashtags ni de mots marketing
-- UNIQUEMENT des instructions de mouvement et visuelles
+- Le prompt DOIT décrire ce qui est réellement visible (personnage, objet, expression)
 - Répondre en FRANÇAIS
 
-Exemple : "Mains qui déballent le produit avec enthousiasme. Zoom rapide sur la révélation du produit. Lumière naturelle du jour, ambiance lifestyle authentique. Énergie dynamique avec transitions fluides."`;
-        userPrompt = `Analyse cette image et génère un prompt technique pour une vidéo témoignage/unboxing dynamique. ${brandContext}`;
+Exemple avec une image de personne avec un colis :
+"Mains qui déchirent l'emballage, cut brutal vers visage surpris. Zoom punch sur le produit révélé, rotation rapide. Transitions énergiques, ambiance lifestyle authentique. Sans son."`;
+        userPrompt = `DÉCRIS ce que tu vois dans cette image (personnage, expression, objet, contexte), puis génère un prompt ULTRA-DYNAMIQUE style Instagram pour une vidéo témoignage/unboxing.
+
+Contexte de marque : ${brandContext || 'Non spécifié'}`;
         break;
       default:
-        systemPrompt = `Tu es un expert en génération vidéo IA. Analyse l'image et génère un prompt de 200-250 caractères en FRANÇAIS pour créer une vidéo Instagram Reels dynamique.
+        systemPrompt = `Tu es un expert en génération vidéo IA pour Instagram Reels.
 
-Le prompt doit contenir des instructions visuelles claires : mouvements de caméra, actions, éclairage, ambiance.
+PROCESSUS OBLIGATOIRE :
+1. DÉCRIS d'abord ce que tu vois dans l'image (personnage, objets, contexte, couleurs)
+2. INTÈGRE ces éléments dans un prompt vidéo ULTRA-DYNAMIQUE
 
-IMPORTANT : 
-- PAS de hashtags ni de mots marketing
-- UNIQUEMENT des instructions techniques visuelles
+STYLE INSTAGRAM :
+- Mouvements de caméra RAPIDES (zoom punch, cuts brutaux, travelling dynamique)
+- Transitions énergiques et percutantes
+- Rythme soutenu dès la première seconde
+
+Le prompt doit faire 200-250 caractères en FRANÇAIS.
+
+RÈGLES :
+- TOUJOURS terminer par "Sans son."
+- PAS de hashtags
+- Le prompt DOIT décrire ce qui est visible dans l'image
 - Répondre en FRANÇAIS`;
-        userPrompt = `Analyse cette image et génère un prompt technique pour une vidéo Instagram Reels. ${brandContext}`;
+        userPrompt = `DÉCRIS ce que tu vois dans cette image, puis génère un prompt ULTRA-DYNAMIQUE pour Instagram Reels.
+
+Contexte de marque : ${brandContext || 'Non spécifié'}`;
     }
 
     console.log('Calling Lovable AI for prompt generation...', { promptType });
@@ -207,7 +261,7 @@ IMPORTANT :
       // Fallback sur prompt par défaut
       return new Response(
         JSON.stringify({ 
-          prompt: "Génère une vidéo sympa, très dynamique, respectant les codes d'Instagram",
+          prompt: "Vidéo ultra-dynamique style Instagram Reels. Zoom rapide, cuts brutaux, transitions punch. Mouvements énergiques et captivants. Sans son.",
           fallback: true
         }),
         { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -221,7 +275,7 @@ IMPORTANT :
       console.error('No prompt in AI response');
       return new Response(
         JSON.stringify({ 
-          prompt: "Génère une vidéo sympa, très dynamique, respectant les codes d'Instagram",
+          prompt: "Vidéo ultra-dynamique style Instagram Reels. Zoom rapide, cuts brutaux, transitions punch. Mouvements énergiques et captivants. Sans son.",
           fallback: true
         }),
         { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -241,7 +295,7 @@ IMPORTANT :
     // Fallback sur prompt par défaut en cas d'erreur
     return new Response(
       JSON.stringify({ 
-        prompt: "Génère une vidéo sympa, très dynamique, respectant les codes d'Instagram",
+        prompt: "Vidéo ultra-dynamique style Instagram Reels. Zoom rapide, cuts brutaux, transitions punch. Mouvements énergiques et captivants. Sans son.",
         fallback: true,
         error: (error as Error).message
       }),
