@@ -6,23 +6,23 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-// Tool definition for structured output - separates analysis from final prompt
+// Tool definition for structured output - 2-step process: analyze then generate
 const tools = [
   {
     type: "function",
     function: {
       name: "generate_video_prompt",
-      description: "Génère un prompt vidéo basé sur l'analyse d'une image",
+      description: "PROCESSUS EN 2 ÉTAPES : 1) Analyse l'image en détail, 2) Génère un prompt vidéo BASÉ SUR cette analyse",
       parameters: {
         type: "object",
         properties: {
           image_analysis: {
             type: "string",
-            description: "Description détaillée de ce qui est visible dans l'image (personnage, objets, contexte, couleurs). Usage interne uniquement, ne sera PAS affiché à l'utilisateur."
+            description: "ÉTAPE 1 : Description détaillée de ce qui est visible (personnage: genre/tenue/posture, objets, produit, contexte, couleurs, ambiance). Cette analyse sera utilisée pour créer le video_prompt."
           },
           video_prompt: {
             type: "string",
-            description: "Le prompt final pour générer la vidéo Instagram Reels. 200-250 caractères en français, ultra-dynamique, décrivant les mouvements de caméra et transitions, terminant TOUJOURS par 'Sans son.'"
+            description: "ÉTAPE 2 : Prompt vidéo BASÉ SUR image_analysis. DOIT mentionner le sujet identifié dans l'analyse + mouvements de caméra dynamiques. 200-250 caractères en français, termine par 'Sans son.'"
           }
         },
         required: ["image_analysis", "video_prompt"],
@@ -133,86 +133,109 @@ serve(async (req) => {
       case 'situation':
         systemPrompt = `Tu es un expert en génération vidéo IA pour Instagram Reels.
 
-Analyse l'image fournie et génère un prompt vidéo ULTRA-DYNAMIQUE.
+PROCESSUS EN 2 ÉTAPES OBLIGATOIRES :
 
-STYLE INSTAGRAM REELS :
-- Mouvements de caméra RAPIDES (zoom punch, travelling rapide, rotation dynamique, dolly in brutal)
-- Transitions BRUTALES et énergiques (cuts secs, jump cuts)
-- Enchaînements de plans courts (2-3 secondes max par angle)
-- Rythme soutenu et captivant dès la première seconde
+ÉTAPE 1 - image_analysis :
+Décris en détail ce que tu vois : personnage (genre, posture, tenue, expression), objets, contexte, couleurs, ambiance.
 
-Le video_prompt doit :
-- Faire 200-250 caractères en FRANÇAIS
-- Décrire le sujet visible + mouvements de caméra dynamiques
-- Terminer TOUJOURS par "Sans son."
-- PAS de hashtags ni de mots marketing
-- NE PAS inclure de description de l'image, UNIQUEMENT les instructions pour la vidéo`;
+ÉTAPE 2 - video_prompt :
+EN TE BASANT SUR TON ANALYSE, génère un prompt qui :
+- MENTIONNE le sujet principal identifié (ex: "Femme en robe rouge", "Homme avec casque")
+- Décrit une mise en situation dynamique de CE sujet
+- Utilise des mouvements RAPIDES : zoom punch, travelling rapide, rotation dynamique
+- Transitions BRUTALES : cuts secs, jump cuts
+- Termine TOUJOURS par "Sans son."
+
+EXEMPLE :
+- image_analysis: "Femme blonde en bikini bleu tenant un vélo sur une plage ensoleillée"  
+- video_prompt: "Femme en bikini sur la plage, zoom punch sur son sourire. Elle enfourche le vélo, travelling rapide. Cut brutal vers roue qui tourne. Sans son."
+
+RÈGLES video_prompt :
+- 200-250 caractères en FRANÇAIS
+- Le SUJET de l'image DOIT apparaître dans le prompt
+- PAS de hashtags ni de mots marketing`;
         
-        userPrompt = `Génère un prompt pour une vidéo en situation d'utilisation.
+        userPrompt = `Analyse cette image puis génère un prompt vidéo en situation d'utilisation.
 Contexte de marque : ${brandContext || 'Non spécifié'}`;
         break;
 
       case 'product':
         systemPrompt = `Tu es un expert en génération vidéo IA pour Instagram Reels.
 
-Analyse le produit visible dans l'image et génère un prompt vidéo ULTRA-DYNAMIQUE.
+PROCESSUS EN 2 ÉTAPES OBLIGATOIRES :
 
-STYLE INSTAGRAM REELS - PRODUIT :
-- Mouvements RAPIDES (zoom burst sur les détails, rotation accélérée 360°, dolly punch)
-- Transitions BRUTALES entre les angles (cuts secs, whip pan)
-- Gros plans percutants sur textures et finitions
-- Rythme soutenu avec cuts rapides toutes les 2 secondes
+ÉTAPE 1 - image_analysis :
+Décris le produit visible : forme, couleur, matériaux, détails, textures, contexte de présentation.
 
-Le video_prompt doit :
-- Faire 200-250 caractères en FRANÇAIS
-- Décrire les mouvements de caméra dynamiques et premium
-- Terminer TOUJOURS par "Sans son."
-- PAS de hashtags ni de mots marketing
-- NE PAS inclure de description du produit, UNIQUEMENT les instructions pour la vidéo`;
+ÉTAPE 2 - video_prompt :
+EN TE BASANT SUR TON ANALYSE, génère un prompt qui :
+- MENTIONNE le produit identifié avec ses caractéristiques visuelles
+- Met en valeur CE produit avec des mouvements premium
+- Zoom burst sur les détails identifiés, rotation 360°
+- Transitions BRUTALES : cuts secs, whip pan
+- Termine TOUJOURS par "Sans son."
+
+EXEMPLE :
+- image_analysis: "Montre argentée avec bracelet en acier, cadran noir, posée sur surface en marbre"
+- video_prompt: "Montre argentée sur marbre, zoom burst sur le cadran noir. Rotation 360° révélant le bracelet acier. Reflets dynamiques, cuts brutaux. Sans son."
+
+RÈGLES video_prompt :
+- 200-250 caractères en FRANÇAIS  
+- Le PRODUIT décrit DOIT apparaître dans le prompt
+- PAS de hashtags ni de mots marketing`;
         
-        userPrompt = `Génère un prompt pour une mise en avant produit premium.
+        userPrompt = `Analyse ce produit puis génère un prompt pour une mise en avant premium.
 Contexte de marque : ${brandContext || 'Non spécifié'}`;
         break;
 
       case 'testimonial':
         systemPrompt = `Tu es un expert en génération vidéo IA pour Instagram Reels.
 
-Analyse l'image (personnage, expression, contexte) et génère un prompt vidéo ULTRA-DYNAMIQUE.
+PROCESSUS EN 2 ÉTAPES OBLIGATOIRES :
 
-STYLE INSTAGRAM REELS - UNBOXING/TÉMOIGNAGE :
-- Mouvements RAPIDES et spontanés (caméra portée énergique, shake effect)
-- Transitions BRUTALES entre réaction et produit (jump cuts, whip pan)
-- Zooms punch sur les émotions et le produit
-- Rythme ultra-dynamique façon créateur de contenu TikTok/Reels
+ÉTAPE 1 - image_analysis :
+Décris ce que tu vois : personnage (genre, expression, posture), objet tenu, contexte, ambiance.
 
-Le video_prompt doit :
-- Faire 200-250 caractères en FRANÇAIS
-- Décrire des actions rapides et authentiques
-- Terminer TOUJOURS par "Sans son."
-- PAS de hashtags ni de mots marketing
-- NE PAS inclure de description du personnage, UNIQUEMENT les instructions pour la vidéo`;
+ÉTAPE 2 - video_prompt :
+EN TE BASANT SUR TON ANALYSE, génère un prompt qui :
+- MENTIONNE le personnage et l'objet identifiés
+- Crée une interaction dynamique entre le personnage et l'objet
+- Mouvements SPONTANÉS : caméra portée, shake effect
+- Transitions BRUTALES : jump cuts, whip pan  
+- Termine TOUJOURS par "Sans son."
+
+EXEMPLE :
+- image_analysis: "Jeune homme souriant tenant un colis ouvert, expression de surprise, salon moderne"
+- video_prompt: "Homme surpris ouvrant le colis, zoom punch sur son visage. Cut brutal vers le produit révélé, rotation rapide. Réaction authentique. Sans son."
+
+RÈGLES video_prompt :
+- 200-250 caractères en FRANÇAIS
+- Le PERSONNAGE et L'OBJET doivent apparaître dans le prompt
+- PAS de hashtags ni de mots marketing`;
         
-        userPrompt = `Génère un prompt pour une vidéo témoignage/unboxing.
+        userPrompt = `Analyse cette image puis génère un prompt pour une vidéo témoignage/unboxing.
 Contexte de marque : ${brandContext || 'Non spécifié'}`;
         break;
 
       default:
         systemPrompt = `Tu es un expert en génération vidéo IA pour Instagram Reels.
 
-Analyse l'image fournie et génère un prompt vidéo ULTRA-DYNAMIQUE.
+PROCESSUS EN 2 ÉTAPES OBLIGATOIRES :
 
-STYLE INSTAGRAM :
-- Mouvements de caméra RAPIDES (zoom punch, cuts brutaux, travelling dynamique)
-- Transitions énergiques et percutantes
-- Rythme soutenu dès la première seconde
+ÉTAPE 1 - image_analysis :
+Décris en détail ce que tu vois dans l'image.
 
-Le video_prompt doit :
-- Faire 200-250 caractères en FRANÇAIS
-- Terminer TOUJOURS par "Sans son."
-- PAS de hashtags
-- NE PAS inclure de description de l'image, UNIQUEMENT les instructions pour la vidéo`;
+ÉTAPE 2 - video_prompt :
+EN TE BASANT SUR TON ANALYSE, génère un prompt qui :
+- MENTIONNE le sujet principal identifié
+- Décrit des mouvements de caméra RAPIDES autour de CE sujet
+- Termine TOUJOURS par "Sans son."
+
+RÈGLES video_prompt :
+- 200-250 caractères en FRANÇAIS
+- Le sujet de l'image DOIT apparaître`;
         
-        userPrompt = `Génère un prompt ultra-dynamique pour Instagram Reels.
+        userPrompt = `Analyse cette image puis génère un prompt ultra-dynamique pour Instagram Reels.
 Contexte de marque : ${brandContext || 'Non spécifié'}`;
     }
 
