@@ -6,6 +6,32 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
+// Tool definition for structured output - separates analysis from final prompt
+const tools = [
+  {
+    type: "function",
+    function: {
+      name: "generate_video_prompt",
+      description: "Génère un prompt vidéo basé sur l'analyse d'une image",
+      parameters: {
+        type: "object",
+        properties: {
+          image_analysis: {
+            type: "string",
+            description: "Description détaillée de ce qui est visible dans l'image (personnage, objets, contexte, couleurs). Usage interne uniquement, ne sera PAS affiché à l'utilisateur."
+          },
+          video_prompt: {
+            type: "string",
+            description: "Le prompt final pour générer la vidéo Instagram Reels. 200-250 caractères en français, ultra-dynamique, décrivant les mouvements de caméra et transitions, terminant TOUJOURS par 'Sans son.'"
+          }
+        },
+        required: ["image_analysis", "video_prompt"],
+        additionalProperties: false
+      }
+    }
+  }
+];
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -99,17 +125,15 @@ serve(async (req) => {
       ? `Marque: ${brandProfile.company_name}. ${brandProfile.business_description || ''}` 
       : '';
 
-    // Adapter le system prompt selon le type
+    // Adapter le system prompt selon le type - simplifié car le format est forcé par le tool
     let systemPrompt = '';
     let userPrompt = '';
 
     switch (promptType) {
       case 'situation':
-        systemPrompt = `Tu es un expert en génération vidéo IA pour Instagram Reels. 
+        systemPrompt = `Tu es un expert en génération vidéo IA pour Instagram Reels.
 
-PROCESSUS OBLIGATOIRE :
-1. DÉCRIS d'abord ce que tu vois : personnage (genre, posture, tenue, expression), objets, décor, ambiance, couleurs
-2. INTÈGRE ces éléments dans un prompt vidéo ULTRA-DYNAMIQUE
+Analyse l'image fournie et génère un prompt vidéo ULTRA-DYNAMIQUE.
 
 STYLE INSTAGRAM REELS :
 - Mouvements de caméra RAPIDES (zoom punch, travelling rapide, rotation dynamique, dolly in brutal)
@@ -117,30 +141,21 @@ STYLE INSTAGRAM REELS :
 - Enchaînements de plans courts (2-3 secondes max par angle)
 - Rythme soutenu et captivant dès la première seconde
 
-Le prompt doit faire 200-250 caractères en FRANÇAIS et contenir :
-- Description du sujet principal visible dans l'image
-- Mouvements de caméra dynamiques et rapides
-- Actions énergiques et engageantes
-- Ambiance punchy
-
-RÈGLES STRICTES :
-- TOUJOURS terminer par "Sans son."
+Le video_prompt doit :
+- Faire 200-250 caractères en FRANÇAIS
+- Décrire le sujet visible + mouvements de caméra dynamiques
+- Terminer TOUJOURS par "Sans son."
 - PAS de hashtags ni de mots marketing
-- Le prompt DOIT mentionner les éléments clés visibles dans l'image (personnage, objet, contexte)
-- Répondre en FRANÇAIS
-
-Exemple avec une image d'une femme tenant un sac :
-"Femme stylée avec sac à main, zoom rapide sur son sourire puis travelling arrière dynamique. Cut brutal vers gros plan du sac, rotation 180°. Transitions punch énergiques, lumière chaude. Sans son."`;
-        userPrompt = `DÉCRIS ce que tu vois dans cette image (personnage, objets, contexte, couleurs), puis génère un prompt ULTRA-DYNAMIQUE style Instagram Reels pour une vidéo en situation d'utilisation.
-
+- NE PAS inclure de description de l'image, UNIQUEMENT les instructions pour la vidéo`;
+        
+        userPrompt = `Génère un prompt pour une vidéo en situation d'utilisation.
 Contexte de marque : ${brandContext || 'Non spécifié'}`;
         break;
+
       case 'product':
         systemPrompt = `Tu es un expert en génération vidéo IA pour Instagram Reels.
 
-PROCESSUS OBLIGATOIRE :
-1. DÉCRIS d'abord le produit visible : forme, couleur, matériaux, détails, textures, contexte
-2. INTÈGRE ces éléments dans un prompt vidéo ULTRA-DYNAMIQUE
+Analyse le produit visible dans l'image et génère un prompt vidéo ULTRA-DYNAMIQUE.
 
 STYLE INSTAGRAM REELS - PRODUIT :
 - Mouvements RAPIDES (zoom burst sur les détails, rotation accélérée 360°, dolly punch)
@@ -148,30 +163,21 @@ STYLE INSTAGRAM REELS - PRODUIT :
 - Gros plans percutants sur textures et finitions
 - Rythme soutenu avec cuts rapides toutes les 2 secondes
 
-Le prompt doit faire 200-250 caractères en FRANÇAIS et contenir :
-- Description précise du produit visible dans l'image
-- Mouvements de caméra dynamiques premium
-- Mise en valeur énergique des détails
-- Ambiance haut de gamme mais punchy
-
-RÈGLES STRICTES :
-- TOUJOURS terminer par "Sans son."
+Le video_prompt doit :
+- Faire 200-250 caractères en FRANÇAIS
+- Décrire les mouvements de caméra dynamiques et premium
+- Terminer TOUJOURS par "Sans son."
 - PAS de hashtags ni de mots marketing
-- Le prompt DOIT décrire le produit réel visible (couleur, forme, matière)
-- Répondre en FRANÇAIS
-
-Exemple avec une image de montre :
-"Montre argentée sur surface noire, rotation 360° rapide. Cut brutal zoom sur le cadran, reflets dynamiques. Transition punch vers bracelet, travelling accéléré. Style premium énergique. Sans son."`;
-        userPrompt = `DÉCRIS ce produit visible dans l'image (forme, couleurs, matériaux, détails), puis génère un prompt ULTRA-DYNAMIQUE style Instagram pour une mise en avant premium.
-
+- NE PAS inclure de description du produit, UNIQUEMENT les instructions pour la vidéo`;
+        
+        userPrompt = `Génère un prompt pour une mise en avant produit premium.
 Contexte de marque : ${brandContext || 'Non spécifié'}`;
         break;
+
       case 'testimonial':
         systemPrompt = `Tu es un expert en génération vidéo IA pour Instagram Reels.
 
-PROCESSUS OBLIGATOIRE :
-1. DÉCRIS d'abord ce que tu vois : personnage (genre, expression, posture), objet tenu, contexte, ambiance
-2. INTÈGRE ces éléments dans un prompt vidéo ULTRA-DYNAMIQUE
+Analyse l'image (personnage, expression, contexte) et génère un prompt vidéo ULTRA-DYNAMIQUE.
 
 STYLE INSTAGRAM REELS - UNBOXING/TÉMOIGNAGE :
 - Mouvements RAPIDES et spontanés (caméra portée énergique, shake effect)
@@ -179,51 +185,40 @@ STYLE INSTAGRAM REELS - UNBOXING/TÉMOIGNAGE :
 - Zooms punch sur les émotions et le produit
 - Rythme ultra-dynamique façon créateur de contenu TikTok/Reels
 
-Le prompt doit faire 200-250 caractères en FRANÇAIS et contenir :
-- Description du personnage et de l'objet visible
-- Actions rapides et authentiques
-- Transitions énergiques
-- Ambiance lifestyle dynamique
-
-RÈGLES STRICTES :
-- TOUJOURS terminer par "Sans son."
+Le video_prompt doit :
+- Faire 200-250 caractères en FRANÇAIS
+- Décrire des actions rapides et authentiques
+- Terminer TOUJOURS par "Sans son."
 - PAS de hashtags ni de mots marketing
-- Le prompt DOIT décrire ce qui est réellement visible (personnage, objet, expression)
-- Répondre en FRANÇAIS
-
-Exemple avec une image de personne avec un colis :
-"Mains qui déchirent l'emballage, cut brutal vers visage surpris. Zoom punch sur le produit révélé, rotation rapide. Transitions énergiques, ambiance lifestyle authentique. Sans son."`;
-        userPrompt = `DÉCRIS ce que tu vois dans cette image (personnage, expression, objet, contexte), puis génère un prompt ULTRA-DYNAMIQUE style Instagram pour une vidéo témoignage/unboxing.
-
+- NE PAS inclure de description du personnage, UNIQUEMENT les instructions pour la vidéo`;
+        
+        userPrompt = `Génère un prompt pour une vidéo témoignage/unboxing.
 Contexte de marque : ${brandContext || 'Non spécifié'}`;
         break;
+
       default:
         systemPrompt = `Tu es un expert en génération vidéo IA pour Instagram Reels.
 
-PROCESSUS OBLIGATOIRE :
-1. DÉCRIS d'abord ce que tu vois dans l'image (personnage, objets, contexte, couleurs)
-2. INTÈGRE ces éléments dans un prompt vidéo ULTRA-DYNAMIQUE
+Analyse l'image fournie et génère un prompt vidéo ULTRA-DYNAMIQUE.
 
 STYLE INSTAGRAM :
 - Mouvements de caméra RAPIDES (zoom punch, cuts brutaux, travelling dynamique)
 - Transitions énergiques et percutantes
 - Rythme soutenu dès la première seconde
 
-Le prompt doit faire 200-250 caractères en FRANÇAIS.
-
-RÈGLES :
-- TOUJOURS terminer par "Sans son."
+Le video_prompt doit :
+- Faire 200-250 caractères en FRANÇAIS
+- Terminer TOUJOURS par "Sans son."
 - PAS de hashtags
-- Le prompt DOIT décrire ce qui est visible dans l'image
-- Répondre en FRANÇAIS`;
-        userPrompt = `DÉCRIS ce que tu vois dans cette image, puis génère un prompt ULTRA-DYNAMIQUE pour Instagram Reels.
-
+- NE PAS inclure de description de l'image, UNIQUEMENT les instructions pour la vidéo`;
+        
+        userPrompt = `Génère un prompt ultra-dynamique pour Instagram Reels.
 Contexte de marque : ${brandContext || 'Non spécifié'}`;
     }
 
-    console.log('Calling Lovable AI for prompt generation...', { promptType });
+    console.log('Calling Lovable AI with tool calling...', { promptType });
 
-    // Appel Lovable AI
+    // Appel Lovable AI avec tool calling pour séparer analyse et prompt final
     const aiResponse = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -250,13 +245,28 @@ Contexte de marque : ${brandContext || 'Non spécifié'}`;
               }
             ]
           }
-        ]
+        ],
+        tools: tools,
+        tool_choice: { type: "function", function: { name: "generate_video_prompt" } }
       })
     });
 
     if (!aiResponse.ok) {
       const errorText = await aiResponse.text();
       console.error('Lovable AI error:', errorText);
+      
+      if (aiResponse.status === 429) {
+        return new Response(
+          JSON.stringify({ error: "Rate limit exceeded, please try again later" }),
+          { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+      if (aiResponse.status === 402) {
+        return new Response(
+          JSON.stringify({ error: "Payment required, please add credits" }),
+          { status: 402, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
       
       // Fallback sur prompt par défaut
       return new Response(
@@ -269,23 +279,46 @@ Contexte de marque : ${brandContext || 'Non spécifié'}`;
     }
 
     const aiData = await aiResponse.json();
-    const generatedPrompt = aiData.choices?.[0]?.message?.content;
+    console.log('AI response received');
 
-    if (!generatedPrompt) {
-      console.error('No prompt in AI response');
+    // Extraire la réponse du tool call
+    const toolCall = aiData.choices?.[0]?.message?.tool_calls?.[0];
+    
+    if (toolCall?.function?.name === "generate_video_prompt") {
+      try {
+        const args = JSON.parse(toolCall.function.arguments);
+        
+        // Log l'analyse pour debug (interne uniquement)
+        console.log('Image analysis (internal):', args.image_analysis);
+        console.log('Video prompt (final):', args.video_prompt);
+        
+        // Retourner UNIQUEMENT le prompt vidéo à l'utilisateur
+        return new Response(
+          JSON.stringify({ prompt: args.video_prompt }),
+          { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      } catch (parseError) {
+        console.error('Error parsing tool call arguments:', parseError);
+      }
+    }
+
+    // Fallback: essayer d'extraire du contenu régulier
+    const content = aiData.choices?.[0]?.message?.content;
+    if (content) {
+      console.log('Fallback to content:', content);
       return new Response(
-        JSON.stringify({ 
-          prompt: "Vidéo ultra-dynamique style Instagram Reels. Zoom rapide, cuts brutaux, transitions punch. Mouvements énergiques et captivants. Sans son.",
-          fallback: true
-        }),
+        JSON.stringify({ prompt: content.trim() }),
         { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    console.log('Generated prompt:', generatedPrompt);
-
+    // Ultimate fallback
+    console.log('Using ultimate fallback prompt');
     return new Response(
-      JSON.stringify({ prompt: generatedPrompt.trim() }),
+      JSON.stringify({ 
+        prompt: "Vidéo ultra-dynamique style Instagram Reels. Zoom rapide, cuts brutaux, transitions punch. Mouvements énergiques et captivants. Sans son.",
+        fallback: true
+      }),
       { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
 
