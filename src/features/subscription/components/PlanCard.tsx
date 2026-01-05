@@ -42,9 +42,11 @@ export const PlanCard = ({ plan, isCurrentPlan, onSubscribe, loading }: PlanCard
       <CardContent className="space-y-4">
         <div className="text-center mb-6">
           <p className="text-sm font-semibold">
-            {typeof plan.videoLimit === 'number' ? `${plan.videoLimit} vidéos` : 'Vidéos illimitées'}
+            {typeof plan.videoLimit === 'number' ? `${plan.videoLimit} vidéos` : 'Vidéos illimitées*'}
           </p>
-          <p className="text-xs text-muted-foreground">par mois</p>
+          {typeof plan.videoLimit === 'number' && (
+            <p className="text-xs text-muted-foreground">par mois</p>
+          )}
         </div>
 
         {plan.includesPrevious && (

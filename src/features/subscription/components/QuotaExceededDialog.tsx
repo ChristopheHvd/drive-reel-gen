@@ -108,6 +108,10 @@ export const QuotaExceededDialog = ({
           />
         </div>
 
+        <p className="text-xs text-muted-foreground italic text-center">
+          *Politique de fair-use à 500 vidéos
+        </p>
+
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             Fermer
