@@ -182,11 +182,10 @@ const Pricing = () => {
             </div>
 
             {/* Footer note */}
-            <div className="mt-8 text-center">
+            <div className="mt-8 text-center space-y-1">
               <p className="text-sm text-muted-foreground italic">
-                *considérez 2 à 3 itérations pour obtenir la{" "}
+                *Politique de fair-use à 500 vidéos. Considérez 2 à 3 itérations pour obtenir la{" "}
                 <span className="underline text-primary">vidéo</span> parfaite.
-                **dans un maximum de 500
               </p>
             </div>
           </div>

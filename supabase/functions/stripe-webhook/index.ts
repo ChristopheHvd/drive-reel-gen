@@ -151,6 +151,47 @@ serve(async (req) => {
         }
         break;
       }
+
+      case "invoice.paid": {
+        const invoice = event.data.object as Stripe.Invoice;
+        
+        // Ne traiter que les factures liées à un abonnement
+        if (!invoice.subscription) {
+          console.log("Invoice not linked to a subscription, skipping");
+          break;
+        }
+
+        console.log("Processing invoice.paid for subscription:", invoice.subscription);
+
+        // Récupérer les détails de l'abonnement pour les dates de période
+        const subscription = await stripe.subscriptions.retrieve(
+          invoice.subscription as string
+        );
+
+        console.log("Resetting quota for subscription:", {
+          id: subscription.id,
+          current_period_start: subscription.current_period_start,
+          current_period_end: subscription.current_period_end,
+        });
+
+        // Réinitialiser le compteur de vidéos et mettre à jour les dates de période
+        const { error } = await supabaseAdmin
+          .from('user_subscriptions')
+          .update({
+            videos_generated_this_month: 0,
+            current_period_start: safeTimestampToISO(subscription.current_period_start),
+            current_period_end: safeTimestampToISO(subscription.current_period_end),
+            updated_at: new Date().toISOString(),
+          })
+          .eq('stripe_subscription_id', subscription.id);
+
+        if (error) {
+          console.error("Error resetting quota:", error);
+        } else {
+          console.log("Successfully reset videos_generated_this_month to 0");
+        }
+        break;
+      }
     }
 
     return new Response(JSON.stringify({ received: true }), {
