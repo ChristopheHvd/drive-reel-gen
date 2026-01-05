@@ -2,7 +2,7 @@ export interface Subscription {
   id: string;
   user_id: string;
   team_id: string | null;
-  plan_type: "free" | "pro" | "business";
+  plan_type: "free" | "starter" | "pro" | "business";
   video_limit: number;
   videos_generated_this_month: number;
   current_period_end: string | null;
@@ -18,35 +18,57 @@ export interface PlanConfig {
   features: string[];
   stripePriceId: string;
   isPopular?: boolean;
+  includesPrevious?: string;
 }
 
-export const PLAN_CONFIGS: Record<"free" | "pro" | "business", PlanConfig> = {
+export const PLAN_CONFIGS: Record<"free" | "starter" | "pro" | "business", PlanConfig> = {
   free: {
     name: "Free",
     price: 0,
     videoLimit: 6,
-    features: ["6 vidéos par mois", "Génération IA de prompts", "Formats 9:16 et 16:9"],
-    stripePriceId: "", // forcement vide
+    features: [
+      "6 vidéos",
+      "Format 9:16 et 16:9",
+      "Support communautaire",
+      "Watermark QuickQuick",
+    ],
+    stripePriceId: "",
+  },
+  starter: {
+    name: "Starter",
+    price: 29,
+    videoLimit: 20,
+    features: [
+      "20 vidéos par mois*",
+      "Brand Kit",
+      "Upload illimité",
+      "Tous les formats : 8sec, 16sec, 24sec",
+    ],
+    stripePriceId: "price_starter_placeholder",
   },
   pro: {
     name: "Pro",
-    price: 100,
-    videoLimit: 50,
-    features: ["50 vidéos par mois", "Génération IA de prompts", "Formats 9:16 et 16:9", "Support prioritaire"],
+    price: 79,
+    videoLimit: "unlimited",
+    features: [
+      "Vidéos illimitées*",
+      "Multi-utilisateur",
+      "Support email",
+    ],
     stripePriceId: "price_1SSexRBlI68zgCmz0DNoBAha",
     isPopular: true,
+    includesPrevious: "Tout de Starter +",
   },
   business: {
     name: "Business",
-    price: 350,
+    price: 199,
     videoLimit: "unlimited",
     features: [
-      "Vidéos illimitées",
-      "Profil de marque intégré",
-      "Formats 9:16 et 16:9",
-      "Logo et images additionnelles",
-      "Support dédié 24/7",
+      "API access",
+      "Formation équipe",
+      "Support dédié",
     ],
     stripePriceId: "price_1SSey5BlI68zgCmz8gi0Dijy",
+    includesPrevious: "Tout de Pro +",
   },
 };
