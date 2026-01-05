@@ -1,63 +1,74 @@
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
-import { Check } from "lucide-react";
+import { Gift, Sparkles, Star, Building2 } from "lucide-react";
 import logo from "@/assets/quickquick-logo.png";
 import { useAuth } from "@/features/auth";
 
 const Pricing = () => {
   const { user } = useAuth();
-  
+
   const plans = [
     {
       name: "Free",
       price: "0€",
-      period: "gratuit",
-      videos: "6 vidéos/mois",
+      period: "",
+      icon: Gift,
       features: [
-        "6 vidéos par mois",
+        "6 vidéos",
         "Format 9:16 et 16:9",
-        "Upload d'images",
-        "Génération IA de prompts",
         "Support communautaire",
+        "Watermark QuickQuick ??",
       ],
       cta: "Commencer",
       variant: "outline" as const,
       popular: false,
+      includesPrevious: null,
+    },
+    {
+      name: "Starter",
+      price: "29€",
+      period: "/mois",
+      icon: Sparkles,
+      features: [
+        "20 vidéos par mois*",
+        "Brand Kit",
+        "Upload illimité",
+        "Tous les formats : 8sec, 16sec, 24sec",
+      ],
+      cta: "S'abonner",
+      variant: "outline" as const,
+      popular: false,
+      includesPrevious: null,
     },
     {
       name: "Pro",
-      price: "100€",
-      period: "par mois",
-      videos: "50 vidéos/mois",
+      price: "79€",
+      period: "/mois",
+      icon: Star,
       features: [
-        "50 vidéos par mois",
-        "Tous les formats",
-        "Upload illimité",
-        "Analyse de marque",
-        "Génération avancée",
-        "Support prioritaire",
+        "Vidéos illimitées*",
+        "Multi-utilisateur",
+        "Support email",
       ],
       cta: "S'abonner",
       variant: "premium" as const,
       popular: true,
+      includesPrevious: "Tout de Starter +",
     },
     {
       name: "Business",
-      price: "350€",
-      period: "par mois",
-      videos: "Illimité",
+      price: "199€",
+      period: "/mois",
+      icon: Building2,
       features: [
-        "Vidéos illimitées",
-        "Tous les formats",
-        "Équipe illimitée",
-        "Analyse de marque avancée",
-        "API dédiée",
-        "Support dédié 24/7",
-        "Personnalisation poussée",
+        "API access",
+        "Formation équipe",
+        "Support dédié",
       ],
       cta: "S'abonner",
-      variant: "neon" as const,
+      variant: "outline" as const,
       popular: false,
+      includesPrevious: "Tout de Pro +",
     },
   ];
 
@@ -87,85 +98,97 @@ const Pricing = () => {
         {/* Pricing Section */}
         <section className="container mx-auto px-4 py-20">
           <div className="max-w-6xl mx-auto">
-            <div className="text-center mb-16 space-y-4">
-              <h1 className="text-4xl md:text-6xl font-bold">
-                Choisissez votre{" "}
+            <div className="text-center mb-16">
+              <h1 className="text-4xl md:text-5xl font-bold">
                 <span className="bg-gradient-gold bg-clip-text text-transparent">
-                  plan
+                  Des tarifs adaptés à chaque ambition
                 </span>
               </h1>
-              <p className="text-xl text-muted-foreground">
-                Des tarifs simples et transparents pour tous vos besoins
-              </p>
             </div>
 
-            <div className="grid md:grid-cols-3 gap-8">
-              {plans.map((plan, index) => (
-                <div
-                  key={index}
-                  className={`relative p-8 rounded-2xl bg-card border ${
-                    plan.popular
-                      ? "border-primary shadow-gold"
-                      : "border-border"
-                  } hover:border-primary/50 transition-all`}
-                >
-                  {plan.popular && (
-                    <div className="absolute -top-4 left-1/2 -translate-x-1/2">
-                      <span className="px-4 py-1 rounded-full bg-gradient-gold text-primary-foreground text-sm font-semibold shadow-gold">
-                        Populaire
-                      </span>
+            <div className="grid md:grid-cols-2 gap-6">
+              {plans.map((plan, index) => {
+                const IconComponent = plan.icon;
+                return (
+                  <div
+                    key={index}
+                    className={`relative rounded-xl overflow-hidden ${
+                      plan.popular
+                        ? "border-2 border-primary"
+                        : "border border-border"
+                    }`}
+                  >
+                    {/* Header with icon */}
+                    <div
+                      className={`flex items-center justify-center py-3 ${
+                        plan.popular
+                          ? "bg-primary"
+                          : "bg-muted/30"
+                      }`}
+                    >
+                      <IconComponent
+                        className={`h-5 w-5 ${
+                          plan.popular ? "text-primary-foreground" : "text-muted-foreground"
+                        }`}
+                      />
                     </div>
-                  )}
 
-                  <div className="space-y-6">
-                    <div>
-                      <h3 className="text-2xl font-bold mb-2">{plan.name}</h3>
-                      <div className="flex items-baseline gap-2">
-                        <span className="text-4xl font-bold">{plan.price}</span>
-                        <span className="text-muted-foreground">{plan.period}</span>
+                    {/* Content */}
+                    <div className="p-6 bg-card">
+                      <div className="mb-4">
+                        <h3 className="text-lg font-semibold text-foreground">
+                          {plan.name}
+                        </h3>
+                        <div className="flex items-baseline">
+                          <span className="text-2xl font-bold text-primary">
+                            {plan.price}
+                          </span>
+                          <span className="text-muted-foreground text-sm">
+                            {plan.period}
+                          </span>
+                        </div>
                       </div>
-                      <p className="text-sm text-primary mt-2 font-semibold">
-                        {plan.videos}
-                      </p>
+
+                      {plan.includesPrevious && (
+                        <p className="text-sm text-foreground mb-3">
+                          {plan.includesPrevious}
+                        </p>
+                      )}
+
+                      <ul className="space-y-2">
+                        {plan.features.map((feature, featureIndex) => (
+                          <li
+                            key={featureIndex}
+                            className="flex items-start gap-2 text-sm text-muted-foreground"
+                          >
+                            <span className="text-muted-foreground">•</span>
+                            <span>{feature}</span>
+                          </li>
+                        ))}
+                      </ul>
+
+                      <Link to="/auth" className="block mt-6">
+                        <Button
+                          variant={plan.variant}
+                          className="w-full"
+                          size="default"
+                        >
+                          {plan.cta}
+                        </Button>
+                      </Link>
                     </div>
-
-                    <ul className="space-y-3">
-                      {plan.features.map((feature, featureIndex) => (
-                        <li key={featureIndex} className="flex items-start gap-3">
-                          <Check className="h-5 w-5 text-primary shrink-0 mt-0.5" />
-                          <span className="text-sm text-foreground/90">{feature}</span>
-                        </li>
-                      ))}
-                    </ul>
-
-                    <Link to="/auth" className="block">
-                      <Button variant={plan.variant} className="w-full" size="lg">
-                        {plan.cta}
-                      </Button>
-                    </Link>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
 
-            <div className="mt-16 text-center">
-              <p className="text-muted-foreground mb-6">
-                Tous les plans incluent l'accès complet à la plateforme
+            {/* Footer note */}
+            <div className="mt-8 text-center">
+              <p className="text-sm text-muted-foreground italic">
+                *considérez 2 à 3 itérations pour obtenir la{" "}
+                <span className="underline text-primary">vidéo</span> parfaite.
+                **dans un maximum de 500
               </p>
-              <div className="flex flex-wrap justify-center gap-4 text-sm">
-                <span className="flex items-center gap-2">
-                  <Check className="h-4 w-4 text-accent" />
-                  Pas de période d'engagement
-                </span>
-                <span className="flex items-center gap-2">
-                  <Check className="h-4 w-4 text-accent" />
-                  Résiliation à tout moment
-                </span>
-                <span className="flex items-center gap-2">
-                  <Check className="h-4 w-4 text-accent" />
-                  Support en français
-                </span>
-              </div>
             </div>
           </div>
         </section>

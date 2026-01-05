@@ -10,7 +10,7 @@ interface QuotaExceededDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   nextResetDate: string;
-  currentPlan: 'free' | 'pro' | 'business';
+  currentPlan: 'free' | 'starter' | 'pro' | 'business';
 }
 
 export const QuotaExceededDialog = ({
@@ -22,7 +22,7 @@ export const QuotaExceededDialog = ({
   const [loading, setLoading] = useState<string | null>(null);
   const { toast } = useToast();
 
-  const handleSubscribe = async (planType: 'pro' | 'business') => {
+  const handleSubscribe = async (planType: 'starter' | 'pro' | 'business') => {
     try {
       setLoading(planType);
       const plan = PLAN_CONFIGS[planType];
@@ -62,15 +62,18 @@ export const QuotaExceededDialog = ({
     if (currentPlan === 'free') {
       return `Vous avez utilisé vos ${PLAN_CONFIGS.free.videoLimit} vidéos gratuites ce mois-ci.`;
     }
+    if (currentPlan === 'starter') {
+      return `Vous avez utilisé vos ${PLAN_CONFIGS.starter.videoLimit} vidéos du plan Starter ce mois-ci.`;
+    }
     if (currentPlan === 'pro') {
-      return `Vous avez utilisé vos ${PLAN_CONFIGS.pro.videoLimit} vidéos du plan Pro ce mois-ci.`;
+      return 'Votre quota mensuel est atteint (plan Pro).';
     }
     return 'Votre quota mensuel est atteint.';
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-2xl">Quota mensuel atteint 😅</DialogTitle>
           <DialogDescription className="text-base pt-2">
@@ -80,10 +83,16 @@ export const QuotaExceededDialog = ({
           </DialogDescription>
         </DialogHeader>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 py-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 py-6">
           <PlanCard
             plan={PLAN_CONFIGS.free}
             isCurrentPlan={currentPlan === 'free'}
+          />
+          <PlanCard
+            plan={PLAN_CONFIGS.starter}
+            isCurrentPlan={currentPlan === 'starter'}
+            onSubscribe={() => handleSubscribe('starter')}
+            loading={loading === 'starter'}
           />
           <PlanCard
             plan={PLAN_CONFIGS.pro}

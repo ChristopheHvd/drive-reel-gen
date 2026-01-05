@@ -47,6 +47,12 @@ export const PlanCard = ({ plan, isCurrentPlan, onSubscribe, loading }: PlanCard
           <p className="text-xs text-muted-foreground">par mois</p>
         </div>
 
+        {plan.includesPrevious && (
+          <p className="text-sm font-medium text-foreground mb-2">
+            {plan.includesPrevious}
+          </p>
+        )}
+
         <ul className="space-y-3">
           {plan.features.map((feature, index) => (
             <li key={index} className="flex items-start gap-2">
