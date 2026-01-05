@@ -9,7 +9,7 @@ const Pricing = () => {
 
   const plans = [
     {
-      name: "Free",
+      name: "Gratuit",
       price: "0€",
       period: "",
       icon: Gift,
@@ -17,7 +17,6 @@ const Pricing = () => {
         "6 vidéos",
         "Format 9:16 et 16:9",
         "Support communautaire",
-        "Watermark QuickQuick ??",
       ],
       cta: "Commencer",
       variant: "outline" as const,
