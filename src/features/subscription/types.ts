@@ -23,14 +23,13 @@ export interface PlanConfig {
 
 export const PLAN_CONFIGS: Record<"free" | "starter" | "pro" | "business", PlanConfig> = {
   free: {
-    name: "Free",
+    name: "Gratuit",
     price: 0,
     videoLimit: 6,
     features: [
       "6 vidéos",
       "Format 9:16 et 16:9",
       "Support communautaire",
-      "Watermark QuickQuick",
     ],
     stripePriceId: "",
   },
