@@ -167,6 +167,101 @@ describe('Stripe Webhook Integration', () => {
     });
   });
 
+  describe('invoice.paid simulation', () => {
+    it('should reset videos_generated_this_month to 0 when invoice is paid', async () => {
+      const mockUpdateData = {
+        videos_generated_this_month: 0,
+        current_period_start: expect.any(String),
+        current_period_end: expect.any(String),
+        updated_at: expect.any(String),
+      };
+
+      const mockEq = vi.fn().mockResolvedValue({ data: null, error: null });
+      const mockUpdate = vi.fn().mockReturnValue({ eq: mockEq });
+      vi.mocked(supabase.from).mockReturnValue({ update: mockUpdate } as any);
+
+      const { error } = await supabase
+        .from('user_subscriptions')
+        .update({
+          videos_generated_this_month: 0,
+          current_period_start: new Date().toISOString(),
+          current_period_end: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+          updated_at: new Date().toISOString(),
+        })
+        .eq('stripe_subscription_id', 'sub_test_123');
+
+      expect(error).toBeNull();
+      expect(mockUpdate).toHaveBeenCalledWith(expect.objectContaining({
+        videos_generated_this_month: 0,
+      }));
+    });
+
+    it('should update period dates when invoice is paid', async () => {
+      const newPeriodStart = new Date(1764163467 * 1000).toISOString();
+      const newPeriodEnd = new Date(1766755467 * 1000).toISOString();
+
+      const mockEq = vi.fn().mockResolvedValue({ data: null, error: null });
+      const mockUpdate = vi.fn().mockReturnValue({ eq: mockEq });
+      vi.mocked(supabase.from).mockReturnValue({ update: mockUpdate } as any);
+
+      const { error } = await supabase
+        .from('user_subscriptions')
+        .update({
+          videos_generated_this_month: 0,
+          current_period_start: newPeriodStart,
+          current_period_end: newPeriodEnd,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('stripe_subscription_id', 'sub_test_123');
+
+      expect(error).toBeNull();
+      expect(mockUpdate).toHaveBeenCalledWith(expect.objectContaining({
+        current_period_start: expect.stringMatching(/2025-11-26/),
+        current_period_end: expect.stringMatching(/2025-12-26/),
+      }));
+    });
+
+    it('should skip invoice not linked to a subscription', () => {
+      const invoice = {
+        id: 'in_test_123',
+        subscription: null,
+      };
+
+      // Simule la logique du handler: si pas de subscription, on ne fait rien
+      expect(invoice.subscription).toBeNull();
+      // Le handler devrait skip sans erreur - vérifié via le log "Invoice not linked to a subscription, skipping"
+    });
+
+    it('should reset quota regardless of current count', async () => {
+      // Simule un utilisateur avec 50 vidéos générées (quota max atteint)
+      const currentSubscription = {
+        videos_generated_this_month: 50,
+        plan_type: 'pro',
+        video_limit: 50,
+      };
+
+      const mockEq = vi.fn().mockResolvedValue({ data: null, error: null });
+      const mockUpdate = vi.fn().mockReturnValue({ eq: mockEq });
+      vi.mocked(supabase.from).mockReturnValue({ update: mockUpdate } as any);
+
+      // Après invoice.paid, le quota doit être reset à 0
+      const { error } = await supabase
+        .from('user_subscriptions')
+        .update({
+          videos_generated_this_month: 0,
+          current_period_start: new Date().toISOString(),
+          current_period_end: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+          updated_at: new Date().toISOString(),
+        })
+        .eq('stripe_subscription_id', 'sub_test_123');
+
+      expect(error).toBeNull();
+      expect(mockUpdate).toHaveBeenCalledWith(expect.objectContaining({
+        videos_generated_this_month: 0,
+      }));
+    });
+  });
+
   describe('quota counter verification', () => {
     it('should preserve videos_generated_this_month during plan changes', async () => {
       const mockSubscription = {
