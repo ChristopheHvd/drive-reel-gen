@@ -15,8 +15,9 @@ const Pricing = () => {
       icon: Gift,
       features: [
         "6 vidéos",
-        "Format 9:16 et 16:9",
-        "Support communautaire",
+        "Formats 9:16",
+        "Durée vidéo : 8 secondes",
+        "Watermark QuickQuick",
       ],
       cta: "Commencer",
       variant: "outline" as const,
@@ -30,9 +31,8 @@ const Pricing = () => {
       icon: Sparkles,
       features: [
         "20 vidéos par mois*",
-        "Brand Kit",
-        "Upload illimité",
-        "Tous les formats : 8sec, 16sec, 24sec",
+        "Durée vidéo au choix : 8sec, 16sec, 24sec",
+        "Formats vidéo au choix : 9:16 ou 16:9",
       ],
       cta: "S'abonner",
       variant: "outline" as const,
@@ -45,7 +45,8 @@ const Pricing = () => {
       period: "/mois",
       icon: Star,
       features: [
-        "Vidéos illimitées*",
+        "60 vidéos par mois",
+        "Brand Kit",
         "Multi-utilisateur",
         "Support email",
       ],
@@ -60,7 +61,7 @@ const Pricing = () => {
       period: "/mois",
       icon: Building2,
       features: [
-        "API access",
+        "Vidéo illimitées**",
         "Formation équipe",
         "Support dédié",
       ],
