@@ -450,6 +450,7 @@ const Dashboard = () => {
                   onGenerate={handleGenerateVideo}
                   disabled={!selectedImage}
                   loading={generatingVideo}
+                  planType={subscription?.plan_type as "free" | "starter" | "pro" | "business" | undefined}
                 />
               ) : (
                 <div className="flex items-center justify-center h-full text-center">

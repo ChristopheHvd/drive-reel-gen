@@ -116,4 +116,89 @@ describe('VideoConfigForm', () => {
     const textarea = getByPlaceholderText(/décrivez la vidéo/i);
     expect(textarea.className).toContain('resize-y');
   });
+
+  describe('Plan restrictions', () => {
+    it('should disable 16:9 format for free plan', async () => {
+      const user = userEvent.setup();
+      const { getByText, getByRole } = render(
+        <VideoConfigForm onGenerate={vi.fn()} planType="free" />
+      );
+      
+      // Ouvrir les options avancées
+      await user.click(getByText(/options avancées/i));
+      
+      // Vérifier que 16:9 est désactivé
+      const option16_9 = getByRole('radio', { name: /16:9.*horizontal.*youtube/i });
+      expect(option16_9).toBeDisabled();
+    });
+
+    it('should disable 16s and 24s duration for free plan', async () => {
+      const user = userEvent.setup();
+      const { getByText, getByRole } = render(
+        <VideoConfigForm onGenerate={vi.fn()} planType="free" />
+      );
+      
+      await user.click(getByText(/options avancées/i));
+      
+      // Vérifier que 16s et 24s sont désactivés
+      expect(getByRole('radio', { name: /16 secondes/i })).toBeDisabled();
+      expect(getByRole('radio', { name: /24 secondes/i })).toBeDisabled();
+    });
+
+    it('should keep 8s duration enabled for free plan', async () => {
+      const user = userEvent.setup();
+      const { getByText, getByRole } = render(
+        <VideoConfigForm onGenerate={vi.fn()} planType="free" />
+      );
+      
+      await user.click(getByText(/options avancées/i));
+      
+      // 8s doit rester actif
+      expect(getByRole('radio', { name: /8 secondes/i })).not.toBeDisabled();
+    });
+
+    it('should show "Starter+" badge on restricted options for free plan', async () => {
+      const user = userEvent.setup();
+      const { getByText, getAllByText } = render(
+        <VideoConfigForm onGenerate={vi.fn()} planType="free" />
+      );
+      
+      await user.click(getByText(/options avancées/i));
+      
+      // Vérifier la présence des badges Starter+
+      const badges = getAllByText('Starter+');
+      expect(badges.length).toBeGreaterThanOrEqual(3); // 16s, 24s, 16:9
+    });
+
+    it('should enable all options for paid plans', async () => {
+      const user = userEvent.setup();
+      const { getByText, getByRole } = render(
+        <VideoConfigForm onGenerate={vi.fn()} planType="starter" />
+      );
+      
+      await user.click(getByText(/options avancées/i));
+      
+      // Toutes les options doivent être actives
+      expect(getByRole('radio', { name: /16:9.*horizontal.*youtube/i })).not.toBeDisabled();
+      expect(getByRole('radio', { name: /16 secondes/i })).not.toBeDisabled();
+      expect(getByRole('radio', { name: /24 secondes/i })).not.toBeDisabled();
+    });
+
+    it('should force 9:16 and 8s when submitting with free plan', async () => {
+      const user = userEvent.setup();
+      const onGenerate = vi.fn();
+      const { getByRole } = render(
+        <VideoConfigForm onGenerate={onGenerate} planType="free" />
+      );
+      
+      await user.click(getByRole('button', { name: /générer une vidéo/i }));
+      
+      expect(onGenerate).toHaveBeenCalledWith(
+        expect.objectContaining({
+          aspectRatio: '9:16',
+          durationSeconds: 8,
+        })
+      );
+    });
+  });
 });
