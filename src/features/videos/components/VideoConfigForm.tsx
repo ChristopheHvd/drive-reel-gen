@@ -4,13 +4,15 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Collapsible, CollapsibleTrigger, CollapsibleContent } from "@/components/ui/collapsible";
-import { Video, Loader2, ChevronRight, PackageOpen, Users, MessageSquareQuote, AlertCircle, Info } from "lucide-react";
+import { Video, Loader2, ChevronRight, PackageOpen, Users, MessageSquareQuote, AlertCircle, Info, Lock } from "lucide-react";
 import { AspectRatio, PromptType, VideoDuration } from "../types";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { MediaUploader } from "./MediaUploader";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
 
 interface VideoConfigFormProps {
   selectedImageId?: string;
@@ -24,6 +26,7 @@ interface VideoConfigFormProps {
   }) => void;
   disabled?: boolean;
   loading?: boolean;
+  planType?: "free" | "starter" | "pro" | "business";
 }
 
 /**
@@ -37,11 +40,16 @@ export const VideoConfigForm = ({
   initialPrompt,
   onGenerate, 
   disabled, 
-  loading 
+  loading,
+  planType = "free"
 }: VideoConfigFormProps) => {
+  const isFreePlan = planType === "free";
+  
   const [prompt, setPrompt] = useState(initialPrompt || "Génère une vidéo sympa, très dynamique, respectant les codes d'Instagram");
   const [aspectRatio, setAspectRatio] = useState<AspectRatio>("9:16");
   const [durationSeconds, setDurationSeconds] = useState<VideoDuration>(() => {
+    // Plan gratuit: forcer 8s
+    if (isFreePlan) return 8;
     const saved = localStorage.getItem('daftfunk-video-duration');
     return saved ? (Number(saved) as VideoDuration) : 8;
   });
@@ -49,6 +57,14 @@ export const VideoConfigForm = ({
   const [additionalImageFile, setAdditionalImageFile] = useState<File | null>(null);
   const [loadingPromptType, setLoadingPromptType] = useState<PromptType | null>(null);
   const [showAdvanced, setShowAdvanced] = useState(false);
+
+  // Forcer les valeurs par défaut si plan gratuit
+  useEffect(() => {
+    if (isFreePlan) {
+      setAspectRatio("9:16");
+      setDurationSeconds(8);
+    }
+  }, [isFreePlan]);
 
   // Mettre à jour le prompt quand initialPrompt change
   useEffect(() => {
@@ -181,6 +197,7 @@ export const VideoConfigForm = ({
             <RadioGroup 
               value={String(durationSeconds)} 
               onValueChange={(v) => {
+                if (isFreePlan && v !== "8") return;
                 const val = Number(v) as VideoDuration;
                 setDurationSeconds(val);
                 localStorage.setItem('daftfunk-video-duration', String(val));
@@ -192,32 +209,58 @@ export const VideoConfigForm = ({
                   8 secondes <span className="text-muted-foreground">(~2min)</span>
                 </Label>
               </div>
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="16" id="dur-16" />
-                <Label htmlFor="dur-16" className="font-normal cursor-pointer flex items-center gap-1">
+              <div className={cn("flex items-center space-x-2", isFreePlan && "opacity-50")}>
+                <RadioGroupItem value="16" id="dur-16" disabled={isFreePlan} />
+                <Label 
+                  htmlFor="dur-16" 
+                  className={cn(
+                    "font-normal flex items-center gap-1",
+                    isFreePlan ? "cursor-not-allowed" : "cursor-pointer"
+                  )}
+                >
                   16 secondes <span className="text-muted-foreground">(~4min)</span>
-                  <Tooltip>
-                    <TooltipTrigger type="button">
-                      <Info className="w-3 h-3 text-muted-foreground" />
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p>Comptera pour 2 vidéos générées dans votre crédit</p>
-                    </TooltipContent>
-                  </Tooltip>
+                  {isFreePlan ? (
+                    <Badge variant="outline" className="ml-1 text-xs gap-1">
+                      <Lock className="w-3 h-3" />
+                      Starter+
+                    </Badge>
+                  ) : (
+                    <Tooltip>
+                      <TooltipTrigger type="button">
+                        <Info className="w-3 h-3 text-muted-foreground" />
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>Comptera pour 2 vidéos générées dans votre crédit</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  )}
                 </Label>
               </div>
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="24" id="dur-24" />
-                <Label htmlFor="dur-24" className="font-normal cursor-pointer flex items-center gap-1">
+              <div className={cn("flex items-center space-x-2", isFreePlan && "opacity-50")}>
+                <RadioGroupItem value="24" id="dur-24" disabled={isFreePlan} />
+                <Label 
+                  htmlFor="dur-24" 
+                  className={cn(
+                    "font-normal flex items-center gap-1",
+                    isFreePlan ? "cursor-not-allowed" : "cursor-pointer"
+                  )}
+                >
                   24 secondes <span className="text-muted-foreground">(~6min)</span>
-                  <Tooltip>
-                    <TooltipTrigger type="button">
-                      <Info className="w-3 h-3 text-muted-foreground" />
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p>Comptera pour 3 vidéos générées dans votre crédit</p>
-                    </TooltipContent>
-                  </Tooltip>
+                  {isFreePlan ? (
+                    <Badge variant="outline" className="ml-1 text-xs gap-1">
+                      <Lock className="w-3 h-3" />
+                      Starter+
+                    </Badge>
+                  ) : (
+                    <Tooltip>
+                      <TooltipTrigger type="button">
+                        <Info className="w-3 h-3 text-muted-foreground" />
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>Comptera pour 3 vidéos générées dans votre crédit</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  )}
                 </Label>
               </div>
             </RadioGroup>
@@ -228,7 +271,10 @@ export const VideoConfigForm = ({
             <Label>Format de la vidéo</Label>
             <RadioGroup 
               value={aspectRatio} 
-              onValueChange={(v) => setAspectRatio(v as AspectRatio)}
+              onValueChange={(v) => {
+                if (isFreePlan && v === "16:9") return;
+                setAspectRatio(v as AspectRatio);
+              }}
             >
               <div className="flex items-center space-x-2">
                 <RadioGroupItem value="9:16" id="9:16" />
@@ -236,10 +282,22 @@ export const VideoConfigForm = ({
                   9:16 (Vertical - Instagram Reels)
                 </Label>
               </div>
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="16:9" id="16:9" />
-                <Label htmlFor="16:9" className="font-normal cursor-pointer">
+              <div className={cn("flex items-center space-x-2", isFreePlan && "opacity-50")}>
+                <RadioGroupItem value="16:9" id="16:9" disabled={isFreePlan} />
+                <Label 
+                  htmlFor="16:9" 
+                  className={cn(
+                    "font-normal flex items-center gap-1",
+                    isFreePlan ? "cursor-not-allowed" : "cursor-pointer"
+                  )}
+                >
                   16:9 (Horizontal - YouTube)
+                  {isFreePlan && (
+                    <Badge variant="outline" className="ml-1 text-xs gap-1">
+                      <Lock className="w-3 h-3" />
+                      Starter+
+                    </Badge>
+                  )}
                 </Label>
               </div>
             </RadioGroup>
