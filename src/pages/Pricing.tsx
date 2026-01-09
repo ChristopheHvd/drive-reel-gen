@@ -61,7 +61,7 @@ const Pricing = () => {
       period: "/mois",
       icon: Building2,
       features: [
-        "Vidéo illimitées**",
+        "Vidéo illimitées*",
         "Formation équipe",
         "Support dédié",
       ],
