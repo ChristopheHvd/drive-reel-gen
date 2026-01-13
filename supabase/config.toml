@@ -30,3 +30,6 @@ verify_jwt = true
 
 [functions.fal-merge-callback]
 verify_jwt = false
+
+[functions.update-subscription]
+verify_jwt = true

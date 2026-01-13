@@ -9,7 +9,11 @@ export interface Subscription {
   stripe_customer_id: string | null;
   stripe_subscription_id: string | null;
   stripe_price_id: string | null;
+  cancel_at_period_end?: boolean;
 }
+
+// Hiérarchie des plans pour déterminer upgrade/downgrade
+export const PLAN_HIERARCHY: ("free" | "starter" | "pro" | "business")[] = ['free', 'starter', 'pro', 'business'];
 
 export interface PlanConfig {
   name: string;
