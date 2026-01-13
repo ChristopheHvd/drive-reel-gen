@@ -11,6 +11,20 @@ const supabaseAdmin = createClient(
   Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
 );
 
+// Mapping des priceId vers les plans
+const PRICE_TO_PLAN: Record<string, { planType: string; videoLimit: number }> = {
+  'price_1SmJs7BlI68zgCmzFk7Iv8BO': { planType: 'starter', videoLimit: 20 },
+  'price_1SmJowBlI68zgCmziOqmGmKv': { planType: 'pro', videoLimit: 60 },
+  'price_1SSey5BlI68zgCmz8gi0Dijy': { planType: 'business', videoLimit: 9999 }, // "illimité"
+};
+
+/**
+ * Récupère les infos du plan à partir du priceId
+ */
+const getPlanFromPriceId = (priceId: string): { planType: string; videoLimit: number } => {
+  return PRICE_TO_PLAN[priceId] || { planType: 'pro', videoLimit: 60 };
+};
+
 /**
  * Convertit un timestamp Unix Stripe en ISO string de manière sécurisée
  * @param timestamp - Timestamp Unix en secondes (peut être undefined/null)
@@ -81,20 +95,20 @@ serve(async (req) => {
         const priceId = subscription.items.data[0].price.id;
         
         // Determine plan type and video limit based on price
-        let planType = 'pro';
-        let videoLimit = 50;
+        const planInfo = getPlanFromPriceId(priceId);
         
         // Update subscription in database
         const { error } = await supabaseAdmin
           .from('user_subscriptions')
           .update({
-            plan_type: planType,
-            video_limit: videoLimit,
+            plan_type: planInfo.planType,
+            video_limit: planInfo.videoLimit,
             stripe_customer_id: session.customer as string,
             stripe_subscription_id: session.subscription as string,
             stripe_price_id: priceId,
             current_period_start: safeTimestampToISO(subscription.current_period_start),
             current_period_end: safeTimestampToISO(subscription.current_period_end),
+            cancel_at_period_end: false,
             updated_at: new Date().toISOString(),
           })
           .eq('user_id', userId);
@@ -112,16 +126,30 @@ serve(async (req) => {
           id: subscription.id,
           current_period_start: subscription.current_period_start,
           current_period_end: subscription.current_period_end,
+          cancel_at_period_end: subscription.cancel_at_period_end,
         });
+        
+        // Récupérer le nouveau priceId pour détecter un changement de plan
+        const priceId = subscription.items.data[0]?.price?.id;
+        const planInfo = priceId ? getPlanFromPriceId(priceId) : null;
+        
+        const updateData: Record<string, any> = {
+          current_period_start: safeTimestampToISO(subscription.current_period_start),
+          current_period_end: safeTimestampToISO(subscription.current_period_end),
+          cancel_at_period_end: subscription.cancel_at_period_end,
+          updated_at: new Date().toISOString(),
+        };
+        
+        // Si le plan a changé, mettre à jour le type et la limite
+        if (planInfo && priceId) {
+          updateData.plan_type = planInfo.planType;
+          updateData.video_limit = planInfo.videoLimit;
+          updateData.stripe_price_id = priceId;
+        }
         
         const { error } = await supabaseAdmin
           .from('user_subscriptions')
-          .update({
-            current_period_start: safeTimestampToISO(subscription.current_period_start),
-            current_period_end: safeTimestampToISO(subscription.current_period_end),
-            cancel_at_period_end: subscription.cancel_at_period_end,
-            updated_at: new Date().toISOString(),
-          })
+          .update(updateData)
           .eq('stripe_subscription_id', subscription.id);
 
         if (error) {
