@@ -14,6 +14,13 @@ vi.mock('@/integrations/supabase/client', () => ({
   },
 }));
 
+// Mock useToast
+vi.mock('@/hooks/use-toast', () => ({
+  useToast: () => ({
+    toast: vi.fn(),
+  }),
+}));
+
 describe('useSubscription', () => {
   const mockUser = { id: 'test-user-id', email: 'test@example.com' };
   const mockTeamMember = {
@@ -28,6 +35,7 @@ describe('useSubscription', () => {
     video_limit: 50,
     videos_generated_this_month: 25,
     current_period_end: '2025-12-31T00:00:00Z',
+    cancel_at_period_end: false,
     stripe_customer_id: 'cus_123',
     stripe_subscription_id: 'sub_123',
     stripe_price_id: 'price_123',
@@ -274,6 +282,316 @@ describe('useSubscription', () => {
       expect(ownerResult.current.subscription?.plan_type).toBe('pro');
       expect(memberResult.current.subscription?.plan_type).toBe('pro');
       expect(ownerResult.current.videosRemaining).toBe(memberResult.current.videosRemaining);
+    });
+  });
+
+  describe('isCanceled', () => {
+    it('should return isCanceled true when cancel_at_period_end is true', async () => {
+      const canceledSubscription = { ...mockSubscription, cancel_at_period_end: true };
+      setupMocks(mockTeamMember, canceledSubscription);
+
+      const { result } = renderHook(() => useSubscription());
+
+      await waitFor(() => {
+        expect(result.current.loading).toBe(false);
+      });
+
+      expect(result.current.isCanceled).toBe(true);
+    });
+
+    it('should return isCanceled false when cancel_at_period_end is false', async () => {
+      setupMocks(mockTeamMember, mockSubscription);
+
+      const { result } = renderHook(() => useSubscription());
+
+      await waitFor(() => {
+        expect(result.current.loading).toBe(false);
+      });
+
+      expect(result.current.isCanceled).toBe(false);
+    });
+
+    it('should return isCanceled false when cancel_at_period_end is undefined', async () => {
+      const subWithoutCancel = { ...mockSubscription };
+      delete (subWithoutCancel as any).cancel_at_period_end;
+      setupMocks(mockTeamMember, subWithoutCancel);
+
+      const { result } = renderHook(() => useSubscription());
+
+      await waitFor(() => {
+        expect(result.current.loading).toBe(false);
+      });
+
+      expect(result.current.isCanceled).toBe(false);
+    });
+  });
+
+  describe('periodEndDate', () => {
+    it('should format periodEndDate in French locale', async () => {
+      setupMocks(mockTeamMember, mockSubscription);
+
+      const { result } = renderHook(() => useSubscription());
+
+      await waitFor(() => {
+        expect(result.current.loading).toBe(false);
+      });
+
+      // Should be formatted in French
+      expect(result.current.periodEndDate).toMatch(/\d{1,2}\s+\w+\s+\d{4}/);
+    });
+
+    it('should return null when current_period_end is null', async () => {
+      const subWithoutPeriodEnd = { ...mockSubscription, current_period_end: null };
+      setupMocks(mockTeamMember, subWithoutPeriodEnd);
+
+      const { result } = renderHook(() => useSubscription());
+
+      await waitFor(() => {
+        expect(result.current.loading).toBe(false);
+      });
+
+      expect(result.current.periodEndDate).toBeNull();
+    });
+  });
+
+  describe('isDowngrade', () => {
+    it('should return true when target plan is lower (pro → starter)', async () => {
+      setupMocks(mockTeamMember, mockSubscription); // plan_type: 'pro'
+
+      const { result } = renderHook(() => useSubscription());
+
+      await waitFor(() => {
+        expect(result.current.loading).toBe(false);
+      });
+
+      expect(result.current.isDowngrade('starter')).toBe(true);
+    });
+
+    it('should return true when target plan is lower (pro → free)', async () => {
+      setupMocks(mockTeamMember, mockSubscription);
+
+      const { result } = renderHook(() => useSubscription());
+
+      await waitFor(() => {
+        expect(result.current.loading).toBe(false);
+      });
+
+      expect(result.current.isDowngrade('free')).toBe(true);
+    });
+
+    it('should return false when target plan is same', async () => {
+      setupMocks(mockTeamMember, mockSubscription);
+
+      const { result } = renderHook(() => useSubscription());
+
+      await waitFor(() => {
+        expect(result.current.loading).toBe(false);
+      });
+
+      expect(result.current.isDowngrade('pro')).toBe(false);
+    });
+
+    it('should return false when target plan is higher', async () => {
+      setupMocks(mockTeamMember, mockSubscription);
+
+      const { result } = renderHook(() => useSubscription());
+
+      await waitFor(() => {
+        expect(result.current.loading).toBe(false);
+      });
+
+      expect(result.current.isDowngrade('business')).toBe(false);
+    });
+
+    it('should return false when no subscription', async () => {
+      setupMocks(mockTeamMember, null);
+
+      const { result } = renderHook(() => useSubscription());
+
+      await waitFor(() => {
+        expect(result.current.loading).toBe(false);
+      });
+
+      expect(result.current.isDowngrade('starter')).toBe(false);
+    });
+  });
+
+  describe('isUpgrade', () => {
+    it('should return true when target plan is higher (pro → business)', async () => {
+      setupMocks(mockTeamMember, mockSubscription);
+
+      const { result } = renderHook(() => useSubscription());
+
+      await waitFor(() => {
+        expect(result.current.loading).toBe(false);
+      });
+
+      expect(result.current.isUpgrade('business')).toBe(true);
+    });
+
+    it('should return false when target plan is same', async () => {
+      setupMocks(mockTeamMember, mockSubscription);
+
+      const { result } = renderHook(() => useSubscription());
+
+      await waitFor(() => {
+        expect(result.current.loading).toBe(false);
+      });
+
+      expect(result.current.isUpgrade('pro')).toBe(false);
+    });
+
+    it('should return false when target plan is lower', async () => {
+      setupMocks(mockTeamMember, mockSubscription);
+
+      const { result } = renderHook(() => useSubscription());
+
+      await waitFor(() => {
+        expect(result.current.loading).toBe(false);
+      });
+
+      expect(result.current.isUpgrade('starter')).toBe(false);
+    });
+
+    it('should return false when no subscription', async () => {
+      setupMocks(mockTeamMember, null);
+
+      const { result } = renderHook(() => useSubscription());
+
+      await waitFor(() => {
+        expect(result.current.loading).toBe(false);
+      });
+
+      expect(result.current.isUpgrade('business')).toBe(false);
+    });
+  });
+
+  describe('changePlan', () => {
+    beforeEach(() => {
+      (supabase as any).functions = {
+        invoke: vi.fn(),
+      };
+    });
+
+    it('should call update-subscription edge function', async () => {
+      setupMocks(mockTeamMember, mockSubscription);
+      vi.mocked((supabase as any).functions.invoke).mockResolvedValue({
+        data: { success: true, isDowngrade: false, newPlan: 'business' },
+        error: null,
+      });
+
+      const { result } = renderHook(() => useSubscription());
+
+      await waitFor(() => {
+        expect(result.current.loading).toBe(false);
+      });
+
+      await result.current.changePlan('business');
+
+      expect((supabase as any).functions.invoke).toHaveBeenCalledWith('update-subscription', {
+        body: { newPlanType: 'business' },
+      });
+    });
+
+    it('should return data after successful plan change', async () => {
+      setupMocks(mockTeamMember, mockSubscription);
+      const mockResponse = { success: true, isDowngrade: true, newPlan: 'starter' };
+      vi.mocked((supabase as any).functions.invoke).mockResolvedValue({
+        data: mockResponse,
+        error: null,
+      });
+
+      const { result } = renderHook(() => useSubscription());
+
+      await waitFor(() => {
+        expect(result.current.loading).toBe(false);
+      });
+
+      const response = await result.current.changePlan('starter');
+
+      expect(response).toEqual(mockResponse);
+    });
+
+    it('should throw error on failure', async () => {
+      setupMocks(mockTeamMember, mockSubscription);
+      vi.mocked((supabase as any).functions.invoke).mockResolvedValue({
+        data: null,
+        error: new Error('Plan change failed'),
+      });
+
+      const { result } = renderHook(() => useSubscription());
+
+      await waitFor(() => {
+        expect(result.current.loading).toBe(false);
+      });
+
+      await expect(result.current.changePlan('business')).rejects.toThrow();
+    });
+  });
+
+  describe('openCustomerPortal', () => {
+    const mockOpen = vi.fn();
+
+    beforeEach(() => {
+      (supabase as any).functions = {
+        invoke: vi.fn(),
+      };
+      vi.stubGlobal('open', mockOpen);
+    });
+
+    it('should call customer-portal edge function', async () => {
+      setupMocks(mockTeamMember, mockSubscription);
+      vi.mocked((supabase as any).functions.invoke).mockResolvedValue({
+        data: { url: 'https://billing.stripe.com/session/xyz' },
+        error: null,
+      });
+
+      const { result } = renderHook(() => useSubscription());
+
+      await waitFor(() => {
+        expect(result.current.loading).toBe(false);
+      });
+
+      await result.current.openCustomerPortal();
+
+      expect((supabase as any).functions.invoke).toHaveBeenCalledWith('customer-portal');
+    });
+
+    it('should open URL in new tab on success', async () => {
+      setupMocks(mockTeamMember, mockSubscription);
+      const portalUrl = 'https://billing.stripe.com/session/xyz';
+      vi.mocked((supabase as any).functions.invoke).mockResolvedValue({
+        data: { url: portalUrl },
+        error: null,
+      });
+
+      const { result } = renderHook(() => useSubscription());
+
+      await waitFor(() => {
+        expect(result.current.loading).toBe(false);
+      });
+
+      await result.current.openCustomerPortal();
+
+      expect(mockOpen).toHaveBeenCalledWith(portalUrl, '_blank');
+    });
+
+    it('should not open window on error', async () => {
+      setupMocks(mockTeamMember, mockSubscription);
+      vi.mocked((supabase as any).functions.invoke).mockResolvedValue({
+        data: null,
+        error: new Error('Portal error'),
+      });
+
+      const { result } = renderHook(() => useSubscription());
+
+      await waitFor(() => {
+        expect(result.current.loading).toBe(false);
+      });
+
+      await result.current.openCustomerPortal();
+
+      expect(mockOpen).not.toHaveBeenCalled();
     });
   });
 });
