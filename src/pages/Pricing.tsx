@@ -13,12 +13,7 @@ const Pricing = () => {
       price: "0€",
       period: "",
       icon: Gift,
-      features: [
-        "6 vidéos",
-        "Formats 9:16",
-        "Durée vidéo : 8 secondes",
-        "Watermark QuickQuick",
-      ],
+      features: ["6 vidéos", "Formats 9:16", "Durée vidéo : 8 secondes", "Watermark QuickQuick"],
       cta: "Commencer",
       variant: "outline" as const,
       popular: false,
@@ -44,12 +39,7 @@ const Pricing = () => {
       price: "79€",
       period: "/mois",
       icon: Star,
-      features: [
-        "60 vidéos par mois",
-        "Brand Kit",
-        "Multi-utilisateur",
-        "Support email",
-      ],
+      features: ["60 vidéos par mois", "Brand Kit", "Multi-utilisateur", "Support email"],
       cta: "S'abonner",
       variant: "premium" as const,
       popular: true,
@@ -60,11 +50,7 @@ const Pricing = () => {
       price: "199€",
       period: "/mois",
       icon: Building2,
-      features: [
-        "Vidéo illimitées*",
-        "Formation équipe",
-        "Support dédié",
-      ],
+      features: ["Vidéo illimitées*", "Formation équipe", "Support dédié"],
       cta: "S'abonner",
       variant: "outline" as const,
       popular: false,
@@ -79,9 +65,7 @@ const Pricing = () => {
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <Link to="/" className="flex items-center gap-3">
             <img src={logo} alt="QuickQuick" className="h-10 w-10" />
-            <span className="text-2xl font-bold bg-gradient-gold bg-clip-text text-transparent">
-              QuickQuick
-            </span>
+            <span className="text-2xl font-bold bg-gradient-gold bg-clip-text text-transparent">QuickQuick</span>
           </Link>
           <nav className="flex items-center gap-4">
             <Link to={user ? "/app" : "/"}>
@@ -113,54 +97,33 @@ const Pricing = () => {
                   <div
                     key={index}
                     className={`relative rounded-xl overflow-hidden ${
-                      plan.popular
-                        ? "border-2 border-primary"
-                        : "border border-border"
+                      plan.popular ? "border-2 border-primary" : "border border-border"
                     }`}
                   >
                     {/* Header with icon */}
                     <div
-                      className={`flex items-center justify-center py-3 ${
-                        plan.popular
-                          ? "bg-primary"
-                          : "bg-muted/30"
-                      }`}
+                      className={`flex items-center justify-center py-3 ${plan.popular ? "bg-primary" : "bg-muted/30"}`}
                     >
                       <IconComponent
-                        className={`h-5 w-5 ${
-                          plan.popular ? "text-primary-foreground" : "text-muted-foreground"
-                        }`}
+                        className={`h-5 w-5 ${plan.popular ? "text-primary-foreground" : "text-muted-foreground"}`}
                       />
                     </div>
 
                     {/* Content */}
                     <div className="p-6 bg-card">
                       <div className="mb-4">
-                        <h3 className="text-lg font-semibold text-foreground">
-                          {plan.name}
-                        </h3>
+                        <h3 className="text-lg font-semibold text-foreground">{plan.name}</h3>
                         <div className="flex items-baseline">
-                          <span className="text-2xl font-bold text-primary">
-                            {plan.price}
-                          </span>
-                          <span className="text-muted-foreground text-sm">
-                            {plan.period}
-                          </span>
+                          <span className="text-2xl font-bold text-primary">{plan.price}</span>
+                          <span className="text-muted-foreground text-sm">{plan.period}</span>
                         </div>
                       </div>
 
-                      {plan.includesPrevious && (
-                        <p className="text-sm text-foreground mb-3">
-                          {plan.includesPrevious}
-                        </p>
-                      )}
+                      {plan.includesPrevious && <p className="text-sm text-foreground mb-3">{plan.includesPrevious}</p>}
 
                       <ul className="space-y-2">
                         {plan.features.map((feature, featureIndex) => (
-                          <li
-                            key={featureIndex}
-                            className="flex items-start gap-2 text-sm text-muted-foreground"
-                          >
+                          <li key={featureIndex} className="flex items-start gap-2 text-sm text-muted-foreground">
                             <span className="text-muted-foreground">•</span>
                             <span>{feature}</span>
                           </li>
@@ -168,11 +131,7 @@ const Pricing = () => {
                       </ul>
 
                       <Link to="/auth" className="block mt-6">
-                        <Button
-                          variant={plan.variant}
-                          className="w-full"
-                          size="default"
-                        >
+                        <Button variant={plan.variant} className="w-full" size="default">
                           {plan.cta}
                         </Button>
                       </Link>
@@ -185,8 +144,7 @@ const Pricing = () => {
             {/* Footer note */}
             <div className="mt-8 text-center space-y-1">
               <p className="text-sm text-muted-foreground italic">
-                *Politique de fair-use à 500 vidéos. Considérez 2 à 3 itérations pour obtenir la{" "}
-                <span className="underline text-primary">vidéo</span> parfaite.
+                *Politique de fair-use à 500 vidéos. Considérez 2 à 3 itérations pour obtenir la vidéo parfaite.
               </p>
             </div>
           </div>
